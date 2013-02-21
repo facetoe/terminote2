@@ -2,9 +2,7 @@
  ============================================================================
  Name        : linkedList.c
  Author      : Facetoe
- Version     :
- Copyright   : copy right!
- Description : Hello World in C, Ansi-style
+ Description : Linked list library for terminote
  ============================================================================
  */
 
@@ -22,7 +20,6 @@
 
 struct Node {
 	int note_num;
-	int *size;
 	char message[MAX_MESSAGE_SIZE];
 	char time[TIME_SIZE];
 	char path[MAX_PATH_SIZE];
@@ -39,9 +36,6 @@ void init(node *head, node *currP) {
 		printf("Initializing list\n");
 
 	currP->note_num = 0;
-
-	int *sizeP = 0;
-	currP->size = sizeP;
 
 	strcpy(currP->time, "");
 	strcpy(currP->message, "");
@@ -230,24 +224,6 @@ void deleteNote(node *currP, int noteNum)
 	}
 }
 
-void destroy(node *head)
-{
-	node *tmp;
-
-	/* Loop through the list freeing all the memory */
-	while(head != NULL)
-	{
-		if( DEBUG )
-			printf("Freeing Note #%d\n", head->note_num);
-
-		tmp = head->next;
-		if(head)
-			free(head);
-		head = tmp;
-	}
-
-}
-
 /* Deletes all notes */
 void deleteAll(node *head)
 {
@@ -265,6 +241,25 @@ void deleteAll(node *head)
 			free(tmp);
 		tmp = head->next;
 	}
+}
+
+/* Destroys the list freeing all memory */
+void destroy(node *head)
+{
+	node *tmp;
+
+	/* Loop through the list freeing all the memory */
+	while(head != NULL)
+	{
+		if( DEBUG )
+			printf("Freeing Note #%d\n", head->note_num);
+
+		tmp = head->next;
+		if(head)
+			free(head);
+		head = tmp;
+	}
+
 }
 
 void printList(node *currP)
