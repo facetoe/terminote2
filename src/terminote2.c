@@ -12,21 +12,15 @@ int main(void) {
 	node *head, *currP;
 	create_list(&head, &currP);
 
-	append(currP, "string");
-	append(currP, "STring");
-	append(currP, "Party");
-	append(currP, "So many party time");
+	append(currP, "String 1");
+	append(currP, "String 2");
+	append(currP, "String 3");
+	append(currP, "Final String");
 
-	//currP = head;
+	currP = head;
 
-	for (int i = 0; i < 5; ++i) {
-		currP=previous(head, currP);
-		printf("%d\n", currP->note_num);
-	}
-
-
-	printf("Head: %d\n", head->note_num);
-
+	deleteNote(currP, 3);
+	printList(currP);
 
 	destroy(head);
 

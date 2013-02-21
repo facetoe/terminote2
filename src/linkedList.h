@@ -22,6 +22,7 @@
 
 struct Node {
 	int note_num;
+	int *size;
 	char message[MAX_MESSAGE_SIZE];
 	char time[TIME_SIZE];
 	char path[MAX_PATH_SIZE];
@@ -38,6 +39,9 @@ void init(node *head, node *currP) {
 		printf("Initializing list\n");
 
 	currP->note_num = 0;
+
+	int *sizeP = 0;
+	currP->size = sizeP;
 
 	strcpy(currP->time, "");
 	strcpy(currP->message, "");
@@ -72,6 +76,7 @@ void append(node *currP, char *noteText)
 	/* Allocate memory for new node */
 	currP->next = (node *) malloc(sizeof(node));
 
+	/* Store old note_num */
 	old_note_num = currP->note_num;
 
 	/* Move to newly created node */
@@ -79,7 +84,6 @@ void append(node *currP, char *noteText)
 
 	/* Update note_num */
 	currP->note_num = ++old_note_num;
-
 
 	/* Get and store path information */
 	char *path = getcwd(NULL, 0);
@@ -167,10 +171,41 @@ node *previous(node *head, node *currP)
 	}
 }
 
+/* Delete a node by noteNum */
+void deleteNote(node *currP, int noteNum)
+{
+	/* Don't delete root node */
+	if ( noteNum == 0 )
+		return;
+
+	node *tmp;
+
+	while(currP)
+	{
+		/* Go to the note before the one to be deleted */
+		if (currP->note_num == noteNum-1)
+		{
+			/* tmp points to node to be deleted */
+			tmp = currP->next;
+
+			/* Link currP to node after tmp, leaving a hole */
+			currP->next = tmp->next;
+
+			/* Free tmp */
+			if (tmp != NULL)
+				free(tmp);
+			return;
+
+		} else {
+			tmp = currP;
+			currP = currP->next;
+		}
+	}
+}
+
 void destroy(node *head)
 {
 	node *tmp;
-
 
 	/* Loop through the list freeing all the memory */
 	while(head != NULL)
