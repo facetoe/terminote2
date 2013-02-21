@@ -20,8 +20,11 @@ int main(void) {
 	currP = head;
 
 	deleteNote(currP, 3);
+	orderList(currP);
 	printList(currP);
 
+	deleteAll(currP);
+	printList(currP);
 	destroy(head);
 
 	return 0;

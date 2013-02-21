@@ -74,7 +74,7 @@ void append(node *currP, char *noteText)
 	}
 
 	/* Allocate memory for new node */
-	currP->next = (node *) malloc(sizeof(node));
+	currP->next = (node *) calloc( 1, sizeof(node) );
 
 	/* Store old note_num */
 	old_note_num = currP->note_num;
@@ -103,9 +103,9 @@ void append(node *currP, char *noteText)
 		perror("Unable to retrieve time\n");
 	} else {
 
-	strip_newline(time);
-	size_t time_len = strlen(time);
-	strncpy(currP->time, time, time_len);
+		strip_newline(time);
+		size_t time_len = strlen(time);
+		strncpy(currP->time, time, time_len);
 	}
 
 	if (noteText)
@@ -171,7 +171,34 @@ node *previous(node *head, node *currP)
 	}
 }
 
+int length( node *currP )
+{
+	int size = 0;
+	while(currP)
+	{
+		size++;
+		currP = currP->next;
+	}
+	return size;
+}
+
+void orderList(node *currP)
+{
+	/* Don't count root node */
+	currP = currP->next;
+
+	int num = 0;
+	while(currP)
+	{
+		currP->note_num = ++num;
+		currP = currP->next;
+	}
+}
+
 /* Delete a node by noteNum */
+/* Note: this function leaves the list unordered,
+ * you need to call orderList() on it after using it.
+ */
 void deleteNote(node *currP, int noteNum)
 {
 	/* Don't delete root node */
@@ -219,6 +246,25 @@ void destroy(node *head)
 		head = tmp;
 	}
 
+}
+
+/* Deletes all notes */
+void deleteAll(node *head)
+{
+	node *tmp;
+
+	/* Don't delete root node */
+	tmp = head->next;
+	while( tmp != NULL)
+	{
+		head->next = tmp->next;
+		if( DEBUG )
+			printf("Deleting Note #%d\n", tmp->note_num);
+
+		if ( tmp )
+			free(tmp);
+		tmp = head->next;
+	}
 }
 
 void printList(node *currP)
