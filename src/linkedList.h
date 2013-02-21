@@ -59,7 +59,8 @@ void create_list(node **head, node **currP) {
 	init(*head, *currP);
 }
 
-void insert(node **head, node *currP, char *noteText)
+/* Appends a note to the end of the list */
+void append(node *currP, char *noteText)
 {
 	int old_note_num;
 
@@ -128,15 +129,56 @@ void insert(node **head, node *currP, char *noteText)
 		printf("Inserted <%s> in %d\n", currP->message, currP->note_num);
 }
 
+/* Returns a pointer to the next note in the list. If currP is the last note,
+ * returns a pointer to the first note: ie, head->next to skip root node.
+ */
+node *next(node *head, node *currP)
+{
+	if ( currP->next != NULL)
+		return currP->next;
+	else
+		return head->next;
+}
+
+/* Returns the previous note in the list */
+node *previous(node *head, node *currP)
+{
+	int noteNum = currP->note_num;
+
+
+	if( noteNum == 1)
+	{
+		/* We are at the start of the list, so loop to the end */
+		while(currP->next != NULL)
+			currP = currP->next;
+
+		/* And return a pointer to the end */
+		return currP;
+	} else {
+		/* We are not at the start, so reset currP to head */
+		currP = head;
+
+		/* And loop through to noteNum -1, ie the previous note */
+		while( currP->next != NULL && currP->note_num != noteNum-1)
+			currP = currP->next;
+
+		/* Return the previous note */
+		return currP;
+	}
+}
+
 void destroy(node *head)
 {
 	node *tmp;
 
+
 	/* Loop through the list freeing all the memory */
 	while(head != NULL)
 	{
-		tmp = head->next;
+		if( DEBUG )
+			printf("Freeing Note #%d\n", head->note_num);
 
+		tmp = head->next;
 		if(head)
 			free(head);
 		head = tmp;
