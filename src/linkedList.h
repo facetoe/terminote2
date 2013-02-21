@@ -128,6 +128,22 @@ void insert(node **head, node *currP, char *noteText)
 		printf("Inserted <%s> in %d\n", currP->message, currP->note_num);
 }
 
+void destroy(node *head)
+{
+	node *tmp;
+
+	/* Loop through the list freeing all the memory */
+	while(head != NULL)
+	{
+		tmp = head->next;
+
+		if(head)
+			free(head);
+		head = tmp;
+	}
+
+}
+
 void printList(node *currP)
 {
 	/* Don't print root node */

@@ -16,8 +16,7 @@ int main(void) {
 	insert(&head, currP, "STring");
 	insert(&head, currP, "Party");
 
-	printList(currP);
-
+	destroy(head);
 
 	return 0;
 }
