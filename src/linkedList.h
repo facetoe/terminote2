@@ -33,20 +33,70 @@ struct Node {
 
 typedef struct Node node;
 
+/* Initialize all the elements to prevent problems later */
 void init(node *head, node *currP);
-void create_list(node **head, node **currP);
-void append(node *currP, char *noteText);
-node *next(node *head, node *currP);
-node *previous(node *head, node *currP);
-int length(node *currP);
-void orderList(node *currP);
-void deleteNote(node *currP, int noteNum);
-void deleteAll(node *head);
-void destroy(node *head);
-void printList(node *currP);
-void writeBinary(FILE *fp, node *head);
-void readBinary(FILE *fp, node *head);
-bool loadList(node *head, char *path);
-bool saveList(node *head, char *path);
 
+
+/* Creates and initializes the list */
+void create_list(node **head, node **currP);
+
+
+/* Appends a note to the end of the list */
+void append(node *currP, char *noteText);
+
+
+/* Returns a pointer to the next note in the list. If currP is the last note,
+ * returns a pointer to the first note: ie, head->next to skip root node.
+ */
+node *next(node *head, node *currP);
+
+
+/* Returns the previous note in the list */
+node *previous(node *head, node *currP);
+
+
+/* Returns the length of the list */
+int length(node *currP);
+
+
+/* Reorders the noteNums */
+void orderList(node *currP);
+
+
+/* Delete a node by noteNum */
+/* Warning: this function leaves the list unordered,
+ * you need to call orderList() after using it.
+ */
+void deleteNote(node *currP, int noteNum);
+
+
+/* Deletes all notes */
+/* Note: This function affects currP, so after using it you need to reset currP to head */
+void deleteAll(node *currP);
+
+
+/* Destroys the list freeing all memory */
+void destroy(node *head);
+
+
+/* Prints every note */
+void printList(node *currP);
+
+
+/* Writes the note structs to a file */
+void writeBinary(FILE *fp, node *head);
+
+
+/* Reads the note data from a file and places in struct */
+void readBinary(FILE *fp, node *head);
+
+
+/* Attempts to read a saved list from path.		*/
+/* Returns true on success or false on failure. */
+bool loadList(node *head, char *path);
+
+
+/* Attempts to save the list at path. 			*/
+/* Returns true on success or false on failure. */
+bool saveList(node *head, char *path);
 #endif /* LINKEDLIST_H_ */

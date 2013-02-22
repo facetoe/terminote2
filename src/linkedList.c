@@ -227,19 +227,19 @@ void deleteNote(node *currP, int noteNum) {
 
 /* Deletes all notes */
 /* Note: This function affects currP, so after using it you need to reset currP to head */
-void deleteAll(node *head) {
+void deleteAll(node *currP) {
 	node *tmp;
 
 	/* Don't delete root node */
-	tmp = head->next;
+	tmp = currP->next;
 	while (tmp != NULL ) {
-		head->next = tmp->next;
+		currP->next = tmp->next;
 		if (DEBUG)
 			printf("Deleting Note #%d\n", tmp->note_num);
 
 		if (tmp)
 			free(tmp);
-		tmp = head->next;
+		tmp = currP->next;
 	}
 }
 

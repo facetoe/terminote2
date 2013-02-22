@@ -15,19 +15,22 @@
 #include <pwd.h>
 #include <unistd.h>
 
+/* Returns a pointer to a string containing the current time */
 char *current_time() {
-// Returns a pointer to a string containing the current time
 	time_t t;
 	time(&t);
 	return ctime(&t);
 }
 
+/* Strip trailing newline and replace with NULL terminator */
 void strip_newline(char *string) {
-	/* Strip trailing newline and replace with NULL terminator */
 	int len = strlen(string) - 1;
 	string[len] = '\0';
 }
 
+/* Determines if a file exists.
+ * Returns true for success, false for failure.
+ */
 int file_exists(char *filename) {
 	struct stat buffer;
 	return (stat(filename, &buffer) == 0);
