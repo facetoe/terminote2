@@ -409,7 +409,6 @@ bool saveList(node *head, char *path)
 		int fh = open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
 		if (fh >= 0)
 		{
-			fclose(fh);
 			fprintf(stderr, "Successfully created file\n");
 
 			fp = fopen(path, "wb");
