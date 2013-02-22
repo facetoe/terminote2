@@ -4,12 +4,18 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/helperFunctions.c \
+../src/linkedList.c \
 ../src/terminote2.c 
 
 OBJS += \
+./src/helperFunctions.o \
+./src/linkedList.o \
 ./src/terminote2.o 
 
 C_DEPS += \
+./src/helperFunctions.d \
+./src/linkedList.d \
 ./src/terminote2.d 
 
 

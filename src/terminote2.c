@@ -6,6 +6,7 @@
  */
 
 #include "linkedList.h"
+#include "helperFunctions.h"
 #include <fcntl.h>
 
 int main(void) {
@@ -20,7 +21,6 @@ int main(void) {
 	char *path;
 	if ( getDataPath(pathBuff, pathBuffLen, "terminote.data") )
 		path = pathBuff;
-	currP = head;
 
 	append(currP, "string1");
 	append(currP, "String2");
@@ -28,7 +28,7 @@ int main(void) {
 	append(currP, "String4");
 	append(currP, "String5");
 
-
+	currP = head;
 	saveList(currP, path);
 	//deleteAll(currP);
 	//loadList(currP, path);

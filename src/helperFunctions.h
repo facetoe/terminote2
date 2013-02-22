@@ -1,76 +1,17 @@
 /*
- * helperFunctions.c
+ * helperFunctions.h
  *
- *  Created on: Feb 21, 2013
+ *  Created on: Feb 22, 2013
  *      Author: fragmachine
  */
 
-#include <time.h>
-#include <sys/stat.h>
-#include <pwd.h>
-#include <unistd.h>
+#ifndef HELPERFUNCTIONS_H_
+#define HELPERFUNCTIONS_H_
 
-char *current_time()
-{
-// Returns a pointer to a string containing the current time
-time_t t;
-time(&t);
-return ctime(&t);
-}
+char *current_time();
+void strip_newline(char *string);
+int file_exists(char *filename);
+char *getHomDir();
+bool getDataPath(char buffer[], int buffLen, char *fileName);
 
-void strip_newline(char *string)
-{
-	/* Strip trailing newline and replace with NULL terminator */
-	int len = strlen(string) -1;
-	string[len] = '\0';
-}
-
-int file_exists (char *filename)
-{
-  struct stat buffer;
-  return (stat (filename, &buffer) == 0);
-}
-
-/* Attempts to get the users home directory. Returns NULL on failure or
- * a pointer to the directory string on success.
- *
- * Note: Valgrind reports this function as leaking memory, however
- * this - http://stackoverflow.com/questions/12919653/valgrind-reports-getpwuid-leaks-in-c-with-ubuntu
- * answer on stack overflow says that it's not a "real" leak... So there isn't much I can do.
- * I tested it in a loop a few thousand times and the amount of memory lost doesn't increase.
- */
-char *getHomDir()
-{
-	struct passwd *psStruct = NULL;
-	uid_t uid = getuid();
-	psStruct = getpwuid(uid);
-
-	if (psStruct == NULL)
-	{
-		perror("Error retrieving home directory\n");
-		return NULL;
-	}
-
-	char *dirP = psStruct->pw_dir;
-
-	return dirP;
-}
-
-/* Gets the path of users home directory and concatenates it into the buffer 		*/
-/* Returns true on success or false if the buffer wasn't big enough, or other error */
-bool getDataPath(char buffer[], int buffLen, char *fileName)
-{
-	int charsRead;
-	char *homePath = getHomDir();
-	if ( homePath )
-	{
-		charsRead = snprintf(buffer, buffLen, "%s/%s", homePath, fileName);
-		return charsRead < buffLen;
-
-	} else {
-		return false;
-	}
-}
-
-
-
+#endif /* HELPERFUNCTIONS_H_ */
