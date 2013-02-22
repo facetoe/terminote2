@@ -11,6 +11,7 @@
 #include <time.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <pwd.h>
 #include <unistd.h>
 
