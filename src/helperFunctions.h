@@ -51,3 +51,21 @@ char *getHomDir()
 	return dirP;
 }
 
+/* Gets the path of users home directory and concatenates it into the buffer 		*/
+/* Returns true on success or false if the buffer wasn't big enough, or other error */
+bool getDataPath(char buffer[], int buffLen, char *fileName)
+{
+	int charsRead;
+	char *homePath = getHomDir();
+	if ( homePath )
+	{
+		charsRead = snprintf(buffer, buffLen, "%s/%s", homePath, fileName);
+		return charsRead < buffLen;
+
+	} else {
+		return false;
+	}
+}
+
+
+

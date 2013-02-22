@@ -16,7 +16,11 @@ int main(void) {
 
 	currP = head;
 
-	char *path = "/Users/fragmachine/Desktop/terminoteData";
+	int pathBuffLen = 200;
+	char pathBuff[pathBuffLen];
+	char *path;
+	if ( getDataPath(pathBuff, pathBuffLen, "terminote") )
+		path = pathBuff;
 
 	currP = head;
 
