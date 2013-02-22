@@ -33,6 +33,11 @@ int file_exists (char *filename)
 
 /* Attempts to get the users home directory. Returns NULL on failure or
  * a pointer to the directory string on success.
+ *
+ * Note: Valgrind reports this function as leaking memory, however
+ * this - http://stackoverflow.com/questions/12919653/valgrind-reports-getpwuid-leaks-in-c-with-ubuntu
+ * answer on stack overflow says that it's not a "real" leak... So there isn't much I can do.
+ * I tested it in a loop a few thousand times and the amount of memory lost doesn't increase.
  */
 char *getHomDir()
 {

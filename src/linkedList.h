@@ -231,6 +231,7 @@ void deleteNote(node *currP, int noteNum)
 }
 
 /* Deletes all notes */
+/* Note: This function affects currP, so after using it you need to reset currP to head */
 void deleteAll(node *head)
 {
 	node *tmp;
