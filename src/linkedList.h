@@ -299,7 +299,7 @@ void writeBinary(FILE *fp, node *head) {
 	if (head->note_num == 0)
 		head = head->next;
 
-	while (head != NULL ) {
+	while ( head ) {
 		if( DEBUG )
 			printf("Writing Note #%d\n", head->note_num);
 
@@ -409,7 +409,10 @@ bool saveList(node *head, char *path)
 		int fh = open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
 		if (fh >= 0)
 		{
+			fclose(fh);
 			fprintf(stderr, "Successfully created file\n");
+
+			fp = fopen(path, "wb");
 			writeBinary(fp, head);
 			fclose(fp);
 			return true;
