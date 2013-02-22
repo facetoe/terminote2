@@ -13,7 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <fcntl.h>
 
 #define MAX_TITLE_SIZE 200
 #define MAX_MESSAGE_SIZE 1000

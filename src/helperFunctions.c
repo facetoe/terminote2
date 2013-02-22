@@ -5,15 +5,14 @@
  *      Author: fragmachine
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+
 #include <stdbool.h>
 #include <time.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include <unistd.h>
+#include "helperFunctions.h"
+#include "linkedList.h"
 
 /* Returns a pointer to a string containing the current time */
 char *current_time() {

@@ -7,7 +7,6 @@
 
 #include "linkedList.h"
 #include "helperFunctions.h"
-#include <fcntl.h>
 
 int main(void) {
 
@@ -23,19 +22,26 @@ int main(void) {
 		path = pathBuff;
 
 	append(currP, "string1");
-	append(currP, "String2");
-	append(currP, "String3");
-	append(currP, "String4");
-	append(currP, "String5");
+	append(currP, "string2");
+	append(currP, "string3");
+	append(currP, "string4");
+	append(currP, "string5");
+	append(currP, "string6");
 
-	currP = head;
-	saveList(currP, path);
-	//deleteAll(currP);
-	//loadList(currP, path);
-	deleteAll(currP);
-	currP=head;
+
+
+	printf("size = %d\n", length(currP));
 	saveList(currP, path);
 	destroy(currP);
+
+	create_list(&head, &currP);
+	printf("size = %d\n", length(currP));
+	loadList(currP, path);
+
+	printList(currP);
+	destroy(currP);
+
+
 
 
 

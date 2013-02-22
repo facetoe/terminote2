@@ -15,26 +15,11 @@
 #define DEBUG 1
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
+
+#include "linkedList.h"
 #include "helperFunctions.h"
 
-struct Node {
-	int note_num;
-	char title[MAX_TITLE_SIZE];
-	char message[MAX_MESSAGE_SIZE];
-	char time[TIME_SIZE];
-	char path[MAX_PATH_SIZE];
-
-	struct Node *next;
-};
-
-typedef struct Node node;
 
 /* Initialize all the elements to prevent problems later */
 void init(node *head, node *currP) {
@@ -285,6 +270,7 @@ void writeBinary(FILE *fp, node *head) {
 	if (head->note_num == 0)
 		head = head->next;
 
+
 	while (head) {
 		if (DEBUG)
 			printf("Writing Note #%d\n", head->note_num);
@@ -308,11 +294,6 @@ void writeBinary(FILE *fp, node *head) {
 
 /* Reads the note data from a file and places in struct */
 void readBinary(FILE *fp, node *head) {
-
-	if (head->note_num == 0) {
-		head->next = (node *) malloc(sizeof(node));
-		head = head->next;
-	}
 
 	int len, note_num;
 	note_num = 0;
@@ -387,11 +368,11 @@ bool saveList(node *head, char *path) {
 		fprintf(stderr,
 				"Error loading data file at: %s\nAttempting to create one...\n",
 				path);
-		int fh = open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
-		if (fh >= 0) {
-			fprintf(stderr, "Successfully created file\n");
 
-			fp = fopen(path, "wb");
+		fp = fopen(path, "wb");
+		if (fp != NULL)
+		{
+			fprintf(stderr, "Successfully created file\n");
 			writeBinary(fp, head);
 			fclose(fp);
 			return true;
