@@ -6,26 +6,39 @@
  */
 
 #include "linkedList.h"
+#include <fcntl.h>
 
 int main(void) {
 
 	node *head, *currP;
 	create_list(&head, &currP);
 
-	append(currP, "String 1");
-	append(currP, "String 2");
-	append(currP, "String 3");
-	append(currP, "Final String");
 
 	currP = head;
 
-	deleteNote(currP, 3);
-	orderList(currP);
-	printList(currP);
+	char *path = "/Users/fragmachine/Desktop/terminoteData";
 
+	currP = head;
+
+	append(currP, "string1");
+	append(currP, "String2");
+	append(currP, "String3");
+	append(currP, "String4");
+	append(currP, "String5");
+
+
+	saveList(currP, path);
+	//deleteAll(currP);
+	//loadList(currP, path);
 	deleteAll(currP);
-	printList(currP);
-	destroy(head);
+	saveList(currP, path);
+	destroy(currP);
+
+
+
+
+
+
 
 	return 0;
 }

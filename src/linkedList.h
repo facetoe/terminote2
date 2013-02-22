@@ -11,8 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <fcntl.h>
 #include "helperFunctions.h"
 
+#define MAX_TITLE_SIZE 200
 #define MAX_MESSAGE_SIZE 1000
 #define TIME_SIZE 30
 #define MAX_PATH_SIZE 200
@@ -20,6 +23,7 @@
 
 struct Node {
 	int note_num;
+	char title[MAX_TITLE_SIZE];
 	char message[MAX_MESSAGE_SIZE];
 	char time[TIME_SIZE];
 	char path[MAX_PATH_SIZE];
@@ -50,7 +54,7 @@ void create_list(node **head, node **currP) {
 		printf("Creating list\n");
 
 	/* Allocate memory for the head */
-	*head = (node *) malloc(sizeof(node));
+	*head = (node *) calloc( 1, sizeof(node));
 	*currP = *head;
 
 	/* Initialize all the elements */
@@ -165,6 +169,7 @@ node *previous(node *head, node *currP)
 	}
 }
 
+/* Returns the length of the list */
 int length( node *currP )
 {
 	int size = 0;
@@ -176,6 +181,7 @@ int length( node *currP )
 	return size;
 }
 
+/* Reorders the noteNums */
 void orderList(node *currP)
 {
 	/* Don't count root node */
@@ -190,8 +196,8 @@ void orderList(node *currP)
 }
 
 /* Delete a node by noteNum */
-/* Note: this function leaves the list unordered,
- * you need to call orderList() on it after using it.
+/* Warning: this function leaves the list unordered,
+ * you need to call orderList() after using it.
  */
 void deleteNote(node *currP, int noteNum)
 {
@@ -215,8 +221,8 @@ void deleteNote(node *currP, int noteNum)
 			/* Free tmp */
 			if (tmp != NULL)
 				free(tmp);
-			return;
 
+			return;
 		} else {
 			tmp = currP;
 			currP = currP->next;
@@ -262,6 +268,7 @@ void destroy(node *head)
 
 }
 
+/* Prints every note */
 void printList(node *currP)
 {
 	/* Don't print root node */
@@ -283,4 +290,135 @@ void printList(node *currP)
 		currP=currP->next;
 	}
 }
+
+/* Writes the note structs to a file */
+void writeBinary(FILE *fp, node *head) {
+
+	/* Don't write root node */
+	if (head->note_num == 0)
+		head = head->next;
+
+	while (head != NULL ) {
+		if( DEBUG )
+			printf("Writing Note #%d\n", head->note_num);
+
+		/* Get the length +1 (for NULL terminator), write the data. Repeat */
+		int len = strlen(head->message) + 1;
+		fwrite(&len, sizeof(int), 1, fp);
+		fwrite(head->message, sizeof(char), len, fp);
+
+		len = strlen(head->path) + 1;
+		fwrite(&len, sizeof(int), 1, fp);
+		fwrite(head->path, sizeof(char), len, fp);
+
+		len = strlen(head->time) + 1;
+		fwrite(&len, sizeof(int), 1, fp);
+		fwrite(head->time, sizeof(char), len, fp);
+
+		head = head->next;
+	}
+}
+
+
+/* Reads the note data from a file and places in struct */
+void readBinary(FILE *fp, node *head) {
+
+	if (head->note_num == 0)
+	{
+		head->next = (node *) malloc(sizeof(node));
+		head = head->next;
+	}
+
+	int len, note_num;
+	note_num = 0;
+
+	char message[MAX_MESSAGE_SIZE];
+	char path[MAX_PATH_SIZE];
+	char time[TIME_SIZE];
+
+	while (fread(&len, sizeof(len), 1, fp)) {
+		note_num++;
+		if( DEBUG )
+			printf("Reading Note #%d\n", note_num);
+
+		/* Allocate memory for new note */
+		head->next = (node *) malloc(sizeof(node));
+
+		/* Move to new note and set note->next to NULL */
+		head = head->next;
+		head->next = NULL;
+
+		/* We got the first length in the loop condition.... */
+		fread(message, sizeof(char), len, fp);
+
+		fread(&len, sizeof(len), 1, fp);
+		fread(path, sizeof(char), len, fp);
+
+		fread(&len, sizeof(len), 1, fp);
+		fread(time, sizeof(char), len, fp);
+
+
+		/* Insert strings into struct */
+		strcpy(head->message, message);
+		strcpy(head->path, path);
+		strcpy(head->time, time);
+
+		head->note_num = note_num;
+
+	}
+}
+
+/* Attempts to read a saved list from path.		*/
+/* Returns true on success or false on failure. */
+bool loadList(node *head, char *path)
+{
+	if( DEBUG )
+		printf("Loading list from: %s\n", path);
+
+	FILE *fp;
+
+	if ( file_exists(path) && ( fp = fopen(path, "rb") ) != NULL )
+	{
+		readBinary(fp, head);
+		fclose(fp);
+		return true;
+	} else {
+		fprintf(stderr, "Could not find data file at: %s", path);
+		return false;
+	}
+}
+
+/* Attempts to save the list at path. 			*/
+/* Returns true on success or false on failure. */
+bool saveList(node *head, char *path)
+{
+
+	if( DEBUG )
+		printf("Saving list at: %s\n", path);
+
+	FILE *fp = NULL;
+	if ( file_exists(path) && ( fp = fopen(path, "wb") ) != NULL )
+	{
+		writeBinary(fp, head);
+		fclose(fp);
+		return true;
+
+	} else {
+		fprintf(stderr, "Error loading data file at: %s\nAttempting to create one...\n", path);
+		int fh = open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+		if (fh >= 0)
+		{
+			fprintf(stderr, "Successfully created file\n");
+			writeBinary(fp, head);
+			fclose(fp);
+			return true;
+
+		} else {
+			fprintf(stderr, "Failed to create file\n");
+			return false;
+		}
+	}
+}
+
+
 
