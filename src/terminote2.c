@@ -10,39 +10,19 @@
 
 int main(void) {
 
-	node *head, *currP;
-	create_list(&head, &currP);
-
-
-	currP = head;
 
 	int pathBuffLen = 200;
 	char pathBuff[pathBuffLen];
 	char *path;
+
+	for (int i = 0; i < 2000; ++i) {
+
+
 	if ( getDataPath(pathBuff, pathBuffLen, "terminote") )
 		path = pathBuff;
+	}
 
-	currP = head;
-
-	append(currP, "string1");
-	append(currP, "String2");
-	append(currP, "String3");
-	append(currP, "String4");
-	append(currP, "String5");
-
-
-	saveList(currP, path);
-	//deleteAll(currP);
-	//loadList(currP, path);
-	deleteAll(currP);
-	saveList(currP, path);
-	destroy(currP);
-
-
-
-
-
-
+	printf("%s\n", path);
 
 	return 0;
 }
