@@ -116,7 +116,7 @@ void printAllWithSubString(node *currP, node *head) {
 }
 
 /* Enters UI loop */
-void uiLoop(node *currP, node *head, int keepRunning) {
+void uiLoop(node *currP, node *head) {
 	char opt;
 	int lastNoteNum = 0;
 	menuMessage();
@@ -128,7 +128,7 @@ void uiLoop(node *currP, node *head, int keepRunning) {
 		switch (opt) {
 		/* Exit */
 		case 'q':
-			keepRunning = 0;
+			//keepRunning = 0;
 			break;
 
 			/* Next */

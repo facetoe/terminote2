@@ -39,7 +39,7 @@ void printAllWithSubString(node *currP, node *head);
 
 int keepRunning;
 /* Enters UI loop */
-void uiLoop(node *currP, node *head, int keepRunning);
+void uiLoop(node *currP, node *head);
 
 /* Handles SIGINT by killing run loop */
 void sigintHandler(int sig);

@@ -31,7 +31,7 @@ int main(void) {
 	signal(SIGINT, sigintHandler);
 
 	while(keepRunning)
-		uiLoop(currP, head, keepRunning);
+		uiLoop(currP, head);
 
 	printf("Printed %d\n", keepRunning);
 
