@@ -16,23 +16,17 @@ int main(void) {
 	node *head, *currP;
 	create_list(&head, &currP);
 
-	currP = head;
-
-	int pathBuffLen = 200;
-	char pathBuff[pathBuffLen];
 	char *path;
-	if ( getDataPath(pathBuff, pathBuffLen, "terminote.data") )
-		path = pathBuff;
+	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
+		path = pathBuffer;
 	else
 		fprintf(stderr, "Error loading note data\n");
 
 	loadList(currP, path);
 
-
-
 	char opt;
 	int loop = 1;
-	int lastNoteNum;
+	int lastNoteNum = 0;
 	menuMessage();
 
 	while (loop) {
@@ -51,7 +45,7 @@ int main(void) {
 			{
 				currP=next(head, currP);
 				/* Don't print the note if nothing changed. */
-				if( lastNoteNum != currP->note_num )
+				if( lastNoteNum != currP->note_num && lastNoteNum != 0)
 					printCurrent(currP);
 			}
 			break;
@@ -62,14 +56,14 @@ int main(void) {
 			{
 				currP=previous(head, currP);
 				/* Don't print the note if nothing changed. */
-				if ( lastNoteNum != currP->note_num )
+				if ( lastNoteNum != currP->note_num && lastNoteNum != 0)
 					printCurrent(currP);
 			}
 			break;
 
 		/* Get input and append to list */
 		case 'w':
-			appendNote(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
+			currP=appendNote(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
 		break;
 
 		/* Print */
@@ -80,6 +74,7 @@ int main(void) {
 		/* Delete all notes */
 		case 'g':
 			deleteAllNotes(currP, head);
+			currP=head;
 			break;
 
 		/* Find and print all notes containing search term */
@@ -87,8 +82,13 @@ int main(void) {
 			printAllWithSubString(currP, head);
 			break;
 
+		/* Print menu message */
 		case 'm':
 			menuMessage();
+			break;
+
+		case 'c':
+			currP=deleteCurrent(currP, head);
 			break;
 
 		default:

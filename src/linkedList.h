@@ -41,7 +41,7 @@ void create_list(node **head, node **currP);
 
 
 /* Appends a note to the end of the list */
-void append(node *currP, char *noteText);
+node *append(node *currP, char *noteText);
 
 
 /* Returns a pointer to the next note in the list. If currP is the last note,
@@ -66,7 +66,7 @@ void orderList(node *currP);
 /* Warning: this function leaves the list unordered,
  * you need to call orderList() after using it.
  */
-void deleteNote(node *currP, int noteNum);
+void deleteNode(node *currP, node *head, int noteNum);
 
 
 /* Deletes all notes */

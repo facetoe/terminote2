@@ -46,7 +46,7 @@ void create_list(node **head, node **currP) {
 }
 
 /* Appends a note to the end of the list */
-void append(node *currP, char *noteText) {
+node *append(node *currP, char *noteText) {
 	int old_note_num;
 
 	while (currP->next != NULL ) {
@@ -106,6 +106,7 @@ void append(node *currP, char *noteText) {
 	}
 	if (DEBUG)
 		printf("Inserted <%s> in %d\n", currP->message, currP->note_num);
+	return currP;
 }
 
 /* Returns a pointer to the next node in the list. If currP is the last node,
@@ -182,6 +183,9 @@ int listLength(node *currP) {
 		size++;
 		currP = currP->next;
 	}
+
+	if (DEBUG)
+		printf("List size: %d\n", size);
 	return size;
 }
 
@@ -195,13 +199,16 @@ void orderList(node *currP) {
 		currP->note_num = ++num;
 		currP = currP->next;
 	}
+	if (DEBUG)
+		printf("Ordered list\n");
 }
 
 /* Delete a node by noteNum */
 /* Warning: this function leaves the list unordered,
  * you need to call orderList() after using it.
  */
-void deleteNode(node *currP, int noteNum) {
+void deleteNode(node *currP, node *head, int noteNum) {
+	currP=head;
 	/* Don't delete root node */
 	if (noteNum == 0)
 		return;
@@ -211,8 +218,12 @@ void deleteNode(node *currP, int noteNum) {
 	while (currP) {
 		/* Go to the node before the one to be deleted */
 		if (currP->note_num == noteNum - 1) {
+
 			/* tmp points to node to be deleted */
 			tmp = currP->next;
+
+			if (DEBUG)
+				printf("Deleting note #%d\n", tmp->note_num);
 
 			/* Link currP to node after tmp, leaving a hole */
 			currP->next = tmp->next;

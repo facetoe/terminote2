@@ -48,15 +48,16 @@ bool promtUserChoice(char *prompt)
 		return false;
 }
 
-/* Prompts user for input. Appends input to list */
-void appendNote(char inputBuffer[], int buffSize, node *currP, node *head)
+/* Prompts user for input, appends input to list.
+ * Returns pointer to the new node. */
+node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head)
 {
 	printf("Enter Note\n> ");
 	FLUSH_STDIN(Junk);
 	getInput(inputBuffer, buffSize);
-	currP=head;
-	append(currP, inputBuffer);
 	FLUSH_STDIN(Junk);
+	currP=head;
+	return append(currP, inputBuffer);
 }
 
 /* Asks user if they want to delete all notes. If so, deletes them */
@@ -75,6 +76,28 @@ void deleteAllNotes(node *currP, node *head)
 
 	FLUSH_STDIN(Junk);
 }
+
+/* Deletes current currP. Returns pointer to head. */
+node *deleteCurrent(node *currP, node *head) {
+	FLUSH_STDIN(Junk);
+	if ( currP->note_num == 0 && currP->next == NULL ) {
+		printf("Nothing to delete.\n");
+		return head;
+	}
+
+	if (promtUserChoice("Delete current note?")) {
+		deleteNode(currP, head, currP->note_num);
+		printf("Deleted.\n");
+		currP = head;
+		orderList(currP);
+		FLUSH_STDIN(Junk);
+		return head;
+	} else {
+		FLUSH_STDIN(Junk);
+		return currP;
+	}
+}
+
 
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubString(node *currP, node *head)
