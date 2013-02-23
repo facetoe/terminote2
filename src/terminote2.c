@@ -73,7 +73,7 @@ int main(void) {
 		break;
 
 		/* Print */
-		case 'f':
+		case 'e':
 			printList(currP);
 			break;
 
@@ -83,8 +83,8 @@ int main(void) {
 			break;
 
 		/* Find and print all notes containing search term */
-		case 'e':
-			printAllWithSubString(currP, head, inputBuffer);
+		case 'f':
+			printAllWithSubString(currP, head);
 			break;
 
 		case 'm':

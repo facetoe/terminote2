@@ -8,8 +8,9 @@ void menuMessage(void)
 printf("Wecome to Terminote interactive:\n"
 "(w) to insert new note\n"
 "(a) and (d) to navigate through notes\n"
-"(f) to print all notes\n"
+"(e) to print all notes\n"
 "(g) to delete all notes\n"
+"(f) to search for notes\n"
 "(m) to print this message\n"
 "(q) to quit\n");
 }
@@ -76,14 +77,13 @@ void deleteAllNotes(node *currP, node *head)
 }
 
 /* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubString(node *currP, node *head, char substring[])
+void printAllWithSubString(node *currP, node *head)
 {
 	int found = 0;
-
+	currP=head;
 	FLUSH_STDIN(Junk);
 	printf("Enter search term:\n> ");
 	getInput(inputBuffer, MAX_MESSAGE_SIZE);
-	currP=head;
 
 	/* Don't check root node */
 	if ( currP->note_num == 0)
@@ -91,7 +91,7 @@ void printAllWithSubString(node *currP, node *head, char substring[])
 
 	while (currP)
 	{
-		if ( hasSubstring(currP, substring) )
+		if ( hasSubstring(currP, inputBuffer) )
 		{
 			found++;
 			printCurrent(currP);

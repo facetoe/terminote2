@@ -404,7 +404,17 @@ bool saveList(node *head, char *path) {
 }
 
 /* Searches node->message for substring. Returns true if it does, false if not */
-bool hasSubstring(node *currP, char *subString)
+bool hasSubstring(node *currP, char subString[])
 {
-	return  ( findSubstring(currP->message, subString) != NULL );
+	/* Convert message to lower case */
+	int msgLen = strlen(subString);
+	char messageLower[msgLen];
+	stringToLower(currP->message, messageLower, msgLen);
+
+	/* Convert subString to lower case */
+	int sbstrLen = strlen(subString);
+	char subLower[sbstrLen];
+	stringToLower(subString, subLower, sbstrLen);
+
+	return  ( findSubstring(messageLower, subLower) != NULL );
 }

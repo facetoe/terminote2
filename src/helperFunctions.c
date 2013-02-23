@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <ctype.h>
 #include "helperFunctions.h"
 #include "linkedList.h"
 
@@ -113,6 +114,14 @@ char *findSubstring(char *haystack, char *needle) {
 	}
 }
 
+/* Places lowercase version of str in newString */
+void stringToLower(char str[], char newString[], int len)
+{
+	for (int i = 0; i <= len; ++i) {
+		newString[i] = tolower(str[i]);
+	}
+	newString[len] = '\0';
+}
 
 
 
