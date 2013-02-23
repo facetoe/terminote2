@@ -99,5 +99,12 @@ bool loadList(node *head, char *path);
 /* Returns true on success or false on failure. */
 bool saveList(node *head, char *path);
 
+/* Searches for node with noteNum.
+ * Returns node if found, otherwise returns NULL. */
 node *searchByNoteNum(node *currP, node *head, int noteNum);
+
+/* Searches node->message for substring. Returns true if it does, false if not */
+bool hasSubstring(node *currP, char *subString);
+
+
 #endif /* LINKEDLIST_H_ */

@@ -75,3 +75,32 @@ void deleteAllNotes(node *currP, node *head)
 	FLUSH_STDIN(Junk);
 }
 
+/* Asks user for search term then prints all notes that contain it. */
+void printAllWithSubString(node *currP, node *head, char substring[])
+{
+	int found = 0;
+
+	FLUSH_STDIN(Junk);
+	printf("Enter search term:\n> ");
+	getInput(inputBuffer, MAX_MESSAGE_SIZE);
+	currP=head;
+
+	/* Don't check root node */
+	if ( currP->note_num == 0)
+		currP = currP->next;
+
+	while (currP)
+	{
+		if ( hasSubstring(currP, substring) )
+		{
+			found++;
+			printCurrent(currP);
+		}
+		currP = currP->next;
+	}
+
+	if ( found == 0)
+		printf("Nothing found.\n");
+
+	FLUSH_STDIN(Junk);
+}

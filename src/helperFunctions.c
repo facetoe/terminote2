@@ -97,5 +97,23 @@ int getInput(char buffer[], int bufferLen) {
 	return charsRead;
 }
 
+/* Searches string for substring.
+ * Returns a pointer to the substring if found,
+ * otherwise returns NULL.
+ */
+char *findSubstring(char *haystack, char *needle) {
+	char *pntr;
+
+	if ((pntr = strstr(haystack, needle)) == NULL ) {
+		return NULL ;
+
+	} else {
+
+		return pntr;
+	}
+}
+
+
+
 
 

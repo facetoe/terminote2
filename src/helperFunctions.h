@@ -42,5 +42,11 @@ bool getDataPath(char buffer[], int buffLen, char *fileName);
  *  returns the number of characters read         */
 int getInput(char buffer[], int bufferLen);
 
+/* Searches string for substring.
+ * Returns a pointer to the substring if found,
+ * otherwise returns NULL.
+ */
+char *findSubstring(char *haystack, char *needle);
+
 
 #endif /* HELPERFUNCTIONS_H_ */

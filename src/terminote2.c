@@ -32,10 +32,12 @@ int main(void) {
 
 	char opt;
 	int loop = 1;
+	int lastNoteNum;
 	menuMessage();
 
 	while (loop) {
 		scanf("\n%c", &opt);
+		lastNoteNum = currP->note_num;
 
 		switch (opt) {
 		/* Exit */
@@ -48,7 +50,9 @@ int main(void) {
 			if ( listLength(currP) )
 			{
 				currP=next(head, currP);
-				printCurrent(currP);
+				/* Don't print the note if nothing changed. */
+				if( lastNoteNum != currP->note_num )
+					printCurrent(currP);
 			}
 			break;
 
@@ -57,7 +61,9 @@ int main(void) {
 			if ( listLength(currP) )
 			{
 				currP=previous(head, currP);
-				printCurrent(currP);
+				/* Don't print the note if nothing changed. */
+				if ( lastNoteNum != currP->note_num )
+					printCurrent(currP);
 			}
 			break;
 
@@ -66,6 +72,7 @@ int main(void) {
 			appendNote(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
 		break;
 
+		/* Print */
 		case 'f':
 			printList(currP);
 			break;
@@ -75,8 +82,13 @@ int main(void) {
 			deleteAllNotes(currP, head);
 			break;
 
-		case 't':
-			printCurrent(currP);
+		/* Find and print all notes containing search term */
+		case 'e':
+			printAllWithSubString(currP, head, inputBuffer);
+			break;
+
+		case 'm':
+			menuMessage();
 			break;
 
 		default:

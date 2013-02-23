@@ -403,3 +403,8 @@ bool saveList(node *head, char *path) {
 	}
 }
 
+/* Searches node->message for substring. Returns true if it does, false if not */
+bool hasSubstring(node *currP, char *subString)
+{
+	return  ( findSubstring(currP->message, subString) != NULL );
+}
