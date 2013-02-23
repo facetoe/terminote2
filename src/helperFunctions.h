@@ -33,9 +33,14 @@ int file_exists(char *filename);
 char *getHomDir();
 
 
-/* Gets the path of users home directory and concatenates it into the buffer 		*/
+/* Gets the path of users home directory and concatenates it into the buffer */
 /* Returns true on success or false if the buffer wasn't big enough, or other error */
 bool getDataPath(char buffer[], int buffLen, char *fileName);
+
+/* Get input from stdin. Only reads up to buffer_len.
+ * Returns 0 if input overflows buffer, otherwise
+ *  returns the number of characters read         */
+int getInput(char buffer[], int bufferLen);
 
 
 #endif /* HELPERFUNCTIONS_H_ */

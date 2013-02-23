@@ -55,7 +55,7 @@ node *previous(node *head, node *currP);
 
 
 /* Returns the length of the list */
-int length(node *currP);
+int listLength(node *currP);
 
 
 /* Reorders the noteNums */
@@ -98,4 +98,6 @@ bool loadList(node *head, char *path);
 /* Attempts to save the list at path. 			*/
 /* Returns true on success or false on failure. */
 bool saveList(node *head, char *path);
+
+node *searchByNoteNum(node *currP, node *head, int noteNum);
 #endif /* LINKEDLIST_H_ */

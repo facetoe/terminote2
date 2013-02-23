@@ -8,17 +8,14 @@
 
 
 
-#define MAX_TITLE_SIZE 200
-#define MAX_MESSAGE_SIZE 1000
-#define TIME_SIZE 30
-#define MAX_PATH_SIZE 200
-#define DEBUG 1
+
 
 #include <stdio.h>
 
 
 #include "linkedList.h"
 #include "helperFunctions.h"
+#include "defines.h"
 
 
 /* Initialize all the elements to prevent problems later */
@@ -111,8 +108,8 @@ void append(node *currP, char *noteText) {
 		printf("Inserted <%s> in %d\n", currP->message, currP->note_num);
 }
 
-/* Returns a pointer to the next note in the list. If currP is the last note,
- * returns a pointer to the first note: ie, head->next to skip root node.
+/* Returns a pointer to the next node in the list. If currP is the last node,
+ * returns a pointer to the first node: ie, head->next to skip root node.
  */
 node *next(node *head, node *currP) {
 	if (currP->next != NULL ) {
@@ -126,7 +123,7 @@ node *next(node *head, node *currP) {
 	}
 }
 
-/* Returns the previous note in the list */
+/* Returns the previous node in the list */
 node *previous(node *head, node *currP) {
 	int noteNum = currP->note_num;
 
@@ -144,20 +141,42 @@ node *previous(node *head, node *currP) {
 		/* We are not at the start, so reset currP to head */
 		currP = head;
 
-		/* And loop through to noteNum -1, ie the previous note */
+		/* And loop through to noteNum -1, ie the previous node */
 		while (currP->next != NULL && currP->note_num != noteNum - 1)
 			currP = currP->next;
 
 		if (DEBUG)
 			printf("Previous to: %d\n", currP->note_num);
 
-		/* Return the previous note */
+		/* Return the previous node */
 		return currP;
 	}
 }
 
+/* Searches for node with noteNum.
+ * Returns node if found, otherwise returns NULL. */
+node *searchByNoteNum(node *currP, node *head, int noteNum)
+{
+	/* Reset to first node */
+	currP = head;
+
+	/* don't check root node */
+	if ( currP->note_num == 0 )
+		currP = currP->next;
+
+	while(currP && currP->note_num != noteNum)
+		currP = currP->next;
+
+	return currP;
+}
+
 /* Returns the length of the list */
-int length(node *currP) {
+int listLength(node *currP) {
+
+	/* Don't count the root node */
+	if (currP->note_num == 0)
+		currP = currP->next;
+
 	int size = 0;
 	while (currP) {
 		size++;
@@ -182,7 +201,7 @@ void orderList(node *currP) {
 /* Warning: this function leaves the list unordered,
  * you need to call orderList() after using it.
  */
-void deleteNote(node *currP, int noteNum) {
+void deleteNode(node *currP, int noteNum) {
 	/* Don't delete root node */
 	if (noteNum == 0)
 		return;
@@ -190,7 +209,7 @@ void deleteNote(node *currP, int noteNum) {
 	node *tmp;
 
 	while (currP) {
-		/* Go to the note before the one to be deleted */
+		/* Go to the node before the one to be deleted */
 		if (currP->note_num == noteNum - 1) {
 			/* tmp points to node to be deleted */
 			tmp = currP->next;

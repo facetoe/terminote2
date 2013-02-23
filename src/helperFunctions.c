@@ -72,3 +72,30 @@ bool getDataPath(char buffer[], int buffLen, char *fileName) {
 	}
 }
 
+/* Get input from stdin. Only reads up to buffer_len.
+ * Returns 0 if input overflows buffer, otherwise
+ *  returns the number of characters read
+ */
+int getInput(char buffer[], int bufferLen) {
+	char ch;
+	int charsRead = 0;
+
+	while ((ch = getchar()) != '\n') {
+		/* If input overflows buffer */
+		if (charsRead >= bufferLen)
+		{
+			/* Terminate */
+			buffer[charsRead - 1] = '\0';
+
+			/* And return error */
+			return 0;
+		}
+		buffer[charsRead] = ch;
+		charsRead++;
+	}
+	buffer[charsRead] = '\0';
+	return charsRead;
+}
+
+
+

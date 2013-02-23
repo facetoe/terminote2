@@ -7,6 +7,9 @@
 
 #include "linkedList.h"
 #include "helperFunctions.h"
+#include "terminoteFunctions.h"
+#include "defines.h"
+
 
 int main(void) {
 
@@ -20,34 +23,72 @@ int main(void) {
 	char *path;
 	if ( getDataPath(pathBuff, pathBuffLen, "terminote.data") )
 		path = pathBuff;
+	else
+		fprintf(stderr, "Error loading note data\n");
 
-	append(currP, "string1");
-	append(currP, "string2");
-	append(currP, "string3");
-	append(currP, "string4");
-	append(currP, "string5");
-	append(currP, "string6");
+	loadList(currP, path);
 
 
 
-	printf("size = %d\n", length(currP));
+	char opt;
+	int loop = 1;
+	menuMessage();
+
+	while (loop) {
+		scanf("\n%c", &opt);
+
+		switch (opt) {
+		/* Exit */
+		case 'q':
+			loop = 0;
+			break;
+
+		/* Next */
+		case 'd':
+			if ( listLength(currP) )
+			{
+				currP=next(head, currP);
+				printCurrent(currP);
+			}
+			break;
+
+		/* Previous */
+		case 'a':
+			if ( listLength(currP) )
+			{
+				currP=previous(head, currP);
+				printCurrent(currP);
+			}
+			break;
+
+		/* Get input and append to list */
+		case 'w':
+			appendNote(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
+		break;
+
+		case 'f':
+			printList(currP);
+			break;
+
+		/* Delete all notes */
+		case 'g':
+			deleteAllNotes(currP, head);
+			break;
+
+		case 't':
+			printCurrent(currP);
+			break;
+
+		default:
+			printf("Invalid Entry\n");
+			break;
+		}
+	}
+
+	currP=head;
 	saveList(currP, path);
 	destroy(currP);
 
-	create_list(&head, &currP);
-	printf("size = %d\n", length(currP));
-	loadList(currP, path);
-
-	printList(currP);
-	destroy(currP);
-
-
-
-
-
-
-
-
-
 	return 0;
 }
+
