@@ -37,7 +37,6 @@ node *deleteCurrent(node *currP, node *head);
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubString(node *currP, node *head);
 
-int keepRunning;
 /* Enters UI loop */
 void uiLoop(node *currP, node *head);
 

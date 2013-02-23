@@ -10,8 +10,7 @@
 #include "terminoteFunctions.h"
 #include "defines.h"
 
-int keepRunning = 1;
-
+volatile int keepRunning = 1;
 int main(void) {
 
 	node *head, *currP;
