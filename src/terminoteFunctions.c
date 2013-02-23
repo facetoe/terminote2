@@ -122,13 +122,16 @@ void uiLoop(node *currP, node *head) {
 	menuMessage();
 
 	while (keepRunning) {
-		scanf("\n%c", &opt);
+
+		while ( ( opt = getchar() ) == '\n' )
+			;
+
 		lastNoteNum = currP->note_num;
 
 		switch (opt) {
 		/* Exit */
 		case 'q':
-			//keepRunning = 0;
+			keepRunning = 0;
 			break;
 
 			/* Next */
