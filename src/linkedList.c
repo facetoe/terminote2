@@ -15,7 +15,6 @@
 
 #include "linkedList.h"
 #include "helperFunctions.h"
-#include "defines.h"
 
 
 /* Initialize all the elements to prevent problems later */
@@ -183,9 +182,6 @@ int listLength(node *currP) {
 		size++;
 		currP = currP->next;
 	}
-
-	if (DEBUG)
-		printf("List size: %d\n", size);
 	return size;
 }
 
@@ -376,7 +372,7 @@ bool loadList(node *head, char *path) {
 		fclose(fp);
 		return true;
 	} else {
-		fprintf(stderr, "Could not find data file at: %s", path);
+		fprintf(stderr, "Could not find data file at: %s\n", path);
 		return false;
 	}
 }

@@ -10,6 +10,7 @@
 #include "terminoteFunctions.h"
 #include "defines.h"
 
+int keepRunning = 1;
 
 int main(void) {
 
@@ -20,11 +21,19 @@ int main(void) {
 	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
 		path = pathBuffer;
 	else
-		fprintf(stderr, "Error loading note data\n");
+	{
+		fprintf(stderr, "Error retrieving path\nAborting\n");
+		return 1;
+	}
 
 	loadList(currP, path);
 
-	uiLoop(currP, head);
+	signal(SIGINT, sigintHandler);
+
+	while(keepRunning)
+		uiLoop(currP, head, keepRunning);
+
+	printf("Printed %d\n", keepRunning);
 
 	currP=head;
 	saveList(currP, path);

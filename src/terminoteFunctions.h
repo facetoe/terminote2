@@ -26,7 +26,7 @@ bool promtUserChoice(char *prompt);
 node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head);
 
 
-/* Asks user if they want to delete all notes. If so, deletes them */
+/* Asks user if they want to delete all notes. If so, deletes them. */
 void deleteAllNotes(node *currP, node *head);
 
 
@@ -37,10 +37,11 @@ node *deleteCurrent(node *currP, node *head);
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubString(node *currP, node *head);
 
-
+int keepRunning;
 /* Enters UI loop */
-void uiLoop(node *currP, node *head);
+void uiLoop(node *currP, node *head, int keepRunning);
 
-
+/* Handles SIGINT by killing run loop */
+void sigintHandler(int sig);
 
 #endif /* TERMINOTEFUNCTIONS_H_ */

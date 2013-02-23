@@ -5,7 +5,7 @@
 
 /* Prints menu message */
 void menuMessage(void) {
-	printf("Wecome to Terminote interactive:\n"
+	printf("\nWelcome to Terminote interactive:\n"
 			"(w) to insert new note\n"
 			"(a) and (d) to navigate through notes\n"
 			"(e) to print all notes\n"
@@ -116,20 +116,19 @@ void printAllWithSubString(node *currP, node *head) {
 }
 
 /* Enters UI loop */
-void uiLoop(node *currP, node *head) {
+void uiLoop(node *currP, node *head, int keepRunning) {
 	char opt;
-	int loop = 1;
 	int lastNoteNum = 0;
 	menuMessage();
 
-	while (loop) {
+	while (keepRunning) {
 		scanf("\n%c", &opt);
 		lastNoteNum = currP->note_num;
 
 		switch (opt) {
 		/* Exit */
 		case 'q':
-			loop = 0;
+			keepRunning = 0;
 			break;
 
 			/* Next */
@@ -188,4 +187,11 @@ void uiLoop(node *currP, node *head) {
 			break;
 		}
 	}
+}
+
+/* Handles SIGINT by killing run loop */
+void sigintHandler(int sig)
+{
+	printf("Called\n");
+	keepRunning = 0;
 }

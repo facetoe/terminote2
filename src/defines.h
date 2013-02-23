@@ -21,6 +21,7 @@ char Junk[16];
 char inputBuffer[MAX_MESSAGE_SIZE];
 char pathBuffer[MAX_PATH_SIZE];
 
-
+/* Condition for run loop */
+extern int keepRunning;
 
 #endif /* DEFINES_H_ */
