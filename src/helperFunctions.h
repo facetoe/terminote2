@@ -8,6 +8,13 @@
 #ifndef HELPERFUNCTIONS_H_
 #define HELPERFUNCTIONS_H_
 
+#include <stdbool.h>
+#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <ctype.h>
+
 /* Returns a pointer to a string containing the current time */
 char *current_time();
 

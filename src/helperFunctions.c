@@ -5,13 +5,6 @@
  *      Author: fragmachine
  */
 
-
-#include <stdbool.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <ctype.h>
 #include "helperFunctions.h"
 #include "linkedList.h"
 

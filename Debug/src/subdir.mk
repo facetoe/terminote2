@@ -6,17 +6,20 @@
 C_SRCS += \
 ../src/helperFunctions.c \
 ../src/linkedList.c \
-../src/terminote2.c 
+../src/terminote2.c \
+../src/terminoteFunctions.c 
 
 OBJS += \
 ./src/helperFunctions.o \
 ./src/linkedList.o \
-./src/terminote2.o 
+./src/terminote2.o \
+./src/terminoteFunctions.o 
 
 C_DEPS += \
 ./src/helperFunctions.d \
 ./src/linkedList.d \
-./src/terminote2.d 
+./src/terminote2.d \
+./src/terminoteFunctions.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

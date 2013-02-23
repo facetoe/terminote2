@@ -21,4 +21,6 @@ char Junk[16];
 char inputBuffer[MAX_MESSAGE_SIZE];
 char pathBuffer[MAX_PATH_SIZE];
 
+
+
 #endif /* DEFINES_H_ */
