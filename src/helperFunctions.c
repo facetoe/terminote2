@@ -66,6 +66,7 @@ bool getDataPath(char buffer[], int buffLen, char *fileName) {
 	}
 }
 
+
 /* Get input from stdin. Only reads up to buffer_len.
  * Returns 0 if input overflows buffer, otherwise
  *  returns the number of characters read

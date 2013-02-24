@@ -203,3 +203,29 @@ void sigintHandler(int sig)
 	printf("\nSIGINT received, press any key to quit.\n");
 	keepRunning = 0;
 }
+
+/* Runs Terminote in interactive mode */
+void runInteractive()
+{
+	node *head, *currP;
+	create_list(&head, &currP);
+
+	char *path;
+	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
+		path = pathBuffer;
+	else
+	{
+		fprintf(stderr, "Error retrieving path\nAborting\n");
+		exit(1);
+	}
+
+	loadList(currP, path);
+
+	signal(SIGINT, sigintHandler);
+
+	uiLoop(currP, head);
+
+	currP=head;
+	saveList(currP, path);
+	destroy(currP);
+}

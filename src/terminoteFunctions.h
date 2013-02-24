@@ -43,4 +43,7 @@ void uiLoop(node *currP, node *head);
 /* Handles SIGINT by killing run loop */
 void sigintHandler(int sig);
 
+/* Runs Terminote in interactive mode */
+void runInteractive();
+
 #endif /* TERMINOTEFUNCTIONS_H_ */
