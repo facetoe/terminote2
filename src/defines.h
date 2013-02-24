@@ -22,6 +22,6 @@ char inputBuffer[MAX_MESSAGE_SIZE];
 char pathBuffer[MAX_PATH_SIZE];
 
 /* Condition for run loop */
-volatile int keepRunning;
+volatile extern int keepRunning;
 
 #endif /* DEFINES_H_ */

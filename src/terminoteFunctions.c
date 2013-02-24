@@ -123,12 +123,17 @@ void uiLoop(node *currP, node *head) {
 
 	while (keepRunning) {
 
-		while ( ( opt = getchar() ) == '\n' )
-			;
+		/* Loop until we get something other then a newline */
+		while( ( opt = getchar() ) == '\n' );
+
+		/* Prevents the switch being excecuted one last time on SIGINT */
+		if ( keepRunning == 0 )
+					break;
 
 		lastNoteNum = currP->note_num;
 
 		switch (opt) {
+
 		/* Exit */
 		case 'q':
 			keepRunning = 0;
@@ -195,6 +200,6 @@ void uiLoop(node *currP, node *head) {
 /* Handles SIGINT by killing run loop */
 void sigintHandler(int sig)
 {
-	printf("Called\n");
+	printf("\nSIGINT received, press any key to quit.\n");
 	keepRunning = 0;
 }
