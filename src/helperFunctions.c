@@ -140,6 +140,17 @@ void stringToLower(char str[], char newString[], int len)
 	newString[len] = '\0';
 }
 
+/* Determines if str is an integer *.
+ * Returns true if is false if it's not. */
+bool isInteger(char *str)
+{
+	for (int i = 0; i < strlen(str); ++i)
+		if( str[i] == '.' || !isdigit( str[i] ) )
+			return false;
+
+	return true;
+}
+
 
 
 

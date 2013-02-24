@@ -9,9 +9,25 @@
 #define TERMINOTEFUNCTIONS_H_
 
 typedef struct{
-	int printHelp;
+	/* Pop last note */
 	int popNote;
+	/* Pop n note */
+	int popN;
+
+	/* Delete n note */
+	int delN;
+	/* Delete all notes */
+	int deleteAll;
+
+	/* Print n note */
+	int printN;
+	/* Print all notes */
 	int printAll;
+
+	/* Search notes for search term */
+	int searchNotes;
+	char *searchTerm;
+
 }Options;
 
 /* Prints menu message */
@@ -59,12 +75,18 @@ void sigintHandler(int sig);
 void runInteractive();
 
 /* Runs Terminote in pipe mode */
-void runPipe(Options *options, int argc, char **argv);
+void runNonInteractive(Options *options, int argc, char **argv);
 
 /* Initialize options struct */
 void initOptions(Options *opts);
 
+/* Print options for debugging */
+void printOpts(Options *opts);
+
 /* Parse command line options */
 void parseOptions(Options *options, int argc, char **argv);
+
+/* Returns true if any commandline options were set */
+bool hasOptions( Options *opts );
 
 #endif /* TERMINOTEFUNCTIONS_H_ */

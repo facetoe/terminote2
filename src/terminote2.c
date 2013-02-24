@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 		runInteractive();
 	} else {
 
-		runPipe(&options, argc, argv);
+		runNonInteractive(&options, argc, argv);
 	}
 
 	return 0;

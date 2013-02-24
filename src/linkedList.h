@@ -57,7 +57,6 @@ node *next(node *head, node *currP);
 /* Returns the previous note in the list */
 node *previous(node *head, node *currP);
 
-
 /* Returns the length of the list */
 int listLength(node *currP);
 

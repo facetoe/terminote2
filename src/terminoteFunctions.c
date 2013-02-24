@@ -15,6 +15,12 @@ void menuMessage(void) {
 			"(q) to quit\n");
 }
 
+/* Prints usage */
+void printUsage()
+{
+	printf("Fill this in\n");
+}
+
 /* Prints current note */
 void printCurrent(node *currP) {
 
@@ -256,8 +262,8 @@ void runInteractive()
 	destroy(currP);
 }
 
-/* Runs Terminote in pipe mode */
-void runPipe(Options *options, int argc, char **argv)
+/* Runs Terminote in non interactive mode */
+void runNonInteractive(Options *options, int argc, char **argv)
 {
 	char *path;
 	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
@@ -268,26 +274,72 @@ void runPipe(Options *options, int argc, char **argv)
 		exit(1);
 	}
 
+	/* Set up the list */
 	node *head, *currP;
 	create_list(&head, &currP);
 	loadList(head, path);
 
-	parseOptions(options, argc, argv);
 
-	if ( options->popNote )
-		popNote(currP, head, path);
+	 /* If there are no arguments we'll go ahead and add the data to the list */
+	if (argc <= 1) {
+		/* Read data from the pipe */
+		getInputPipe(inputBuffer, MAX_MESSAGE_SIZE);
 
-	if ( options->printAll )
-		printList( (currP=head) );
+		/* If there is only a newline in the buffer then don't add anything */
+		if (strlen(inputBuffer) == 1 && (int) inputBuffer[0] == 10) {
+			fprintf(stderr, "No Input\n");
+		} else {
+			/* Otherwise append to list and save */
+			append(currP, inputBuffer);
+			saveList(head, path);
+		}
+
+	} else {
+		Options options;
+		parseOptions(&options, argc, argv);
+		printOpts(&options);
+	}
+
 
 }
 
 /* Initialize options struct */
 void initOptions(Options *opts)
 {
-	opts->printHelp = 0;
-	opts->popNote = 0;
-	opts->printAll = 0;
+	opts-> popNote = 0;
+	opts-> popN = 0;
+
+	opts-> delN = 0;
+	opts-> deleteAll = 0;
+
+	opts-> printN = 0;
+	opts-> printAll = 0;
+
+	opts-> searchNotes = 0;
+	opts->searchTerm = "";
+}
+
+/* Print options for debugging */
+void printOpts(Options *opts)
+{
+	printf(
+			"\npopNote: %d"
+			"\npopN: %d"
+			"\ndelN: %d"
+			"\ndeleteAll: %d"
+			"\nprintN: %d"
+			"\nprintAll: %d"
+			"\nsearchNotes: %d"
+			"\nsearchTerm: %s\n",
+			opts->popNote,
+			opts->popN,
+			opts->delN,
+			opts->deleteAll,
+			opts->printN,
+			opts->printAll,
+			opts->searchNotes,
+			opts->searchTerm
+			);
 }
 
 /* Parse command line options */
@@ -295,34 +347,110 @@ void parseOptions(Options *options, int argc, char **argv)
 {
 	char opt;
 	initOptions(options);
-	while ( (opt = getopt(argc, argv, "hpa") ) != -1)
 
-			switch (opt) {
+	char *nArg, *dArg, *sArg, *fArg;
+	nArg=dArg=sArg=fArg=NULL;
+
+	while ( (opt = getopt(argc, argv, "hpn:d:rs:cf:") ) != -1)
+	{
+		switch (opt) {
 
 			case 'h':
-				options->printHelp = 1;
+				printf("Print help\n");
+				exit(0);
 				break;
 
+			/* Pop Note */
 			case 'p':
 				options->popNote = 1;
 				break;
 
-			case 'a':
+			/* Pop n */
+			case 'n':
+				nArg = optarg;
+				break;
+
+			/* Delete n */
+			case 'd':
+				dArg = optarg;
+				break;
+
+			/* Delete all notes */
+			case 'r':
+				options->deleteAll = 1;
+				break;
+
+			/* Print n */
+			case 's':
+				sArg = optarg;
+				options->searchNotes = 1;
+				break;
+
+			/* Print all notes */
+			case 'c':
 				options->printAll = 1;
 				break;
 
+			case 'f':
+				options->searchNotes = 1;
+				options->searchTerm = optarg;
+				break;
+
 			case '?':
+				if ( optopt == 'n')
+				{
+					printf("Error: -n requires a an argument (integer)\n");
+					exit(1);
+				} else if ( optopt == 'd' )
+				{
+					printf("Error: -d requires a an argument (integer)\n");
+					exit(1);
+				}
 
-				if (isprint(optopt))
-					fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-
-				else
-					fprintf(stderr, "Unknown option character `\\x%x'.\n",
-							optopt);
 				break;
 
 			default:
+				printf("Strange thing happened, aborting\n");
 				abort();
 				break;
-			}
+		}
+	}
+
+	/* Ensures -n option is an integer */
+	if ( nArg )
+	{
+		if ( !isInteger(nArg) )
+		{
+			fprintf(stderr, "Error: -n requires an integer\n");
+			exit(1);
+		} else {
+			sscanf(nArg, "%d", &options->popN);
+		}
+	}
+
+	/* Ensures -d option is an integer */
+	if ( dArg )
+	{
+		if ( !isInteger(dArg) )
+		{
+			fprintf(stderr, "Error: -d requires an integer\n");
+			exit(1);
+		} else {
+			sscanf(dArg, "%d", &options->delN);
+		}
+	}
+	/* Ensures -s option is an integer */
+	if ( sArg )
+	{
+		if ( !isInteger(sArg) )
+		{
+			fprintf(stderr, "Error: -s requires an integer\n");
+			exit(1);
+		} else {
+			sscanf(sArg, "%d", &options->printN);
+		}
+	}
+
+
 }
+
