@@ -405,6 +405,14 @@ void parseOptions(Options *options, int argc, char **argv)
 				{
 					printf("Error: -d requires a an argument (integer)\n");
 					exit(1);
+				} else if ( optopt == 's')
+				{
+					printf("Error: -s requires an argument (integer)\n");
+					exit(1);
+				} else if ( optopt == 'f' )
+				{
+					printf("Error: -f requires an argument (string)\n");
+					exit(1);
 				}
 
 				break;
