@@ -68,8 +68,8 @@ void deleteAllNotes(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
 }
 
-/* Deletes current currP. Returns pointer to head. */
-node *deleteCurrent(node *currP, node *head) {
+/* Deletes current currP. Returns pointer to head. This version asks the user if they want to delete and deletes if the answer is y */
+node *deleteCurrentInteractive(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
 	if (currP->note_num == 0 && currP->next == NULL ) {
 		printf("Nothing to delete.\n");
@@ -87,6 +87,32 @@ node *deleteCurrent(node *currP, node *head) {
 		FLUSH_STDIN(Junk);
 		return currP;
 	}
+}
+
+/* Deletes current currP.
+ * WARNING: This version is for non-interactive, it doesn't return anything, prompt the user or clean up after itself. */
+void deleteCurrent(node *currP, node *head) {
+	FLUSH_STDIN(Junk);
+	if (currP->note_num == 0 && currP->next == NULL ) {
+		return;
+	}
+	deleteNode(currP, head, currP->note_num);
+}
+
+/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
+void popNote(node *currP, node *head, char *path)
+{
+	currP = lastNode(currP, head);
+
+	if ( currP )
+	{
+		printCurrent(currP);
+		deleteCurrent(currP, head);
+		saveList(head, path);
+	} else {
+		fprintf(stderr, "No notes to pop\n");
+	}
+
 }
 
 /* Asks user for search term then prints all notes that contain it. */
@@ -187,7 +213,7 @@ void uiLoop(node *currP, node *head) {
 
 			/* Delete Current note */
 		case 'c':
-			currP = deleteCurrent(currP, head);
+			currP = deleteCurrentInteractive(currP, head);
 			break;
 
 		default:
@@ -226,6 +252,77 @@ void runInteractive()
 	uiLoop(currP, head);
 
 	currP=head;
-	saveList(currP, path);
+	saveList(head, path);
 	destroy(currP);
+}
+
+/* Runs Terminote in pipe mode */
+void runPipe(Options *options, int argc, char **argv)
+{
+	char *path;
+	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
+		path = pathBuffer;
+	else
+	{
+		fprintf(stderr, "Error retrieving path\nAborting\n");
+		exit(1);
+	}
+
+	node *head, *currP;
+	create_list(&head, &currP);
+	loadList(head, path);
+
+	parseOptions(options, argc, argv);
+
+	if ( options->popNote )
+		popNote(currP, head, path);
+
+	if ( options->printAll )
+		printList( (currP=head) );
+
+}
+
+/* Initialize options struct */
+void initOptions(Options *opts)
+{
+	opts->printHelp = 0;
+	opts->popNote = 0;
+	opts->printAll = 0;
+}
+
+/* Parse command line options */
+void parseOptions(Options *options, int argc, char **argv)
+{
+	char opt;
+	initOptions(options);
+	while ( (opt = getopt(argc, argv, "hpa") ) != -1)
+
+			switch (opt) {
+
+			case 'h':
+				options->printHelp = 1;
+				break;
+
+			case 'p':
+				options->popNote = 1;
+				break;
+
+			case 'a':
+				options->printAll = 1;
+				break;
+
+			case '?':
+
+				if (isprint(optopt))
+					fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+
+				else
+					fprintf(stderr, "Unknown option character `\\x%x'.\n",
+							optopt);
+				break;
+
+			default:
+				abort();
+				break;
+			}
 }

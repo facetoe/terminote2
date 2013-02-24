@@ -43,12 +43,16 @@ void create_list(node **head, node **currP);
 /* Appends a note to the end of the list */
 node *append(node *currP, char *noteText);
 
+/* Returns the last node in the list. If currP is the root node, returns NULL */
+node *lastNode(node *currP, node *head);
+
+/* Returns the first node in the list. If the first node is the root node, returns NULL */
+node *firstNode(node *currP, node *head);
 
 /* Returns a pointer to the next note in the list. If currP is the last note,
  * returns a pointer to the first note: ie, head->next to skip root node.
  */
 node *next(node *head, node *currP);
-
 
 /* Returns the previous note in the list */
 node *previous(node *head, node *currP);

@@ -9,11 +9,21 @@
 #include "helperFunctions.h"
 #include "terminoteFunctions.h"
 #include "defines.h"
+#include <getopt.h>
 
 volatile int keepRunning = 1;
-int main(void) {
 
-	runInteractive();
+
+int main(int argc, char **argv) {
+
+	Options options;
+
+	if (isatty(STDIN_FILENO)) {
+		runInteractive();
+	} else {
+
+		runPipe(&options, argc, argv);
+	}
 
 	return 0;
 }

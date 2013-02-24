@@ -108,9 +108,31 @@ node *append(node *currP, char *noteText) {
 	return currP;
 }
 
-/* Returns a pointer to the next node in the list. If currP is the last node,
+/* Returns the last node in the list. If currP is the root node, returns NULL */
+node *lastNode(node *currP, node *head)
+{
+	currP = head;
+	if ( currP->next == NULL)
+		return NULL;
+
+	while ( currP->next )
+		currP = currP->next;
+	return currP;
+}
+
+/* Returns the first node in the list. If the first node is the root node, returns NULL */
+node *firstNode(node *currP, node *head)
+{
+	currP = head;
+	if ( currP->next )
+		return currP->next;
+	else
+		return NULL;
+}
+
+/* Returns the next node in the list. If currP is the last node,
  * returns a pointer to the first node: ie, head->next to skip root node.
- */
+ * If there is only one node in the list (not counting root) it returns currP unchanged. */
 node *next(node *head, node *currP) {
 	if (currP->next != NULL ) {
 		if (DEBUG)
@@ -123,7 +145,7 @@ node *next(node *head, node *currP) {
 	}
 }
 
-/* Returns the previous node in the list */
+/* Returns the previous node in the list. If there is only one node (not counting root) returns currP unchanged.  */
 node *previous(node *head, node *currP) {
 	int noteNum = currP->note_num;
 
@@ -201,8 +223,7 @@ void orderList(node *currP) {
 
 /* Delete a node by noteNum */
 /* Warning: this function leaves the list unordered,
- * you need to call orderList() after using it.
- */
+ * you need to call orderList() after using it. */
 void deleteNode(node *currP, node *head, int noteNum) {
 	currP=head;
 	/* Don't delete root node */
@@ -359,7 +380,7 @@ void readBinary(FILE *fp, node *head) {
 	}
 }
 
-/* Attempts to read a saved list from path.		*/
+/* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
 /* Returns true on success or false on failure. */
 bool loadList(node *head, char *path) {
 	if (DEBUG)
@@ -372,8 +393,21 @@ bool loadList(node *head, char *path) {
 		fclose(fp);
 		return true;
 	} else {
-		fprintf(stderr, "Could not find data file at: %s\n", path);
-		return false;
+		fprintf(stderr,
+				"Error loading data file at: %s\nAttempting to create one...\n",
+				path);
+
+		fp = fopen(path, "wb");
+		if (fp != NULL)
+		{
+			fprintf(stderr, "Successfully created file\n");
+			fclose(fp);
+			return true;
+
+		} else {
+			fprintf(stderr, "Failed to create file\n");
+			return false;
+		}
 	}
 }
 

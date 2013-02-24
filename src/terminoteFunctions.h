@@ -8,6 +8,12 @@
 #ifndef TERMINOTEFUNCTIONS_H_
 #define TERMINOTEFUNCTIONS_H_
 
+typedef struct{
+	int printHelp;
+	int popNote;
+	int printAll;
+}Options;
+
 /* Prints menu message */
 void menuMessage(void);
 
@@ -30,9 +36,15 @@ node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head);
 void deleteAllNotes(node *currP, node *head);
 
 
-/* Deletes current currP. Returns pointer to head. */
-node *deleteCurrent(node *currP, node *head);
+/* Deletes current currP. Returns pointer to head. This version asks the user if they want to delete and deletes if the answer is y */
+node *deleteCurrentInteractive(node *currP, node *head);
 
+/* Deletes current currP.
+ * WARNING: This version is for non-interactive, it doesn't return anything, prompt the user or clean up after itself. */
+void deleteCurrent(node *currP, node *head);
+
+/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stdout. */
+void popNote(node *currP, node *head, char *path);
 
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubString(node *currP, node *head);
@@ -45,5 +57,14 @@ void sigintHandler(int sig);
 
 /* Runs Terminote in interactive mode */
 void runInteractive();
+
+/* Runs Terminote in pipe mode */
+void runPipe(Options *options, int argc, char **argv);
+
+/* Initialize options struct */
+void initOptions(Options *opts);
+
+/* Parse command line options */
+void parseOptions(Options *options, int argc, char **argv);
 
 #endif /* TERMINOTEFUNCTIONS_H_ */
