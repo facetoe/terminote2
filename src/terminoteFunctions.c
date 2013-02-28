@@ -364,14 +364,14 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		}
 
 	} else {
-		Options options;
-		parseOptions(&options, argc, argv);
+		/* Parse the arguments and make sure they are valid */
+		parseOptions(options, argc, argv);
 
 		/* Set up the list */
 		node *head, *currP;
 		create_list(&head, &currP);
 		loadList(head);
-		executeOptions(&options, currP, head);
+		executeOptions(options, currP, head);
 		exit(0);
 	}
 
@@ -550,10 +550,11 @@ void parseOptions(Options *options, int argc, char **argv)
 }
 
 /* Ensures options make sense */
-void validateOptions(Options *opts)
-{
+void validateOptions(Options *opts) {
 	int optArr[OPT_NUM];
-	enum {POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH};
+	enum {
+		POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND
+	};
 	optArr[POP] = opts->pop;
 	optArr[POPN] = opts->popN;
 	optArr[DELN] = opts->delN;
@@ -561,19 +562,20 @@ void validateOptions(Options *opts)
 	optArr[PRINTN] = opts->printN;
 	optArr[PRINTA] = opts->printA;
 	optArr[SEARCH] = opts->searchNotes;
+	optArr[APPEND] = opts->append;
 
 	for (int i = 0; i < OPT_NUM; ++i) {
-		if ( optArr[i] )
-			for (int j = i+1; j < OPT_NUM; ++j) {
-				if (optArr[j])
-				{
-					fprintf(stderr, "Too many arguments\n");
+		if (optArr[i])
+			for (int j = i + 1; j < OPT_NUM; ++j) {
+				if (optArr[j] && j != OPT_NUM - 1) {
+					fprintf(stderr, "Too many arguments.\n");
 					exit(1);
 				}
 			}
 	}
-
 }
+
+
 
 void executeOptions(Options *opts, node *currP, node *head)
 {

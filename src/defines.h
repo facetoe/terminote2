@@ -12,7 +12,7 @@
 #define MAX_MESSAGE_SIZE 1000
 #define TIME_SIZE 30
 #define MAX_PATH_SIZE 200
-#define OPT_NUM 7
+#define OPT_NUM 8
 #define DEBUG 1
 
 /* Flushes junk characters in the input buffer */
