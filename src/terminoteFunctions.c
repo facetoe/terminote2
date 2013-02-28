@@ -25,7 +25,7 @@ void printUsage() {
 						"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
 						"ARGUMENTS:\n"
 						"	-h: Print this message and quit.\n"
-						"	-p: Prints the last note and deletes it.\n"
+						"	-p: Prints the last note only, no path or number, then deletes it.\n"
 						"	-n: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
 						"	-d: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
 						"	-r: Deletes all notes.\n"
@@ -48,6 +48,17 @@ void printCurrent(node *currP) {
 				"\nTime: %s"
 				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
 				currP->message);
+	}
+}
+
+void printMessage(node *currP)
+{
+
+	if (currP == NULL || currP->note_num == 0)
+		return;
+
+	else {
+		printf("%s", currP->message);
 	}
 }
 
@@ -210,11 +221,12 @@ void deleteA(node *currP, node *head) {
 }
 
 /* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
+/* This function only prints the message, no path or number. */
 void popNote(node *currP, node *head) {
 	currP = lastNode(currP, head);
 
 	if (currP) {
-		printCurrent(currP);
+		printMessage(currP);
 		deleteCurrent(currP, head);
 		saveList(head);
 	} else {
@@ -223,6 +235,7 @@ void popNote(node *currP, node *head) {
 }
 
 /* Pops note number n and deletes it. */
+/* This function only prints the message, no path or number. */
 void popN(node *currP, node *head, int n) {
 	currP = searchByNoteNum(currP, head, n);
 	if (currP) {
