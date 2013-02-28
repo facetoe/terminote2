@@ -60,7 +60,7 @@ node *append(node *currP, char *noteText) {
 	/* Get and store path information */
 	char *path = getcwd(NULL, 0);
 	if (path == NULL ) {
-		perror("Unable to retrieve path\n");
+		fprintf(stderr, "Unable to retrieve path\n");
 	} else {
 		size_t path_len = strlen(path);
 		strncpy(currP->path, path, path_len);
@@ -175,12 +175,21 @@ node *searchByNoteNum(node *currP, node *head, int noteNum)
 	/* Reset to first node */
 	currP = head;
 
+	/* Nothing to search if the list is empty */
+	if ( listLength(currP) == 0)
+		return NULL;
+
 	/* don't check root node */
 	if ( currP->note_num == 0 )
 		currP = currP->next;
 
-	while(currP && currP->note_num != noteNum)
+	while(currP->note_num != noteNum && currP->next != NULL)
 		currP = currP->next;
+
+	if (currP->note_num == noteNum)
+		return currP;
+	else
+		return NULL;
 
 	return currP;
 }
@@ -288,8 +297,14 @@ void destroy(node *head) {
 /* Prints every note */
 void printList(node *currP) {
 	/* Don't print root node */
-	if (currP->note_num == 0)
+	if (currP->note_num == 0 && currP->next != NULL)
 		currP = currP->next;
+
+	if ( currP->note_num == 0 )
+	{
+		fprintf(stderr, "Nothing to print\n");
+		return;
+	}
 
 	/* Loop through list printing everything */
 	while (currP != NULL ) {
@@ -406,7 +421,7 @@ bool loadList(node *head) {
 
 /* Attempts to save the list at path. 			*/
 /* Returns true on success or false on failure. */
-bool saveList(node *head, char *path) {
+bool saveList(node *head) {
 
 	if (DEBUG)
 		printf("Saving list at: %s\n", path);

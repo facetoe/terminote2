@@ -94,7 +94,7 @@ bool loadList(node *head);
 
 /* Attempts to save the list at path. 			*/
 /* Returns true on success or false on failure. */
-bool saveList(node *head, char *path);
+bool saveList(node *head);
 
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */

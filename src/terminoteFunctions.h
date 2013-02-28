@@ -28,6 +28,10 @@ typedef struct{
 	int searchNotes;
 	char *searchTerm;
 
+	/* Append note */
+	int append;
+	char *appendStr;
+
 }Options;
 
 /* Prints menu message */
@@ -46,7 +50,7 @@ bool promtUserChoice(char *prompt);
 node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head);
 
 /* Asks user if they want to delete all notes. If so, deletes them. */
-void deleteAllNotes(node *currP, node *head);
+void deleteAllNotesInteractive(node *currP, node *head);
 
 /* Deletes current currP. Returns pointer to head. This version asks the user if they want to delete and deletes if the answer is y */
 node *deleteCurrentInteractive(node *currP, node *head);
@@ -56,10 +60,13 @@ node *deleteCurrentInteractive(node *currP, node *head);
 void deleteCurrent(node *currP, node *head);
 
 /* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stdout. */
-void popNote(node *currP, node *head, char *path);
+void popNote(node *currP, node *head);
+
+/* Pops note n */
+void popN(node *currP, node *head, int n);
 
 /* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubString(node *currP, node *head);
+void printAllWithSubStringInteractive(node *currP, node *head);
 
 /* Enters UI loop */
 void uiLoop(node *currP, node *head);
@@ -87,5 +94,8 @@ bool hasOptions( Options *opts );
 
 /* Ensures options make sense */
 void validateOptions(Options *opts);
+
+/* Execute the command line options */
+void executeOptions(Options *opts, node *currP, node *head);
 
 #endif /* TERMINOTEFUNCTIONS_H_ */

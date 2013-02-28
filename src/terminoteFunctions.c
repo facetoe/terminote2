@@ -35,6 +35,70 @@ void printCurrent(node *currP) {
 	}
 }
 
+/* Prints note number n */
+void printN(node *currP, node *head, int n)
+{
+	currP = searchByNoteNum(currP, head, n);
+	if (currP && currP->note_num == n)
+		printCurrent(currP);
+	else
+		fprintf(stderr, "No note number: %d\n", n);
+}
+
+/* Asks user for search term then prints all notes that contain it. */
+void printAllWithSubStringInteractive(node *currP, node *head) {
+	int found = 0;
+	currP = head;
+	FLUSH_STDIN(Junk);
+	printf("Enter search term:\n> ");
+	getInput(inputBuffer, MAX_MESSAGE_SIZE);
+
+	/* Don't check root node */
+	if (currP->note_num == 0)
+		currP = currP->next;
+
+	while (currP) {
+		if (hasSubstring(currP, inputBuffer)) {
+			found++;
+			printCurrent(currP);
+		}
+		currP = currP->next;
+	}
+
+	if (found == 0)
+		printf("Nothing found.\n");
+
+	FLUSH_STDIN(Junk);
+}
+
+/* Asks user for search term then prints all notes that contain it. */
+void printAllWithSubString(node *currP, node *head, char *subString) {
+
+	int found = 0;
+	/* Don't check root node */
+	if (currP->note_num == 0 && currP->next != NULL)
+		currP = currP->next;
+
+	if ( currP->note_num == 0 )
+	{
+		fprintf(stderr, "No notes to search\n");
+		return;
+	}
+
+	while (currP) {
+		if (hasSubstring(currP, subString)) {
+			found++;
+			printCurrent(currP);
+		}
+		currP = currP->next;
+	}
+
+	if (found == 0)
+		fprintf(stderr, "Nothing found.\n");
+
+}
+
+
 /* Prompts user for y or n question. */
 /* Returns true for y and false for anything else */
 bool promtUserChoice(char *prompt) {
@@ -60,7 +124,7 @@ node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head) {
 }
 
 /* Asks user if they want to delete all notes. If so, deletes them */
-void deleteAllNotes(node *currP, node *head) {
+void deleteAllNotesInteractive(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
 	if (promtUserChoice("Delete all notes [y/n]?")) {
 		currP = head;
@@ -73,6 +137,7 @@ void deleteAllNotes(node *currP, node *head) {
 
 	FLUSH_STDIN(Junk);
 }
+
 
 /* Deletes current currP. Returns pointer to head. This version asks the user if they want to delete and deletes if the answer is y */
 node *deleteCurrentInteractive(node *currP, node *head) {
@@ -98,15 +163,42 @@ node *deleteCurrentInteractive(node *currP, node *head) {
 /* Deletes current currP.
  * WARNING: This version is for non-interactive, it doesn't return anything, prompt the user or clean up after itself. */
 void deleteCurrent(node *currP, node *head) {
-	FLUSH_STDIN(Junk);
 	if (currP->note_num == 0 && currP->next == NULL ) {
 		return;
 	}
 	deleteNode(currP, head, currP->note_num);
 }
 
+/* Deletes note number n */
+void deleteN(node *currP, node *head, int n)
+{
+	currP = searchByNoteNum(currP, head, n);
+
+	if ( currP ) {
+		deleteCurrent(currP, head);
+		currP = head;
+		orderList(currP);
+		saveList(head);
+	} else {
+		fprintf(stderr, "No note number: %d\n", n);
+	}
+}
+
+/* Deletes all notes. Non interactive. */
+void deleteA(node *currP, node *head)
+{
+	currP = head;
+	if ( listLength(currP) )
+	{
+		deleteAll(currP);
+		saveList(head);
+	} else {
+		fprintf(stderr, "Nothing to delete\n");
+	}
+}
+
 /* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
-void popNote(node *currP, node *head, char *path)
+void popNote(node *currP, node *head)
 {
 	currP = lastNode(currP, head);
 
@@ -114,38 +206,24 @@ void popNote(node *currP, node *head, char *path)
 	{
 		printCurrent(currP);
 		deleteCurrent(currP, head);
-		saveList(head, path);
+		saveList(head);
 	} else {
 		fprintf(stderr, "No notes to pop\n");
 	}
-
 }
 
-/* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubString(node *currP, node *head) {
-	int found = 0;
-	currP = head;
-	FLUSH_STDIN(Junk);
-	printf("Enter search term:\n> ");
-	getInput(inputBuffer, MAX_MESSAGE_SIZE);
-
-	/* Don't check root node */
-	if (currP->note_num == 0)
-		currP = currP->next;
-
-	while (currP) {
-		if (hasSubstring(currP, inputBuffer)) {
-			found++;
-			printCurrent(currP);
-		}
-		currP = currP->next;
+/* Pops note number n and deletes it. */
+void popN(node *currP, node *head, int n)
+{
+	currP = searchByNoteNum(currP, head, n);
+	if ( currP ) {
+		popNote(currP, head);
+		orderList(currP);
+	} else {
+		fprintf(stderr, "No note number: %d\n", n);
 	}
-
-	if (found == 0)
-		printf("Nothing found.\n");
-
-	FLUSH_STDIN(Junk);
 }
+
 
 /* Enters UI loop */
 void uiLoop(node *currP, node *head) {
@@ -203,13 +281,13 @@ void uiLoop(node *currP, node *head) {
 
 			/* Delete all notes */
 		case 'g':
-			deleteAllNotes(currP, head);
+			deleteAllNotesInteractive(currP, head);
 			currP = head;
 			break;
 
 			/* Find and print all notes containing search term */
 		case 'f':
-			printAllWithSubString(currP, head);
+			printAllWithSubStringInteractive(currP, head);
 			break;
 
 			/* Print menu message */
@@ -258,24 +336,13 @@ void runInteractive()
 	uiLoop(currP, head);
 
 	currP=head;
-	saveList(head, path);
+	saveList(head);
 	destroy(currP);
 }
 
 /* Runs Terminote in non interactive mode */
 void runNonInteractive(Options *options, int argc, char **argv)
 {
-	char *path;
-	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
-		path = pathBuffer;
-	else
-	{
-		fprintf(stderr, "Error retrieving path\nAborting\n");
-		exit(1);
-	}
-
-
-
 
 	 /* If there are no arguments we'll go ahead and add the data to the list */
 	if (argc <= 1) {
@@ -293,7 +360,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		} else {
 			/* Otherwise append to list and save */
 			append(currP, inputBuffer);
-			saveList(head, path);
+			saveList(head);
 		}
 
 	} else {
@@ -304,6 +371,8 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		node *head, *currP;
 		create_list(&head, &currP);
 		loadList(head);
+		executeOptions(&options, currP, head);
+		exit(0);
 	}
 
 
@@ -354,10 +423,10 @@ void parseOptions(Options *options, int argc, char **argv)
 	char opt;
 	initOptions(options);
 
-	char *nArg, *dArg, *sArg, *fArg;
-	nArg=dArg=sArg=fArg=NULL;
+	char *nArg, *dArg, *sArg, *fArg, *aArg;
+	nArg=dArg=sArg=fArg=aArg=NULL;
 
-	while ( (opt = getopt(argc, argv, "hpn:d:rs:cf:") ) != -1)
+	while ( (opt = getopt(argc, argv, "hpn:d:rs:cf:a:") ) != -1)
 	{
 		switch (opt) {
 
@@ -389,7 +458,6 @@ void parseOptions(Options *options, int argc, char **argv)
 			/* Print n */
 			case 's':
 				sArg = optarg;
-				options->searchNotes = 1;
 				break;
 
 			/* Print all notes */
@@ -402,22 +470,35 @@ void parseOptions(Options *options, int argc, char **argv)
 				options->searchTerm = optarg;
 				break;
 
+			/* Append note to list */
+			case 'a':
+				options->append = 1;
+				options->appendStr = optarg;
+				break;
+
 			case '?':
 				if ( optopt == 'n')
 				{
-					printf("Error: -n requires a an argument (integer)\n");
+					fprintf(stderr, "Error: -n requires a an argument (integer)\n");
 					exit(1);
 				} else if ( optopt == 'd' )
 				{
-					printf("Error: -d requires a an argument (integer)\n");
+					fprintf(stderr, "Error: -d requires a an argument (integer)\n");
 					exit(1);
 				} else if ( optopt == 's')
 				{
-					printf("Error: -s requires an argument (integer)\n");
+					fprintf(stderr, "Error: -s requires an argument (integer)\n");
 					exit(1);
 				} else if ( optopt == 'f' )
 				{
-					printf("Error: -f requires an argument (string)\n");
+					fprintf(stderr, "Error: -f requires an argument (string)\n");
+					exit(1);
+				} else if ( optopt == 'a' )
+				{
+					fprintf(stderr, "Error: -a requires an argument (string)\n");
+					exit(1);
+				} else {
+					/* Probably some random option that isn't supported, just exit */
 					exit(1);
 				}
 
@@ -496,10 +577,30 @@ void validateOptions(Options *opts)
 
 void executeOptions(Options *opts, node *currP, node *head)
 {
-	if (opts->pop)
+	if ( opts->pop )
 	{
-	;
+		popNote(currP, head);
+	} else if ( opts->popN ) {
+		popN(currP, head, opts->popN);
+	} else if ( opts->delA ) {
+		deleteA(currP, head);
+	} else if ( opts->delN ) {
+		deleteN(currP, head, opts->delN);
+	} else if ( opts->printN ) {
+		printN(currP, head, opts->printN);
+	} else if ( opts->printA ) {
+		printList(currP);
+	} else if ( opts->searchNotes ) {
+		printAllWithSubString(currP, head, opts->searchTerm);
+	} else if ( opts->append )
+	{
+		append(currP, opts->appendStr);
+		saveList(head);
+	} else {
+		fprintf(stderr, "Something strange happened in executeOptions()\n");
 	}
+
+	destroy(head);
 }
 
 
