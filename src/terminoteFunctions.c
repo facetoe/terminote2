@@ -568,8 +568,8 @@ void validateOptions(Options *opts) {
 
 	for (int i = 0; i < OPT_NUM; ++i) {
 		if (optArr[i])
-			for (int j = i + 1; j < OPT_NUM; ++j) {
-				if (optArr[j] && j != OPT_NUM - 1) {
+			for (int j = i+1; j < OPT_NUM; ++j) {
+				if (optArr[j] && j != OPT_NUM) {
 					fprintf(stderr, "Too many arguments.\n");
 					exit(1);
 				}
