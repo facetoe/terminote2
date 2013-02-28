@@ -89,7 +89,7 @@ void readBinary(FILE *fp, node *head);
 
 /* Attempts to read a saved list from path.		*/
 /* Returns true on success or false on failure. */
-bool loadList(node *head, char *path);
+bool loadList(node *head);
 
 
 /* Attempts to save the list at path. 			*/

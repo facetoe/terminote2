@@ -251,7 +251,7 @@ void runInteractive()
 		exit(1);
 	}
 
-	loadList(currP, path);
+	loadList(currP);
 
 	signal(SIGINT, sigintHandler);
 
@@ -282,7 +282,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		/* Set up the list */
 		node *head, *currP;
 		create_list(&head, &currP);
-		loadList(head, path);
+		loadList(head);
 
 		/* Read data from the pipe */
 		getInputPipe(inputBuffer, MAX_MESSAGE_SIZE);
@@ -303,7 +303,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		/* Set up the list */
 		node *head, *currP;
 		create_list(&head, &currP);
-		loadList(head, path);
+		loadList(head);
 	}
 
 

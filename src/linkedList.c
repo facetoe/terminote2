@@ -375,7 +375,7 @@ void readBinary(FILE *fp, node *head) {
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
 /* Returns true on success or false on failure. */
-bool loadList(node *head, char *path) {
+bool loadList(node *head) {
 	if (DEBUG)
 		printf("Loading list from: %s\n", path);
 
