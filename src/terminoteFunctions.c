@@ -2,6 +2,8 @@
 #include "linkedList.h"
 #include "terminoteFunctions.h"
 #include "defines.h"
+#include <signal.h>
+#include <getopt.h>
 
 /* Prints menu message */
 void menuMessage(void) {
@@ -301,7 +303,7 @@ void uiLoop(node *currP, node *head) {
 
 /* Handles SIGINT by killing run loop */
 void sigintHandler(int sig) {
-	printf("\nSIGINT received, press any key to quit.\n");
+	printf("\nSIGINT (%d) received, press any key to quit.\n", sig);
 	keepRunning = 0;
 }
 
