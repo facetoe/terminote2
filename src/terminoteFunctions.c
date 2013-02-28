@@ -274,14 +274,16 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		exit(1);
 	}
 
-	/* Set up the list */
-	node *head, *currP;
-	create_list(&head, &currP);
-	loadList(head, path);
+
 
 
 	 /* If there are no arguments we'll go ahead and add the data to the list */
 	if (argc <= 1) {
+		/* Set up the list */
+		node *head, *currP;
+		create_list(&head, &currP);
+		loadList(head, path);
+
 		/* Read data from the pipe */
 		getInputPipe(inputBuffer, MAX_MESSAGE_SIZE);
 
@@ -297,7 +299,11 @@ void runNonInteractive(Options *options, int argc, char **argv)
 	} else {
 		Options options;
 		parseOptions(&options, argc, argv);
-		printOpts(&options);
+
+		/* Set up the list */
+		node *head, *currP;
+		create_list(&head, &currP);
+		loadList(head, path);
 	}
 
 
@@ -306,14 +312,14 @@ void runNonInteractive(Options *options, int argc, char **argv)
 /* Initialize options struct */
 void initOptions(Options *opts)
 {
-	opts-> popNote = 0;
+	opts-> pop = 0;
 	opts-> popN = 0;
 
 	opts-> delN = 0;
-	opts-> deleteAll = 0;
+	opts-> delA = 0;
 
 	opts-> printN = 0;
-	opts-> printAll = 0;
+	opts-> printA = 0;
 
 	opts-> searchNotes = 0;
 	opts->searchTerm = "";
@@ -331,12 +337,12 @@ void printOpts(Options *opts)
 			"\nprintAll: %d"
 			"\nsearchNotes: %d"
 			"\nsearchTerm: %s\n",
-			opts->popNote,
+			opts->pop,
 			opts->popN,
 			opts->delN,
-			opts->deleteAll,
+			opts->delA,
 			opts->printN,
-			opts->printAll,
+			opts->printA,
 			opts->searchNotes,
 			opts->searchTerm
 			);
@@ -362,7 +368,7 @@ void parseOptions(Options *options, int argc, char **argv)
 
 			/* Pop Note */
 			case 'p':
-				options->popNote = 1;
+				options->pop = 1;
 				break;
 
 			/* Pop n */
@@ -377,7 +383,7 @@ void parseOptions(Options *options, int argc, char **argv)
 
 			/* Delete all notes */
 			case 'r':
-				options->deleteAll = 1;
+				options->delA = 1;
 				break;
 
 			/* Print n */
@@ -388,7 +394,7 @@ void parseOptions(Options *options, int argc, char **argv)
 
 			/* Print all notes */
 			case 'c':
-				options->printAll = 1;
+				options->printA = 1;
 				break;
 
 			case 'f':
@@ -418,7 +424,7 @@ void parseOptions(Options *options, int argc, char **argv)
 				break;
 
 			default:
-				printf("Strange thing happened, aborting\n");
+				fprintf(stderr, "When strange things happen, are you going round the twist. Aborting.\n");
 				abort();
 				break;
 		}
@@ -459,6 +465,43 @@ void parseOptions(Options *options, int argc, char **argv)
 		}
 	}
 
+	validateOptions(options);
+}
+
+/* Ensures options make sense */
+void validateOptions(Options *opts)
+{
+	int optArr[OPT_NUM];
+	enum {POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH};
+	optArr[POP] = opts->pop;
+	optArr[POPN] = opts->popN;
+	optArr[DELN] = opts->delN;
+	optArr[DELA] = opts->delA;
+	optArr[PRINTN] = opts->printN;
+	optArr[PRINTA] = opts->printA;
+	optArr[SEARCH] = opts->searchNotes;
+
+	for (int i = 0; i < OPT_NUM; ++i) {
+		if ( optArr[i] )
+			for (int j = i+1; j < OPT_NUM; ++j) {
+				if (optArr[j])
+				{
+					fprintf(stderr, "Too many arguments\n");
+					exit(1);
+				}
+			}
+	}
 
 }
+
+void executeOptions(Options *opts, node *currP, node *head)
+{
+	if (opts->pop)
+	{
+	;
+	}
+}
+
+
+
 

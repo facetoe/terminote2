@@ -10,19 +10,19 @@
 
 typedef struct{
 	/* Pop last note */
-	int popNote;
+	int pop;
 	/* Pop n note */
 	int popN;
 
 	/* Delete n note */
 	int delN;
 	/* Delete all notes */
-	int deleteAll;
+	int delA;
 
 	/* Print n note */
 	int printN;
 	/* Print all notes */
-	int printAll;
+	int printA;
 
 	/* Search notes for search term */
 	int searchNotes;
@@ -84,5 +84,8 @@ void parseOptions(Options *options, int argc, char **argv);
 
 /* Returns true if any commandline options were set */
 bool hasOptions( Options *opts );
+
+/* Ensures options make sense */
+void validateOptions(Options *opts);
 
 #endif /* TERMINOTEFUNCTIONS_H_ */

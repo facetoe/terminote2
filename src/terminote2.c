@@ -17,6 +17,9 @@ volatile int keepRunning = 1;
 int main(int argc, char **argv) {
 	Options options;
 
+	getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data");
+	path = pathBuffer;
+
 	if (isatty(STDIN_FILENO) && argc == 1) {
 		runInteractive();
 	} else {
