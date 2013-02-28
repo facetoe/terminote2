@@ -144,7 +144,7 @@ void stringToLower(char str[], char newString[], int len)
  * Returns true if is false if it's not. */
 bool isInteger(char *str)
 {
-	for (int i = 0; i < strlen(str); ++i)
+	for (unsigned int i = 0; i < strlen(str); ++i)
 		if( str[i] == '.' || !isdigit( str[i] ) )
 			return false;
 

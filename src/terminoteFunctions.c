@@ -71,8 +71,8 @@ void printAllWithSubStringInteractive(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
 }
 
-/* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubString(node *currP, node *head, char *subString) {
+/* Prints all notes that contain substring */
+void printAllWithSubString(node *currP, char *subString) {
 
 	int found = 0;
 	/* Don't check root node */
@@ -114,11 +114,13 @@ bool promtUserChoice(char *prompt) {
 
 /* Prompts user for input, appends input to list.
  * Returns pointer to the new node. */
-node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head) {
+node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node *head) {
 	printf("Enter Note\n> ");
 	FLUSH_STDIN(Junk);
 	if ( getInput(inputBuffer, buffSize) >= MAX_MESSAGE_SIZE )
 		fprintf(stderr, "Input too large, truncated\n");
+	else
+		printf("Added note.\n");
 	FLUSH_STDIN(Junk);
 	currP = head;
 	return append(currP, inputBuffer);
@@ -148,7 +150,7 @@ node *deleteCurrentInteractive(node *currP, node *head) {
 		return head;
 	}
 
-	if (promtUserChoice("Delete current note?")) {
+	if (promtUserChoice("Delete current note[y/n]?")) {
 		deleteNode(currP, head, currP->note_num);
 		printf("Deleted.\n");
 		currP = head;
@@ -272,7 +274,7 @@ void uiLoop(node *currP, node *head) {
 
 			/* Get input and append to list */
 		case 'w':
-			currP = appendNote(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
+			currP = appendNoteInteractive(inputBuffer, MAX_MESSAGE_SIZE, currP, head);
 			break;
 
 			/* Print */
@@ -318,6 +320,13 @@ void sigintHandler(int sig)
 /* Runs Terminote in interactive mode */
 void runInteractive()
 {
+	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
+		path = pathBuffer;
+	else {
+		fprintf(stderr, "Failed to load data.\n");
+		exit(1);
+	}
+
 	node *head, *currP;
 	create_list(&head, &currP);
 
@@ -344,6 +353,12 @@ void runInteractive()
 /* Runs Terminote in non interactive mode */
 void runNonInteractive(Options *options, int argc, char **argv)
 {
+	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
+		path = pathBuffer;
+	else {
+		fprintf(stderr, "Failed to load data.\n");
+		exit(1);
+	}
 
 	 /* If there are no arguments we'll go ahead and add the data to the list */
 	if (argc <= 1) {
@@ -595,7 +610,7 @@ void executeOptions(Options *opts, node *currP, node *head)
 	} else if ( opts->printA ) {
 		printList(currP);
 	} else if ( opts->searchNotes ) {
-		printAllWithSubString(currP, head, opts->searchTerm);
+		printAllWithSubString(currP, opts->searchTerm);
 	} else if ( opts->append )
 	{
 		append(currP, opts->appendStr);

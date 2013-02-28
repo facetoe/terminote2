@@ -11,7 +11,7 @@
 
 
 /* Initialize all the elements to prevent problems later */
-void init(node *head, node *currP) {
+void init(node *currP) {
 	if (DEBUG)
 		printf("Initializing list\n");
 
@@ -34,7 +34,7 @@ void create_list(node **head, node **currP) {
 	*currP = *head;
 
 	/* Initialize all the elements */
-	init(*head, *currP);
+	init(*currP);
 }
 
 

@@ -27,7 +27,7 @@ struct Node {
 typedef struct Node node;
 
 /* Initialize all the elements to prevent problems later */
-void init(node *head, node *currP);
+void init(node *currP);
 
 
 /* Creates and initializes the list */

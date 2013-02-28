@@ -47,7 +47,7 @@ bool promtUserChoice(char *prompt);
 
 /* Prompts user for input, appends input to list.
  * Returns pointer to the new node. */
-node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head);
+node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node *head);
 
 /* Asks user if they want to delete all notes. If so, deletes them. */
 void deleteAllNotesInteractive(node *currP, node *head);
@@ -67,6 +67,9 @@ void popN(node *currP, node *head, int n);
 
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubStringInteractive(node *currP, node *head);
+
+/* Prints all notes that contain substring */
+void printAllWithSubString(node *currP, char *subString);
 
 /* Enters UI loop */
 void uiLoop(node *currP, node *head);

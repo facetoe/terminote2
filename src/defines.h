@@ -13,7 +13,7 @@
 #define TIME_SIZE 30
 #define MAX_PATH_SIZE 200
 #define OPT_NUM 8
-#define DEBUG 0
+#define DEBUG 1
 
 /* Flushes junk characters in the input buffer */
 #define FLUSH_STDIN(x) {if(x[strlen(x)-1]!='\n'){do fgets(Junk,16,stdin);while(Junk[strlen(Junk)-1]!='\n');}else x[strlen(x)-1]='\0';}
@@ -28,6 +28,6 @@ char cwdBuffer[MAX_CWDBUFF_SIZE];
 char *path;
 
 /* Condition for run loop */
-volatile extern int keepRunning;
+extern volatile int keepRunning;
 
 #endif /* DEFINES_H_ */
