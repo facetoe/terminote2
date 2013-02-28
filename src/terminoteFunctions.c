@@ -318,7 +318,7 @@ void sigintHandler(int sig)
 void runInteractive()
 {
 	node *head, *currP;
-	create_list(head, currP);
+	create_list(&head, &currP);
 
 	char *path;
 	if ( getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data") )
@@ -348,7 +348,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 	if (argc <= 1) {
 		/* Set up the list */
 		node *head, *currP;
-		create_list(head, currP);
+		create_list(&head, &currP);
 		loadList(head);
 
 		/* Read data from the pipe */
@@ -369,7 +369,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 
 		/* Set up the list */
 		node *head, *currP;
-		create_list(head, currP);
+		create_list(&head, &currP);
 		loadList(head);
 		executeOptions(options, currP, head);
 		exit(0);

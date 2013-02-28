@@ -31,7 +31,7 @@ void init(node *head, node *currP);
 
 
 /* Creates and initializes the list */
-void create_list(node *head, node *currP);
+void create_list(node **head, node **currP);
 
 
 /* Appends a note to the end of the list */

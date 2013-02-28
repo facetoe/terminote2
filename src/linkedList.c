@@ -25,17 +25,19 @@ void init(node *head, node *currP) {
 }
 
 /* Creates and initializes the list */
-void create_list(node *head, node *currP) {
+void create_list(node **head, node **currP) {
 	if (DEBUG)
 		printf("Creating list\n");
 
 	/* Allocate memory for the head */
-	head = (node *) calloc(1, sizeof(node));
-	currP = head;
+	*head = (node *) calloc(1, sizeof(node));
+	*currP = *head;
 
 	/* Initialize all the elements */
-	init(head, currP);
+	init(*head, *currP);
 }
+
+
 
 /* Appends a note to the end of the list */
 node *append(node *currP, char *noteText) {
