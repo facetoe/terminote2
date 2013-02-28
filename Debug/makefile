@@ -29,7 +29,7 @@ all: terminote2
 terminote2: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C Linker'
-	gcc -Wall -std=c99  -o "terminote2" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc  -o "terminote2" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -13,16 +13,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-
-#define MAX_TITLE_SIZE 200
-#define MAX_MESSAGE_SIZE 1000
-#define TIME_SIZE 30
-#define MAX_PATH_SIZE 200
-#define DEBUG 1
+#include "defines.h"
 
 struct Node {
 	int note_num;
-	char title[MAX_TITLE_SIZE];
 	char message[MAX_MESSAGE_SIZE];
 	char time[TIME_SIZE];
 	char path[MAX_PATH_SIZE];
