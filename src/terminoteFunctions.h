@@ -28,6 +28,8 @@ typedef struct{
 	int searchNotes;
 	char searchTerm[MAX_MESSAGE_SIZE-1];
 
+	int version;
+
 	/* Append note */
 	int append;
 	char *appendStr;

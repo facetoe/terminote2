@@ -12,8 +12,9 @@
 #define MAX_MESSAGE_SIZE 1000
 #define TIME_SIZE 30
 #define MAX_PATH_SIZE 200
-#define OPT_NUM 8
-#define DEBUG 1
+#define OPT_NUM 9
+#define DEBUG 0
+#define VERSION_NUM 1.0
 
 /* Flushes junk characters in the input buffer */
 #define FLUSH_STDIN(x) {if(x[strlen(x)-1]!='\n'){do fgets(Junk,16,stdin);while(Junk[strlen(Junk)-1]!='\n');}else x[strlen(x)-1]='\0';}

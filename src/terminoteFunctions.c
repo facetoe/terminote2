@@ -19,7 +19,22 @@ void menuMessage(void) {
 
 /* Prints usage */
 void printUsage() {
-	printf("Fill this in\n");
+	printf("Terminote version %.1f - a command line note tool.\n\n"
+						"Terminote reacts differently depending on how you call it.\n"
+						"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
+						"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
+						"ARGUMENTS:\n"
+						"	-h: Print this message and quit.\n"
+						"	-p: Prints the last note and deletes it.\n"
+						"	-n: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
+						"	-d: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
+						"	-r: Deletes all notes.\n"
+						"	-s: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
+						"	-c: Prints all the notes leaving them intact.\n"
+						"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n"
+						"	-a: Appends a note to the list. Requires a string argument.\n\n"
+						"CONTACT:\n"
+						"  Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n", VERSION_NUM);
 }
 
 /* Prints current note */
@@ -411,11 +426,15 @@ void parseOptions(Options *options, int argc, char **argv) {
 	char *nArg, *dArg, *sArg, *fArg;
 	nArg = dArg = sArg = fArg = NULL;
 
-	while ((opt = getopt(argc, argv, "hpn:d:rs:cf:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "vhpn:d:rs:cf:a:")) != -1) {
 		switch (opt) {
 
+		case 'v':
+			options->version = 1;
+			break;
+
 		case 'h':
-			printf("Print help\n");
+			printUsage();
 			exit(0);
 			break;
 
@@ -528,9 +547,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 void validateOptions(Options *opts) {
 	int optArr[OPT_NUM];
 	/* The enum isn't really necessary, just makes it easier to figure out what's going on */
-	enum {
-		POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND
-	};
+	enum {POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND, VERS };
 	optArr[POP] = opts->pop;
 	optArr[POPN] = opts->popN;
 	optArr[DELN] = opts->delN;
@@ -539,6 +556,7 @@ void validateOptions(Options *opts) {
 	optArr[PRINTA] = opts->printA;
 	optArr[SEARCH] = opts->searchNotes;
 	optArr[APPEND] = opts->append;
+	optArr[VERS] = opts->version;
 
 	/* Only one option at a time makes sense, so this just checks if there are more then one arguments.
 	 * It should probably be simplified somehow... */
@@ -572,8 +590,10 @@ void executeOptions(Options *opts, node *currP, node *head) {
 	} else if (opts->append) {
 		append(currP, opts->appendStr);
 		saveList(head);
+	} else if (opts->version) {
+		printf("%.1f\n", VERSION_NUM);
 	} else {
-		fprintf(stderr, "Something strange happened in executeOptions()\n");
+		fprintf(stderr, "Unrecognized option\n");
 	}
 
 	destroy(head);
