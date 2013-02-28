@@ -117,7 +117,8 @@ bool promtUserChoice(char *prompt) {
 node *appendNote(char inputBuffer[], int buffSize, node *currP, node *head) {
 	printf("Enter Note\n> ");
 	FLUSH_STDIN(Junk);
-	getInput(inputBuffer, buffSize);
+	if ( getInput(inputBuffer, buffSize) >= MAX_MESSAGE_SIZE )
+		fprintf(stderr, "Input too large, truncated\n");
 	FLUSH_STDIN(Junk);
 	currP = head;
 	return append(currP, inputBuffer);
@@ -352,7 +353,8 @@ void runNonInteractive(Options *options, int argc, char **argv)
 		loadList(head);
 
 		/* Read data from the pipe */
-		getInputPipe(inputBuffer, MAX_MESSAGE_SIZE);
+		if ( getInputPipe(inputBuffer, MAX_MESSAGE_SIZE) >= MAX_MESSAGE_SIZE )
+			fprintf(stderr, "Input too large, truncated\n");
 
 		/* If there is only a newline in the buffer then don't add anything */
 		if (strlen(inputBuffer) == 1 && (int) inputBuffer[0] == 10) {
@@ -363,7 +365,7 @@ void runNonInteractive(Options *options, int argc, char **argv)
 			saveList(head);
 		}
 
-	} else {
+	} else  {
 		/* Parse the arguments and make sure they are valid */
 		parseOptions(options, argc, argv);
 
@@ -391,7 +393,7 @@ void initOptions(Options *opts)
 	opts-> printA = 0;
 
 	opts-> searchNotes = 0;
-	opts->searchTerm = "";
+	strncpy(opts->searchTerm, "\0", MAX_MESSAGE_SIZE-1);
 }
 
 /* Print options for debugging */
@@ -423,8 +425,8 @@ void parseOptions(Options *options, int argc, char **argv)
 	char opt;
 	initOptions(options);
 
-	char *nArg, *dArg, *sArg, *fArg, *aArg;
-	nArg=dArg=sArg=fArg=aArg=NULL;
+	char *nArg, *dArg, *sArg, *fArg;
+	nArg=dArg=sArg=fArg=NULL;
 
 	while ( (opt = getopt(argc, argv, "hpn:d:rs:cf:a:") ) != -1)
 	{
@@ -467,7 +469,7 @@ void parseOptions(Options *options, int argc, char **argv)
 
 			case 'f':
 				options->searchNotes = 1;
-				options->searchTerm = optarg;
+				strcpy(options->searchTerm, optarg);
 				break;
 
 			/* Append note to list */
@@ -505,7 +507,7 @@ void parseOptions(Options *options, int argc, char **argv)
 				break;
 
 			default:
-				fprintf(stderr, "When strange things happen, are you going round the twist. Aborting.\n");
+				fprintf(stderr, "When strange things happen, are you going round the twist? Aborting.\n");
 				abort();
 				break;
 		}

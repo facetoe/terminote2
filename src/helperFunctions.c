@@ -82,7 +82,7 @@ int getInput(char buffer[], int bufferLen) {
 			buffer[charsRead - 1] = '\0';
 
 			/* And return error */
-			return 0;
+			return charsRead;
 		}
 		buffer[charsRead] = ch;
 		charsRead++;
@@ -106,7 +106,7 @@ int getInputPipe(char buffer[], int bufferLen) {
 			buffer[charsRead - 1] = '\0';
 
 			/* And return error */
-			return 0;
+			return charsRead;
 		}
 		buffer[charsRead] = ch;
 		charsRead++;

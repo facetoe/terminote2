@@ -458,7 +458,7 @@ bool saveList(node *head) {
 bool hasSubstring(node *currP, char subString[])
 {
 	/* Convert message to lower case */
-	int msgLen = strlen(subString);
+	int msgLen = strlen(currP->message);
 	char messageLower[msgLen];
 	stringToLower(currP->message, messageLower, msgLen);
 

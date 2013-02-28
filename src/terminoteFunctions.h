@@ -26,7 +26,7 @@ typedef struct{
 
 	/* Search notes for search term */
 	int searchNotes;
-	char *searchTerm;
+	char searchTerm[MAX_MESSAGE_SIZE-1];
 
 	/* Append note */
 	int append;
