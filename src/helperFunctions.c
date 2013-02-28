@@ -42,9 +42,9 @@ char *getHomDir() {
 	uid_t uid = getuid();
 	psStruct = getpwuid(uid);
 
-	if (psStruct == NULL) {
+	if (psStruct == NULL ) {
 		perror("Error retrieving home directory\n");
-		return NULL;
+		return NULL ;
 	}
 
 	char *dirP = psStruct->pw_dir;
@@ -54,7 +54,7 @@ char *getHomDir() {
 
 /* Gets the path of users home directory and concatenates it into the buffer 		*/
 /* Returns true on success or false if the buffer wasn't big enough, or other error */
-bool getDataPath(char buffer[], int buffLen, char *fileName) {
+bool getDataPath( char buffer[], int buffLen, char *fileName ) {
 	int charsRead;
 	char *homePath = getHomDir();
 	if (homePath) {
@@ -66,7 +66,6 @@ bool getDataPath(char buffer[], int buffLen, char *fileName) {
 	}
 }
 
-
 /* Get input from stdin. Reads until newline or bufferLen.
  * Returns 0 if input overflows buffer, otherwise
  *  returns the number of characters read. */
@@ -76,8 +75,7 @@ int getInput(char buffer[], int bufferLen) {
 
 	while ((ch = getchar()) != '\n') {
 		/* If input overflows buffer */
-		if (charsRead >= bufferLen)
-		{
+		if (charsRead >= bufferLen) {
 			/* Terminate */
 			buffer[charsRead - 1] = '\0';
 
@@ -100,8 +98,7 @@ int getInputPipe(char buffer[], int bufferLen) {
 
 	while ((ch = getchar()) != EOF) {
 		/* If input overflows buffer */
-		if (charsRead >= bufferLen)
-		{
+		if (charsRead >= bufferLen) {
 			/* Terminate */
 			buffer[charsRead - 1] = '\0';
 
@@ -132,8 +129,7 @@ char *findSubstring(char *haystack, char *needle) {
 }
 
 /* Places lowercase version of str in newString */
-void stringToLower(char str[], char newString[], int len)
-{
+void stringToLower(char str[], char newString[], int len) {
 	for (int i = 0; i <= len; ++i) {
 		newString[i] = tolower(str[i]);
 	}
@@ -142,15 +138,11 @@ void stringToLower(char str[], char newString[], int len)
 
 /* Determines if str is an integer *.
  * Returns true if is false if it's not. */
-bool isInteger(char *str)
-{
+bool isInteger(char *str) {
 	for (unsigned int i = 0; i < strlen(str); ++i)
-		if( str[i] == '.' || !isdigit( str[i] ) )
+		if (str[i] == '.' || !isdigit(str[i]))
 			return false;
 
 	return true;
 }
-
-
-
 

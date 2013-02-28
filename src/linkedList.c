@@ -9,7 +9,6 @@
 #include "linkedList.h"
 #include "helperFunctions.h"
 
-
 /* Initialize all the elements to prevent problems later */
 void init(node *currP) {
 	if (DEBUG)
@@ -36,8 +35,6 @@ void create_list(node **head, node **currP) {
 	/* Initialize all the elements */
 	init(*currP);
 }
-
-
 
 /* Appends a note to the end of the list */
 node *append(node *currP, char *noteText) {
@@ -104,25 +101,23 @@ node *append(node *currP, char *noteText) {
 }
 
 /* Returns the last node in the list. If currP is the root node, returns NULL */
-node *lastNode(node *currP, node *head)
-{
+node *lastNode(node *currP, node *head) {
 	currP = head;
-	if ( currP->next == NULL)
-		return NULL;
+	if (currP->next == NULL )
+		return NULL ;
 
-	while ( currP->next )
+	while (currP->next)
 		currP = currP->next;
 	return currP;
 }
 
 /* Returns the first node in the list. If the first node is the root node, returns NULL */
-node *firstNode(node *currP, node *head)
-{
+node *firstNode(node *currP, node *head) {
 	currP = head;
-	if ( currP->next )
+	if (currP->next)
 		return currP->next;
 	else
-		return NULL;
+		return NULL ;
 }
 
 /* Returns the next node in the list. If currP is the last node,
@@ -172,26 +167,25 @@ node *previous(node *head, node *currP) {
 
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */
-node *searchByNoteNum(node *currP, node *head, int noteNum)
-{
+node *searchByNoteNum(node *currP, node *head, int noteNum) {
 	/* Reset to first node */
 	currP = head;
 
 	/* Nothing to search if the list is empty */
-	if ( listLength(currP) == 0)
-		return NULL;
+	if (listLength(currP) == 0)
+		return NULL ;
 
 	/* don't check root node */
-	if ( currP->note_num == 0 )
+	if (currP->note_num == 0)
 		currP = currP->next;
 
-	while(currP->note_num != noteNum && currP->next != NULL)
+	while (currP->note_num != noteNum && currP->next != NULL )
 		currP = currP->next;
 
 	if (currP->note_num == noteNum)
 		return currP;
 	else
-		return NULL;
+		return NULL ;
 
 	return currP;
 }
@@ -229,7 +223,7 @@ void orderList(node *currP) {
 /* Warning: this function leaves the list unordered,
  * you need to call orderList() after using it. */
 void deleteNode(node *currP, node *head, int noteNum) {
-	currP=head;
+	currP = head;
 	/* Don't delete root node */
 	if (noteNum == 0)
 		return;
@@ -299,11 +293,10 @@ void destroy(node *head) {
 /* Prints every note */
 void printList(node *currP) {
 	/* Don't print root node */
-	if (currP->note_num == 0 && currP->next != NULL)
+	if (currP->note_num == 0 && currP->next != NULL )
 		currP = currP->next;
 
-	if ( currP->note_num == 0 )
-	{
+	if (currP->note_num == 0) {
 		fprintf(stderr, "Nothing to print\n");
 		return;
 	}
@@ -326,7 +319,6 @@ void writeBinary(FILE *fp, node *head) {
 	/* Don't write root node */
 	if (head->note_num == 0)
 		head = head->next;
-
 
 	while (head) {
 		if (DEBUG)
@@ -408,8 +400,7 @@ bool loadList(node *head) {
 				path);
 
 		fp = fopen(path, "wb");
-		if (fp != NULL)
-		{
+		if (fp != NULL ) {
 			fprintf(stderr, "Successfully created file\n");
 			fclose(fp);
 			return true;
@@ -440,8 +431,7 @@ bool saveList(node *head) {
 				path);
 
 		fp = fopen(path, "wb");
-		if (fp != NULL)
-		{
+		if (fp != NULL ) {
 			fprintf(stderr, "Successfully created file\n");
 			writeBinary(fp, head);
 			fclose(fp);
@@ -455,8 +445,7 @@ bool saveList(node *head) {
 }
 
 /* Searches node->message for substring. Returns true if it does, false if not */
-bool hasSubstring(node *currP, char subString[])
-{
+bool hasSubstring( node *currP, char subString[]) {
 	/* Convert message to lower case */
 	int msgLen = strlen(currP->message);
 	char messageLower[msgLen];
@@ -467,5 +456,5 @@ bool hasSubstring(node *currP, char subString[])
 	char subLower[sbstrLen];
 	stringToLower(subString, subLower, sbstrLen);
 
-	return  ( findSubstring(messageLower, subLower) != NULL );
+	return (findSubstring(messageLower, subLower) != NULL );
 }

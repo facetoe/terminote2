@@ -13,7 +13,6 @@
 /* Global variable for run loop */
 volatile int keepRunning = 1;
 
-
 int main(int argc, char **argv) {
 	Options options;
 

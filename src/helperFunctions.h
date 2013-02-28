@@ -16,20 +16,16 @@
 #include <ctype.h>
 #include <unistd.h>
 
-
 /* Returns a pointer to a string containing the current time */
 char *current_time();
 
-
 /* Strip trailing newline and replace with NULL terminator */
 void strip_newline(char *string);
-
 
 /* Determines if a file exists.
  * Returns true for success, false for failure.
  */
 int file_exists(char *filename);
-
 
 /* Attempts to get the users home directory. Returns NULL on failure or
  * a pointer to the directory string on success.
@@ -41,15 +37,13 @@ int file_exists(char *filename);
  */
 char *getHomDir();
 
-
-/* Gets the path of users home directory and concatenates it into the buffer */
+/* Gets the path of users home directory and concatenates it into the buffer 	*/
 /* Returns true on success or false if the buffer wasn't big enough, or other error */
-bool getDataPath(char buffer[], int buffLen, char *fileName);
+bool getDataPath( char buffer[], int buffLen, char *fileName );
 
-
-/* Get input from stdin. Only reads up to buffer_len.
+/* Get input from stdin. Reads until newline or bufferLen.
  * Returns 0 if input overflows buffer, otherwise
- *  returns the number of characters read         */
+ *  returns the number of characters read. */
 int getInput(char buffer[], int bufferLen);
 
 /* Get input from stdin. Reads up to bufferLen or EOF.
@@ -59,16 +53,15 @@ int getInputPipe(char buffer[], int bufferLen);
 
 /* Searches string for substring.
  * Returns a pointer to the substring if found,
- * otherwise returns NULL. */
+ * otherwise returns NULL.
+ */
 char *findSubstring(char *haystack, char *needle);
 
-/* Converts char array to lowercase */
+/* Places lowercase version of str in newString */
 void stringToLower(char str[], char newString[], int len);
 
 /* Determines if str is an integer *.
- * Returns true if it is, false if it's not. */
+ * Returns true if is false if it's not. */
 bool isInteger(char *str);
-
-
 
 #endif /* HELPERFUNCTIONS_H_ */
