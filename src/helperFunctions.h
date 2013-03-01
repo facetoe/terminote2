@@ -1,9 +1,21 @@
 /*
- * helperFunctions.h
- *
- *  Created on: Feb 22, 2013
- *      Author: fragmachine
- */
+    Terminote - a simple, terminal based note program.
+    Copyright (C) 2013  Facetoe.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 
 #ifndef HELPERFUNCTIONS_H_
 #define HELPERFUNCTIONS_H_
@@ -37,7 +49,7 @@ int file_exists(char *filename);
  */
 char *getHomDir();
 
-/* Gets the path of users home directory and concatenates it into the buffer 	*/
+/* Gets the path of users home directory and concatenates it with filename into the buffer 	*/
 /* Returns true on success or false if the buffer wasn't big enough, or other error */
 bool getDataPath( char buffer[], int buffLen, char *fileName );
 
