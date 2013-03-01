@@ -1,19 +1,19 @@
-##Terminote
+#Terminote
 
 
-###What is it?
+##What is it?
 Terminote is a simple note program for the terminal written in C. You can pipe data to it, insert a note and search notes among other things. It also has an interactive mode for managing your notes. 
 
 
-###How do I install it?
+##How do I install it?
 Just `git clone` this repo, `cd` to the `src` directory and type `make`. 
 
 
-###What does it run on?
+##What does it run on?
 I've tested it on Ubuntu and OS X. If you have trouble getting it to run on another *nix platform file a issue and I'll see if I can fix it.
 
 
-###How do I use it?
+##How do I use it?
 Run terminote with the `-h` flag for the most up to date usage information. Here is a sample of its output:
 
 Terminote version 1.0 - a command line note tool.
@@ -37,7 +37,7 @@ Terminote version 1.0 - a command line note tool.
     CONTACT:
       Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2
 
-#Examples:
+###Examples:
 
 You can save the output of a command: 
 
@@ -86,19 +86,19 @@ If you call terminote with no arguments, it enters interactive mode:
 
 
 
-###Why?
+##Why?
 I wanted to learn about linked lists and C, so this is what I came up with.
 
 
-###It doesn't work.
+##It doesn't work.
 Please file an issue here on Github or email me at the address on my profile.
 
 
-###Can you make it do X?
+##Can you make it do X?
 Maybe, file a feature request or email me and I'll give it a try, or you are welcome to fork terminote and implement it yourself.
 
 
-###To do list:
+##To do list:
 
 * Redesign terminote to allow people to write plugins for it.
 
