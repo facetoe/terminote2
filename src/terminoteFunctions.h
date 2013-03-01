@@ -22,8 +22,10 @@
 #define TERMINOTEFUNCTIONS_H_
 
 typedef struct{
-	/* Pop last note */
+	/* Pop last note ( only the message )*/
 	int pop;
+	/* Pop the last note ( with time and path info ) */
+	int popA;
 	/* Pop n note */
 	int popN;
 

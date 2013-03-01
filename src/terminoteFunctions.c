@@ -45,6 +45,7 @@ void printUsage(FILE *outStream) {
 					"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
 					"	-h: Print this message and quit.\n"
 					"	-P: Prints the last note only, no path or number, then deletes it.\n"
+					"	-F: Prints the last note with full info (path/time/num).\n"
 					"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
 					"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
 					"	-R: Deletes all notes.\n"
@@ -64,7 +65,7 @@ void printAll(FILE *outStream, node *currP, node *head) {
 		fprintf(outStream, "NoteNum: %d"
 				"\nPath: %s"
 				"\nTime: %s"
-				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
+				"\n\n%s\n\n", currP->note_num, currP->path, currP->time,
 				currP->message);
 }
 
@@ -76,7 +77,7 @@ void printCurrent(node *currP) {
 		printf("NoteNum: %d"
 				"\nPath: %s"
 				"\nTime: %s"
-				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
+				"\n\n%s\n", currP->note_num, currP->path, currP->time,
 				currP->message);
 	}
 }
@@ -99,7 +100,7 @@ void printMessageAll(FILE *outStream, node *currP) {
 		fprintf(outStream, "NoteNum: %d"
 				"\nPath: %s"
 				"\nTime: %s"
-				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
+				"\n\n%s\n", currP->note_num, currP->path, currP->time,
 				currP->message);
 	}
 }
@@ -120,6 +121,19 @@ void popNote(FILE *outStream, node *currP, node *head) {
 
 	if (currP) {
 		printMessage(outStream, currP);
+		deleteCurrent(currP, head);
+		saveList(head);
+	} else {
+		fprintf(stderr, "No notes to pop\n");
+	}
+}
+
+/* Pops a not off the list with full path and time info */
+void popNoteInfo(FILE *outStream, node *currP, node *head) {
+	currP = lastNode(currP, head);
+
+	if (currP) {
+		printMessageAll(outStream, currP);
 		deleteCurrent(currP, head);
 		saveList(head);
 	} else {
@@ -461,6 +475,7 @@ void initOptions(Options *opts) {
 	opts->outputToFile = 0;
 	opts->append = 0;
 	opts->usage = 0;
+	opts->popA = 0;
 }
 
 /* Print options for debugging */
@@ -484,7 +499,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 	char *nArg, *dArg, *pArg, *fArg, *oArg;
 	nArg = dArg = pArg = fArg = oArg = NULL;
 
-	while ((opt = getopt(argc, argv, "vhPN:D:Rp:lf:a:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "vhPFN:D:Rp:lf:a:o:")) != -1) {
 		switch (opt) {
 
 		case 'v':
@@ -495,9 +510,14 @@ void parseOptions(Options *options, int argc, char **argv) {
 			options->usage = 1;
 			break;
 
-			/* Pop Note */
+			/* Pop Note ( note only )*/
 		case 'P':
 			options->pop = 1;
+			break;
+
+			/* Pop note ( with time/path info ) */
+		case 'F':
+			options->popA = 1;
 			break;
 
 			/* Pop n */
@@ -592,7 +612,7 @@ void validateOptions(Options *opts) {
 	int optArr[OPT_NUM];
 	/* The enum isn't really necessary, just makes it easier to figure out what's going on */
 	enum {
-		POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND, VERS
+		POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND, VERS, POPA
 	};
 	optArr[POP] = opts->pop;
 	optArr[POPN] = opts->popN;
@@ -603,6 +623,7 @@ void validateOptions(Options *opts) {
 	optArr[SEARCH] = opts->searchNotes;
 	optArr[APPEND] = opts->append;
 	optArr[VERS] = opts->version;
+	optArr[POPA] = opts->popA;
 
 	/* Only one of the options in optArr at a time make sense, so this just checks if there are more then one arguments.
 	 * It should probably be simplified somehow... */
@@ -647,6 +668,8 @@ void executeOptions(Options *opts, node *currP, node *head) {
 		printf("%.1f\n", VERSION_NUM);
 	} else if (opts->usage) {
 		printUsage(outStream);
+	} else if (opts->popA) {
+		popNoteInfo(outStream, currP, head);
 	}
 
 	fclose(outStream);
