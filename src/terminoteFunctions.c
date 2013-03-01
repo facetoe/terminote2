@@ -173,9 +173,17 @@ node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node 
 /* Asks user if they want to delete all notes. If so, deletes them */
 void deleteAllNotesInteractive(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
-	if (promtUserChoice("Delete all notes [y/n]?")) {
+	if ( listLength(currP) == 0 )
+	{
+		printf("Nothing to delete.\n");
+		FLUSH_STDIN(Junk);
+		return;
+
+	} else if (promtUserChoice("Delete all notes [y/n]?")) {
 		currP = head;
 		deleteAll(currP);
+		if ( listLength(currP) == 0 )
+			printf("Deleted.\n");
 	} else {
 		printf("Nothing deleted.\n");
 	}
@@ -357,12 +365,6 @@ void sigintHandler(int sig) {
 
 /* Runs Terminote in interactive mode */
 void runInteractive() {
-	if (getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data"))
-		path = pathBuffer;
-	else {
-		fprintf(stderr, "Failed to load data.\n");
-		exit(1);
-	}
 
 	node *head, *currP;
 	create_list(&head, &currP);
@@ -379,12 +381,6 @@ void runInteractive() {
 
 /* Runs Terminote in non interactive mode */
 void runNonInteractive(Options *options, int argc, char **argv) {
-	if (getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data"))
-		path = pathBuffer;
-	else {
-		fprintf(stderr, "Failed to load data.\n");
-		exit(1);
-	}
 
 	/* If there are no arguments we'll go ahead and add the data to the list */
 	if (argc <= 1) {

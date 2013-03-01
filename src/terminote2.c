@@ -27,6 +27,14 @@ volatile int keepRunning = 1;
 int main(int argc, char **argv) {
 	Options options;
 
+	if (getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data"))
+		path = pathBuffer;
+	else {
+		/* If we can't load the save file then the program is crippled, just exit */
+		fprintf(stderr, "Failed to load data.\n");
+		exit(1);
+	}
+
 	if (isatty(STDIN_FILENO) && argc == 1) {
 		runInteractive();
 	} else {
