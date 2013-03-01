@@ -40,8 +40,6 @@ int main(int argc, char **argv) {
 	} else {
 		runNonInteractive(&options, argc, argv);
 	}
-
-
 	return 0;
 }
 
