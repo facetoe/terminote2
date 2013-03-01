@@ -80,8 +80,7 @@ bool getDataPath( char buffer[], int buffLen, char *fileName ) {
 }
 
 /* Get input from stdin. Reads until newline or bufferLen.
- * Returns 0 if input overflows buffer, otherwise
- *  returns the number of characters read. */
+ * Returns the number of characters read. */
 int getInput(char buffer[], int bufferLen) {
 	char ch;
 	int charsRead = 0;
@@ -103,8 +102,7 @@ int getInput(char buffer[], int bufferLen) {
 }
 
 /* Get input from stdin. Reads up to bufferLen or EOF.
- * If more chars are entered then bufferLen returns 0,
- * otherwise returns the number of characters read. */
+ * If more chars are entered then bufferLen returns the number of characters read. */
 int getInputPipe(char buffer[], int bufferLen) {
 	char ch;
 	int charsRead = 0;
@@ -152,7 +150,9 @@ void stringToLower(char str[], char newString[], int len) {
 /* Determines if str is an integer *.
  * Returns true if is false if it's not. */
 bool isInteger(char *str) {
-	for (unsigned int i = 0; i < strlen(str); ++i)
+	int i;
+	for (char *sPntr = str; *sPntr; sPntr++)
+		i = (int)(sPntr -str);
 		if (str[i] == '.' || !isdigit(str[i]))
 			return false;
 
