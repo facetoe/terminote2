@@ -27,6 +27,8 @@
 #define DEBUG 0
 #define VERSION_NUM 1.0
 
+#define DATA_FILE ".terminote.data"
+
 /* Flushes junk characters in the input buffer */
 #define FLUSH_STDIN(x) {if(x[strlen(x)-1]!='\n'){do fgets(Junk,16,stdin);while(Junk[strlen(Junk)-1]!='\n');}else x[strlen(x)-1]='\0';}
 char Junk[16];

@@ -27,7 +27,7 @@ volatile int keepRunning = 1;
 int main(int argc, char **argv) {
 	Options options;
 
-	if (getDataPath(pathBuffer, MAX_PATH_SIZE, "terminote.data"))
+	if (getDataPath(pathBuffer, MAX_PATH_SIZE, DATA_FILE))
 		path = pathBuffer;
 	else {
 		/* If we can't load the save file then the program is crippled, just exit */
