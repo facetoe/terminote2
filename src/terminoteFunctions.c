@@ -45,7 +45,7 @@ void printUsage(FILE *outStream) {
 					"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
 					"	-h: Print this message and quit.\n"
 					"	-P: Prints the last note only, no path or number, then deletes it.\n"
-					"	-F: Prints the last note with full info (path/time/num).\n"
+					"	-F: Prints the last note with full info (path/time/num) then deletes it.\n"
 					"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
 					"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
 					"	-R: Deletes all notes.\n"
