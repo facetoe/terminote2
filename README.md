@@ -16,7 +16,7 @@ I've tested it on Ubuntu and OS X. If you have trouble getting it to run on anot
 ##How do I use it?
 Run terminote with the `-h` flag for the most up to date usage information. Here is a sample of its output:
 
-Terminote version 1.0 - a command line note tool.
+    Terminote version 1.0 - a command line note tool.
 
     Terminote reacts differently depending on how you call it.
     If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.
