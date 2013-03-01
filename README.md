@@ -37,7 +37,7 @@ Terminote version 1.0 - a command line note tool.
     CONTACT:
       Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2
 
-Here are a few examples:
+#Examples:
 
 You can save the output of a command: 
 

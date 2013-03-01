@@ -6,3 +6,5 @@ CFLAGS := -std=c99 -Wall -pedantic -Wextra
 $(BINARY): $(SOURCES) $(HEADERS) Makefile
 	gcc $(CFLAGS) -o $(BINARY) $(SOURCES)
 
+clean:
+	rm $(BINARY)
