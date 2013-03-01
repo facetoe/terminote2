@@ -43,14 +43,14 @@ void printUsage() {
 						"Terminote reacts differently depending on how you call it.\n"
 						"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
 						"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
-						"ARGUMENTS:\n"
+						"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
 						"	-h: Print this message and quit.\n"
-						"	-p: Prints the last note only, no path or number, then deletes it.\n"
-						"	-n: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
-						"	-d: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
-						"	-r: Deletes all notes.\n"
-						"	-s: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
-						"	-c: Prints all the notes leaving them intact.\n"
+						"	-P: Prints the last note only, no path or number, then deletes it.\n"
+						"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
+						"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
+						"	-R: Deletes all notes.\n"
+						"	-p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
+						"	-l: Prints all the notes leaving them intact.\n"
 						"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n"
 						"	-a: Appends a note to the list. Requires a string argument.\n\n"
 						"CONTACT:\n"
@@ -456,10 +456,10 @@ void parseOptions(Options *options, int argc, char **argv) {
 	char opt;
 	initOptions(options);
 
-	char *nArg, *dArg, *sArg, *fArg;
-	nArg = dArg = sArg = fArg = NULL;
+	char *nArg, *dArg, *pArg, *fArg;
+	nArg = dArg = pArg = fArg = NULL;
 
-	while ((opt = getopt(argc, argv, "vhpn:d:rs:cf:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "vhPN:D:Rp:lf:a:")) != -1) {
 		switch (opt) {
 
 		case 'v':
@@ -472,32 +472,32 @@ void parseOptions(Options *options, int argc, char **argv) {
 			break;
 
 			/* Pop Note */
-		case 'p':
+		case 'P':
 			options->pop = 1;
 			break;
 
 			/* Pop n */
-		case 'n':
+		case 'N':
 			nArg = optarg;
 			break;
 
 			/* Delete n */
-		case 'd':
+		case 'D':
 			dArg = optarg;
 			break;
 
 			/* Delete all notes */
-		case 'r':
+		case 'R':
 			options->delA = 1;
 			break;
 
 			/* Print n */
-		case 's':
-			sArg = optarg;
+		case 'p':
+			pArg = optarg;
 			break;
 
 			/* Print all notes */
-		case 'c':
+		case 'l':
 			options->printA = 1;
 			break;
 
@@ -564,12 +564,12 @@ void parseOptions(Options *options, int argc, char **argv) {
 		}
 	}
 	/* Ensures -s option is an integer */
-	if (sArg) {
-		if (!isInteger(sArg)) {
+	if (pArg) {
+		if (!isInteger(pArg)) {
 			fprintf(stderr, "Error: -s requires an integer\n");
 			exit(1);
 		} else {
-			sscanf(sArg, "%d", &options->printN);
+			sscanf(pArg, "%d", &options->printN);
 		}
 	}
 
