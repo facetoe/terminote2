@@ -38,8 +38,8 @@ void menuMessage(void) {
 }
 
 /* Prints usage */
-void printUsage() {
-	printf("Terminote version %.1f - a command line note tool.\n\n"
+void printUsage( FILE *outStream ) {
+	fprintf(outStream, "Terminote version %.1f - a command line note tool.\n\n"
 						"Terminote reacts differently depending on how you call it.\n"
 						"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
 						"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
@@ -432,6 +432,10 @@ void initOptions(Options *opts) {
 
 	opts->searchNotes = 0;
 	strncpy(opts->searchTerm, "\0", MAX_MESSAGE_SIZE-1);
+
+	opts->outputToFile = 0;
+	opts->append = 0;
+	opts->usage = 0;
 }
 
 /* Print options for debugging */
@@ -452,10 +456,10 @@ void parseOptions(Options *options, int argc, char **argv) {
 	char opt;
 	initOptions(options);
 
-	char *nArg, *dArg, *pArg, *fArg;
-	nArg = dArg = pArg = fArg = NULL;
+	char *nArg, *dArg, *pArg, *fArg, *oArg;
+	nArg = dArg = pArg = fArg = oArg = NULL;
 
-	while ((opt = getopt(argc, argv, "vhPN:D:Rp:lf:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "vhPN:D:Rp:lf:a:o:")) != -1) {
 		switch (opt) {
 
 		case 'v':
@@ -463,8 +467,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 			break;
 
 		case 'h':
-			printUsage();
-			exit(0);
+			options->usage = 1;
 			break;
 
 			/* Pop Note */
@@ -500,7 +503,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 			/* Search for notes containing sub string */
 		case 'f':
 			options->searchNotes = 1;
-			strcpy(options->searchTerm, optarg);
+			strncpy(options->searchTerm, optarg, MAX_MESSAGE_SIZE-1);
 			break;
 
 			/* Append note to list */
@@ -509,7 +512,13 @@ void parseOptions(Options *options, int argc, char **argv) {
 			options->appendStr = optarg;
 			break;
 
+		case 'o':
+			options->outputToFile = 1;
+			options->outFile = optarg;
+			break;
+
 		case '?':
+			printf("?\n");
 			exit(1);
 			break;
 
@@ -521,29 +530,29 @@ void parseOptions(Options *options, int argc, char **argv) {
 		}
 	}
 
-	/* Ensures -n option is an integer */
+	/* Ensures -N option is an integer */
 	if (nArg) {
 		if (!isInteger(nArg)) {
-			fprintf(stderr, "Error: -n requires an integer\n");
+			fprintf(stderr, "Error: -N requires an integer\n");
 			exit(1);
 		} else {
 			sscanf(nArg, "%d", &options->popN);
 		}
 	}
 
-	/* Ensures -d option is an integer */
+	/* Ensures -D option is an integer */
 	if (dArg) {
 		if (!isInteger(dArg)) {
-			fprintf(stderr, "Error: -d requires an integer\n");
+			fprintf(stderr, "Error: -D requires an integer\n");
 			exit(1);
 		} else {
 			sscanf(dArg, "%d", &options->delN);
 		}
 	}
-	/* Ensures -s option is an integer */
+	/* Ensures -p option is an integer */
 	if (pArg) {
 		if (!isInteger(pArg)) {
-			fprintf(stderr, "Error: -s requires an integer\n");
+			fprintf(stderr, "Error: -p requires an integer\n");
 			exit(1);
 		} else {
 			sscanf(pArg, "%d", &options->printN);
@@ -568,7 +577,10 @@ void validateOptions(Options *opts) {
 	optArr[APPEND] = opts->append;
 	optArr[VERS] = opts->version;
 
-	/* Only one option at a time makes sense, so this just checks if there are more then one arguments.
+	if ( opts->outputToFile )
+		printf("%s\n", opts->outFile);
+
+	/* Only one of the options in optArr at a time make sense, so this just checks if there are more then one arguments.
 	 * It should probably be simplified somehow... */
 	for (int i = 0; i < OPT_NUM; ++i) {
 		if (optArr[i])
@@ -583,6 +595,14 @@ void validateOptions(Options *opts) {
 
 /* Executes options then destroys the list */
 void executeOptions(Options *opts, node *currP, node *head) {
+	FILE *outStream = NULL;
+
+	if ( opts->outputToFile )
+		outStream = fopen(opts->outFile, "w");
+	else
+		outStream = stdin;
+
+
 	if (opts->pop) {
 		popNote(currP, head);
 	} else if (opts->popN) {
@@ -602,8 +622,9 @@ void executeOptions(Options *opts, node *currP, node *head) {
 		saveList(head);
 	} else if (opts->version) {
 		printf("%.1f\n", VERSION_NUM);
-	} else {
-		fprintf(stderr, "Unrecognized option\n");
+	} else if ( opts->usage )
+	{
+		printUsage(outStream);
 	}
 
 	destroy(head);

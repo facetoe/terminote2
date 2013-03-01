@@ -19,11 +19,15 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+/* Buffers and buffer sizes */
 #define MAX_CWDBUFF_SIZE 300
 #define MAX_MESSAGE_SIZE 1000
 #define TIME_SIZE 30
 #define MAX_PATH_SIZE 200
-#define OPT_NUM 9
+
+/* This is the number of options that exclude any other options, not the total of all options. */
+#define OPT_NUM 10
+
 #define DEBUG 0
 #define VERSION_NUM 1.0
 
