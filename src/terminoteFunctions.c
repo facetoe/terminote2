@@ -1,22 +1,20 @@
 /*
-    Terminote - a simple, terminal based note program.
-    Copyright (C) 2013  Facetoe.
+ Terminote - a simple, terminal based note program.
+ Copyright (C) 2013  Facetoe.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "helperFunctions.h"
 #include "linkedList.h"
@@ -38,28 +36,40 @@ void menuMessage(void) {
 }
 
 /* Prints usage */
-void printUsage( FILE *outStream ) {
-	fprintf(outStream, "Terminote version %.1f - a command line note tool.\n\n"
-						"Terminote reacts differently depending on how you call it.\n"
-						"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
-						"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
-						"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
-						"	-h: Print this message and quit.\n"
-						"	-P: Prints the last note only, no path or number, then deletes it.\n"
-						"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
-						"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
-						"	-R: Deletes all notes.\n"
-						"	-p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
-						"	-l: Prints all the notes leaving them intact.\n"
-						"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n"
-						"	-a: Appends a note to the list. Requires a string argument.\n\n"
-						"CONTACT:\n"
-						"  Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n", VERSION_NUM);
+void printUsage(FILE *outStream) {
+	fprintf(outStream,
+			"Terminote version %.1f - a command line note tool.\n\n"
+					"Terminote reacts differently depending on how you call it.\n"
+					"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
+					"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
+					"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
+					"	-h: Print this message and quit.\n"
+					"	-P: Prints the last note only, no path or number, then deletes it.\n"
+					"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
+					"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
+					"	-R: Deletes all notes.\n"
+					"	-p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
+					"	-l: Prints all the notes leaving them intact.\n"
+					"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n"
+					"	-a: Appends a note to the list. Requires a string argument.\n\n"
+					"CONTACT:\n"
+					"  Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n",
+			VERSION_NUM);
+}
+
+/* Prints all notes. This is meant for non-interactive */
+void printAll(FILE *outStream, node *currP, node *head) {
+	currP = head;
+	while ((currP = currP->next) != NULL )
+		fprintf(outStream, "NoteNum: %d"
+				"\nPath: %s"
+				"\nTime: %s"
+				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
+				currP->message);
 }
 
 /* Prints current note */
 void printCurrent(node *currP) {
-
 	if (currP == NULL || currP->note_num == 0)
 		fprintf(stdout, "Nothing to print.\n");
 	else {
@@ -71,24 +81,64 @@ void printCurrent(node *currP) {
 	}
 }
 
-void printMessage(node *currP)
-{
-
+/* Prints the current node's message only */
+void printMessage(FILE *outStream, node *currP) {
 	if (currP == NULL || currP->note_num == 0)
 		return;
 
 	else {
-		printf("%s", currP->message);
+		fprintf(outStream, "%s", currP->message);
+	}
+}
+
+/* Prints the full message with path/time info included */
+void printMessageAll(FILE *outStream, node *currP) {
+	if (currP == NULL || currP->note_num == 0)
+		return;
+	else {
+		fprintf(outStream, "NoteNum: %d"
+				"\nPath: %s"
+				"\nTime: %s"
+				"\nMessage: %s\n\n", currP->note_num, currP->path, currP->time,
+				currP->message);
 	}
 }
 
 /* Prints note number n */
-void printN(node *currP, node *head, int n) {
+void printN(FILE *outStream, node *currP, node *head, int n) {
 	currP = searchByNoteNum(currP, head, n);
 	if (currP && currP->note_num == n)
-		printCurrent(currP);
+		printMessageAll(outStream, currP);
 	else
 		fprintf(stderr, "No note number: %d\n", n);
+}
+
+/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
+/* This function only prints the message, no path or number. */
+void popNote(FILE *outStream, node *currP, node *head) {
+	currP = lastNode(currP, head);
+
+	if (currP) {
+		printMessage(outStream, currP);
+		deleteCurrent(currP, head);
+		saveList(head);
+	} else {
+		fprintf(stderr, "No notes to pop\n");
+	}
+}
+
+/* Pops note number n and deletes it. */
+/* This function only prints the message, no path or number. */
+void popN(FILE *outStream, node *currP, node *head, int n) {
+	currP = searchByNoteNum(currP, head, n);
+	if (currP) {
+		printMessage(outStream, currP);
+		deleteCurrent(currP, head);
+		orderList(currP);
+		saveList(head);
+	} else {
+		fprintf(stderr, "No note number: %d\n", n);
+	}
 }
 
 /* Asks user for search term then prints all notes that contain it. */
@@ -158,7 +208,8 @@ bool promtUserChoice(char *prompt) {
 
 /* Prompts user for input, appends input to list.
  * Returns pointer to the new node. */
-node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node *head) {
+node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP,
+		node *head) {
 	printf("Enter Note\n> ");
 	FLUSH_STDIN(Junk);
 	if (getInput(inputBuffer, buffSize) >= MAX_MESSAGE_SIZE)
@@ -173,8 +224,7 @@ node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node 
 /* Asks user if they want to delete all notes. If so, deletes them */
 void deleteAllNotesInteractive(node *currP, node *head) {
 	FLUSH_STDIN(Junk);
-	if ( listLength(currP) == 0 )
-	{
+	if (listLength(currP) == 0) {
 		printf("Nothing to delete.\n");
 		FLUSH_STDIN(Junk);
 		return;
@@ -182,7 +232,7 @@ void deleteAllNotesInteractive(node *currP, node *head) {
 	} else if (promtUserChoice("Delete all notes [y/n]?")) {
 		currP = head;
 		deleteAll(currP);
-		if ( listLength(currP) == 0 )
+		if (listLength(currP) == 0)
 			printf("Deleted.\n");
 	} else {
 		printf("Nothing deleted.\n");
@@ -248,32 +298,6 @@ void deleteA(node *currP, node *head) {
 	}
 }
 
-/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
-/* This function only prints the message, no path or number. */
-void popNote(node *currP, node *head) {
-	currP = lastNode(currP, head);
-
-	if (currP) {
-		printMessage(currP);
-		deleteCurrent(currP, head);
-		saveList(head);
-	} else {
-		fprintf(stderr, "No notes to pop\n");
-	}
-}
-
-/* Pops note number n and deletes it. */
-/* This function only prints the message, no path or number. */
-void popN(node *currP, node *head, int n) {
-	currP = searchByNoteNum(currP, head, n);
-	if (currP) {
-		popNote(currP, head);
-		orderList(currP);
-	} else {
-		fprintf(stderr, "No note number: %d\n", n);
-	}
-}
-
 /* Enters UI loop */
 void uiLoop(node *currP, node *head) {
 	char opt;
@@ -283,7 +307,8 @@ void uiLoop(node *currP, node *head) {
 	while (keepRunning) {
 
 		/* Loop until we get something other then a newline */
-		while ( (opt = getchar() ) == '\n' );
+		while ((opt = getchar()) == '\n')
+			;
 
 		/* Prevents the switch being executed one last time on SIGINT */
 		if (keepRunning == 0)
@@ -566,7 +591,9 @@ void parseOptions(Options *options, int argc, char **argv) {
 void validateOptions(Options *opts) {
 	int optArr[OPT_NUM];
 	/* The enum isn't really necessary, just makes it easier to figure out what's going on */
-	enum {POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND, VERS };
+	enum {
+		POP, POPN, DELN, DELA, PRINTN, PRINTA, SEARCH, APPEND, VERS
+	};
 	optArr[POP] = opts->pop;
 	optArr[POPN] = opts->popN;
 	optArr[DELN] = opts->delN;
@@ -576,9 +603,6 @@ void validateOptions(Options *opts) {
 	optArr[SEARCH] = opts->searchNotes;
 	optArr[APPEND] = opts->append;
 	optArr[VERS] = opts->version;
-
-	if ( opts->outputToFile )
-		printf("%s\n", opts->outFile);
 
 	/* Only one of the options in optArr at a time make sense, so this just checks if there are more then one arguments.
 	 * It should probably be simplified somehow... */
@@ -597,24 +621,23 @@ void validateOptions(Options *opts) {
 void executeOptions(Options *opts, node *currP, node *head) {
 	FILE *outStream = NULL;
 
-	if ( opts->outputToFile )
-		outStream = fopen(opts->outFile, "w");
-	else
-		outStream = stdin;
+	outStream = stdout;
 
+	if (opts->outputToFile)
+		outStream = fopen(opts->outFile, "w");
 
 	if (opts->pop) {
-		popNote(currP, head);
+		popNote(outStream, currP, head);
 	} else if (opts->popN) {
-		popN(currP, head, opts->popN);
+		popN(outStream, currP, head, opts->popN);
 	} else if (opts->delA) {
 		deleteA(currP, head);
 	} else if (opts->delN) {
 		deleteN(currP, head, opts->delN);
 	} else if (opts->printN) {
-		printN(currP, head, opts->printN);
+		printN(outStream, currP, head, opts->printN);
 	} else if (opts->printA) {
-		printList(currP);
+		printAll(outStream, currP, head);
 	} else if (opts->searchNotes) {
 		printAllWithSubString(currP, opts->searchTerm);
 	} else if (opts->append) {
@@ -622,11 +645,11 @@ void executeOptions(Options *opts, node *currP, node *head) {
 		saveList(head);
 	} else if (opts->version) {
 		printf("%.1f\n", VERSION_NUM);
-	} else if ( opts->usage )
-	{
+	} else if (opts->usage) {
 		printUsage(outStream);
 	}
 
+	fclose(outStream);
 	destroy(head);
 }
 

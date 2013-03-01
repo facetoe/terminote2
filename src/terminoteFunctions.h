@@ -61,13 +61,21 @@ typedef struct{
 void menuMessage(void);
 
 /* Prints usage */
-void printUsage();
+void printUsage( FILE *outStream );
 
 /* Prints current note */
 void printCurrent(node *currP);
 
 /* Prints note number n */
-void printN(node *currP, node *head, int n);
+void printN(FILE *outStream, node *currP, node *head, int n);
+
+/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
+/* This function only prints the message, no path or number. */
+void popNote(FILE *outStream, node *currP, node *head);
+
+/* Pops note number n and deletes it. */
+/* This function only prints the message, no path or number. */
+void popN(FILE *outStream, node *currP, node *head, int n);
 
 /* Asks user for search term then prints all notes that contain it. */
 void printAllWithSubStringInteractive(node *currP, node *head);
@@ -98,12 +106,6 @@ void deleteN(node *currP, node *head, int n);
 
 /* Deletes all notes. Non interactive. */
 void deleteA(node *currP, node *head);
-
-/* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
-void popNote(node *currP, node *head);
-
-/* Pops note number n and deletes it. */
-void popN(node *currP, node *head, int n);
 
 /* Enters UI loop */
 void uiLoop(node *currP, node *head);
