@@ -510,26 +510,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 			break;
 
 		case '?':
-			if (optopt == 'n') {
-				fprintf(stderr, "Error: -n requires a an argument (integer)\n");
-				exit(1);
-			} else if (optopt == 'd') {
-				fprintf(stderr, "Error: -d requires a an argument (integer)\n");
-				exit(1);
-			} else if (optopt == 's') {
-				fprintf(stderr, "Error: -s requires an argument (integer)\n");
-				exit(1);
-			} else if (optopt == 'f') {
-				fprintf(stderr, "Error: -f requires an argument (string)\n");
-				exit(1);
-			} else if (optopt == 'a') {
-				fprintf(stderr, "Error: -a requires an argument (string)\n");
-				exit(1);
-			} else {
-				/* Probably some random option that isn't supported, just exit */
-				exit(1);
-			}
-
+			exit(1);
 			break;
 
 		default:
