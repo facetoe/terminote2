@@ -66,7 +66,7 @@ void menuMessage(void);
 void printUsage( FILE *outStream );
 
 /* Prints current note */
-void printCurrent(node *currP);
+void printCurrent(FILE *outStream, char *args, node *currP);
 
 /* Prints note number n */
 void printN(FILE *outStream, node *currP, node *head, int n);

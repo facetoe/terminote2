@@ -62,46 +62,32 @@ void printUsage(FILE *outStream) {
 void printAll(FILE *outStream, node *currP, node *head) {
 	currP = head;
 	while ((currP = currP->next) != NULL )
-		fprintf(outStream, "NoteNum: %d"
-				"\nPath: %s"
-				"\nTime: %s"
-				"\n\n%s\n\n", currP->note_num, currP->path, currP->time,
-				currP->message);
+		printCurrent(outStream, "nptm", currP);
 }
 
 /* Prints current note */
-void printCurrent(node *currP) {
+void printCurrent(FILE *outStream, char *args, node *currP) {
 	if (currP == NULL || currP->note_num == 0)
-		fprintf(stdout, "Nothing to print.\n");
+		fprintf(outStream, "Nothing to print.\n");
 	else {
-		printf("NoteNum: %d"
-				"\nPath: %s"
-				"\nTime: %s"
-				"\n\n%s\n", currP->note_num, currP->path, currP->time,
-				currP->message);
-	}
-}
-
-/* Prints the current node's message only */
-void printMessage(FILE *outStream, node *currP) {
-	if (currP == NULL || currP->note_num == 0)
-		return;
-
-	else {
-		fprintf(outStream, "%s", currP->message);
-	}
-}
-
-/* Prints the full message with path/time info included */
-void printMessageAll(FILE *outStream, node *currP) {
-	if (currP == NULL || currP->note_num == 0)
-		return;
-	else {
-		fprintf(outStream, "NoteNum: %d"
-				"\nPath: %s"
-				"\nTime: %s"
-				"\n\n%s\n", currP->note_num, currP->path, currP->time,
-				currP->message);
+		for (char *s = args; *s ; s++) {
+			switch (*s) {
+				case 'n':
+					fprintf(outStream, "%d\n", currP->note_num);
+					break;
+				case 'p':
+					fprintf(outStream, "%s\n", currP->path);
+					break;
+				case 't':
+					fprintf(outStream, "%s\n", currP->time);
+					break;
+				case 'm':
+					fprintf(outStream, "\n%s\n", currP->message);
+					break;
+				default:
+					break;
+			}
+		}
 	}
 }
 
@@ -109,7 +95,7 @@ void printMessageAll(FILE *outStream, node *currP) {
 void printN(FILE *outStream, node *currP, node *head, int n) {
 	currP = searchByNoteNum(currP, head, n);
 	if (currP && currP->note_num == n)
-		printMessageAll(outStream, currP);
+		printCurrent(outStream, "nptm", currP);
 	else
 		fprintf(stderr, "No note number: %d\n", n);
 }
@@ -120,7 +106,7 @@ void popNote(FILE *outStream, node *currP, node *head) {
 	currP = lastNode(currP, head);
 
 	if (currP) {
-		printMessage(outStream, currP);
+		printCurrent(outStream, "m", currP);
 		deleteCurrent(currP, head);
 		saveList(head);
 	} else {
@@ -133,7 +119,7 @@ void popNoteInfo(FILE *outStream, node *currP, node *head) {
 	currP = lastNode(currP, head);
 
 	if (currP) {
-		printMessageAll(outStream, currP);
+		printCurrent(outStream, "nptm", currP);
 		deleteCurrent(currP, head);
 		saveList(head);
 	} else {
@@ -146,7 +132,7 @@ void popNoteInfo(FILE *outStream, node *currP, node *head) {
 void popN(FILE *outStream, node *currP, node *head, int n) {
 	currP = searchByNoteNum(currP, head, n);
 	if (currP) {
-		printMessage(outStream, currP);
+		printCurrent(outStream, "m", currP);
 		deleteCurrent(currP, head);
 		orderList(currP);
 		saveList(head);
@@ -170,7 +156,7 @@ void printAllWithSubStringInteractive(node *currP, node *head) {
 	while (currP) {
 		if (hasSubstring(currP, inputBuffer)) {
 			found++;
-			printCurrent(currP);
+			printCurrent(stdout, "nptm", currP);
 		}
 		currP = currP->next;
 	}
@@ -197,7 +183,7 @@ void printAllWithSubString(node *currP, char *subString) {
 	while (currP) {
 		if (hasSubstring(currP, subString)) {
 			found++;
-			printCurrent(currP);
+			printCurrent(stdout, "nptm", currP);
 		}
 		currP = currP->next;
 	}
@@ -343,7 +329,7 @@ void uiLoop(node *currP, node *head) {
 				currP = next(head, currP);
 				/* Don't print the note if nothing changed. */
 				if (lastNoteNum != currP->note_num && lastNoteNum != 0)
-					printCurrent(currP);
+					printCurrent(stdout, "nptm", currP);
 			}
 			break;
 
@@ -353,7 +339,7 @@ void uiLoop(node *currP, node *head) {
 				currP = previous(head, currP);
 				/* Don't print the note if nothing changed. */
 				if (lastNoteNum != currP->note_num && lastNoteNum != 0)
-					printCurrent(currP);
+					printCurrent(stdout, "nptm", currP);
 			}
 			break;
 

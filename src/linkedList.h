@@ -33,6 +33,7 @@ struct Node {
 	char time[TIME_SIZE];
 	char path[MAX_PATH_SIZE];
 
+	struct Node *root;
 	struct Node *next;
 };
 

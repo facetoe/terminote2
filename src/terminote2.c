@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	if (isatty(STDIN_FILENO) && argc == 1) {
+	if (isatty(STDIN_FILENO)) {
 		runInteractive();
 	} else {
 		runNonInteractive(&options, argc, argv);

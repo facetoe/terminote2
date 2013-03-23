@@ -31,6 +31,7 @@ void init(node *currP) {
 	strcpy(currP->message, "");
 	strcpy(currP->path, "");
 
+	currP->root = currP;
 	currP->next = NULL;
 }
 
