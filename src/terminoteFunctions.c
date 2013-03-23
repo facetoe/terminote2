@@ -20,8 +20,7 @@
 #include "linkedList.h"
 #include "terminoteFunctions.h"
 #include "defines.h"
-#include <signal.h>
-#include <getopt.h>
+
 
 /* Prints menu message */
 void menuMessage(void) {
