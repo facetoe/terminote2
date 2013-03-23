@@ -59,8 +59,8 @@ void printUsage(FILE *outStream) {
 }
 
 /* Prints all notes. This is meant for non-interactive */
-void printAll(FILE *outStream, node *currP, node *head) {
-	currP = head;
+void printAll(FILE *outStream, node *currP) {
+	currP = currP->root;
 	while ((currP = currP->next) != NULL )
 		printCurrent(outStream, "nptm", currP);
 }
@@ -73,16 +73,16 @@ void printCurrent(FILE *outStream, char *args, node *currP) {
 		for (char *s = args; *s ; s++) {
 			switch (*s) {
 				case 'n':
-					fprintf(outStream, "%d\n", currP->note_num);
+					fprintf(outStream, "Note Number: %d\n", currP->note_num);
 					break;
 				case 'p':
-					fprintf(outStream, "%s\n", currP->path);
+					fprintf(outStream, "Path: %s\n", currP->path);
 					break;
 				case 't':
-					fprintf(outStream, "%s\n", currP->time);
+					fprintf(outStream, "Time: %s\n", currP->time);
 					break;
 				case 'm':
-					fprintf(outStream, "\n%s\n", currP->message);
+					fprintf(outStream, "Message:\n%s\n", currP->message);
 					break;
 				default:
 					break;
@@ -92,8 +92,8 @@ void printCurrent(FILE *outStream, char *args, node *currP) {
 }
 
 /* Prints note number n */
-void printN(FILE *outStream, node *currP, node *head, int n) {
-	currP = searchByNoteNum(currP, head, n);
+void printN(FILE *outStream, node *currP, int n) {
+	currP = searchByNoteNum(currP, n);
 	if (currP && currP->note_num == n)
 		printCurrent(outStream, "nptm", currP);
 	else
@@ -102,26 +102,26 @@ void printN(FILE *outStream, node *currP, node *head, int n) {
 
 /* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
 /* This function only prints the message, no path or number. */
-void popNote(FILE *outStream, node *currP, node *head) {
-	currP = lastNode(currP, head);
+void popNote(FILE *outStream, node *currP) {
+	currP = lastNode(currP);
 
 	if (currP) {
 		printCurrent(outStream, "m", currP);
-		deleteCurrent(currP, head);
-		saveList(head);
+		deleteCurrent(currP);
+		saveList(currP);
 	} else {
 		fprintf(stderr, "No notes to pop\n");
 	}
 }
 
 /* Pops a not off the list with full path and time info */
-void popNoteInfo(FILE *outStream, node *currP, node *head) {
-	currP = lastNode(currP, head);
+void popNoteInfo(FILE *outStream, node *currP) {
+	currP = lastNode(currP);
 
 	if (currP) {
 		printCurrent(outStream, "nptm", currP);
-		deleteCurrent(currP, head);
-		saveList(head);
+		deleteCurrent(currP);
+		saveList(currP);
 	} else {
 		fprintf(stderr, "No notes to pop\n");
 	}
@@ -129,22 +129,22 @@ void popNoteInfo(FILE *outStream, node *currP, node *head) {
 
 /* Pops note number n and deletes it. */
 /* This function only prints the message, no path or number. */
-void popN(FILE *outStream, node *currP, node *head, int n) {
-	currP = searchByNoteNum(currP, head, n);
+void popN(FILE *outStream, node *currP, int n) {
+	currP = searchByNoteNum(currP, n);
 	if (currP) {
 		printCurrent(outStream, "m", currP);
-		deleteCurrent(currP, head);
+		deleteCurrent(currP);
 		orderList(currP);
-		saveList(head);
+		saveList(currP);
 	} else {
 		fprintf(stderr, "No note number: %d\n", n);
 	}
 }
 
 /* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubStringInteractive(node *currP, node *head) {
+void printAllWithSubStringInteractive(node *currP) {
 	int found = 0;
-	currP = head;
+	currP = currP->root;
 	FLUSH_STDIN(Junk);
 	printf("Enter search term:\n> ");
 	getInput(inputBuffer, MAX_MESSAGE_SIZE);
@@ -170,6 +170,7 @@ void printAllWithSubStringInteractive(node *currP, node *head) {
 /* Prints all notes that contain substring */
 void printAllWithSubString(node *currP, char *subString) {
 
+	currP = currP->root;
 	int found = 0;
 	/* Don't check root node */
 	if (currP->note_num == 0 && currP->next != NULL )
@@ -208,8 +209,7 @@ bool promtUserChoice(char *prompt) {
 
 /* Prompts user for input, appends input to list.
  * Returns pointer to the new node. */
-node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP,
-		node *head) {
+node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP) {
 	printf("Enter Note\n> ");
 	FLUSH_STDIN(Junk);
 	if (getInput(inputBuffer, buffSize) >= MAX_MESSAGE_SIZE)
@@ -217,12 +217,12 @@ node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP,
 	else
 		printf("Added note.\n");
 	FLUSH_STDIN(Junk);
-	currP = head;
+	currP = currP->root;
 	return append(currP, inputBuffer);
 }
 
 /* Asks user if they want to delete all notes. If so, deletes them */
-void deleteAllNotesInteractive(node *currP, node *head) {
+void deleteAllNotesInteractive(node *currP) {
 	FLUSH_STDIN(Junk);
 	if (listLength(currP) == 0) {
 		printf("Nothing to delete.\n");
@@ -230,7 +230,7 @@ void deleteAllNotesInteractive(node *currP, node *head) {
 		return;
 
 	} else if (promtUserChoice("Delete all notes [y/n]?")) {
-		currP = head;
+		currP = currP->root;
 		deleteAll(currP);
 		if (listLength(currP) == 0)
 			printf("Deleted.\n");
@@ -238,26 +238,25 @@ void deleteAllNotesInteractive(node *currP, node *head) {
 		printf("Nothing deleted.\n");
 	}
 	/* Reset to head otherwise we are sitting in a NULL node */
-	currP = head;
+	currP = currP->root;
 
 	FLUSH_STDIN(Junk);
 }
 
 /* Deletes current currP. Returns pointer to head if successful or currP if not. This version asks the user if they want to delete and deletes if the answer is y */
-node *deleteCurrentInteractive(node *currP, node *head) {
+node *deleteCurrentInteractive(node *currP) {
 	FLUSH_STDIN(Junk);
 	if (currP->note_num == 0 && currP->next == NULL ) {
 		printf("Nothing to delete.\n");
-		return head;
+		return currP;
 	}
 
 	if (promtUserChoice("Delete current note[y/n]?")) {
-		deleteNode(currP, head, currP->note_num);
+		deleteNode(currP, currP->note_num);
 		printf("Deleted.\n");
-		currP = head;
 		orderList(currP);
 		FLUSH_STDIN(Junk);
-		return head;
+		return currP->root;
 	} else {
 		FLUSH_STDIN(Junk);
 		return currP;
@@ -266,55 +265,53 @@ node *deleteCurrentInteractive(node *currP, node *head) {
 
 /* Deletes current currP.
  * WARNING: This version is for non-interactive, it doesn't return anything, prompt the user or clean up after itself. */
-void deleteCurrent(node *currP, node *head) {
+void deleteCurrent(node *currP) {
 	if (currP->note_num == 0 && currP->next == NULL ) {
 		return;
 	}
-	deleteNode(currP, head, currP->note_num);
+	deleteNode(currP, currP->note_num);
 }
 
 /* Deletes note number n */
-void deleteN(node *currP, node *head, int n) {
-	currP = searchByNoteNum(currP, head, n);
+void deleteN(node *currP, int n) {
+	currP = searchByNoteNum(currP, n);
 
 	if (currP) {
-		deleteCurrent(currP, head);
-		currP = head;
+		deleteCurrent(currP);
 		orderList(currP);
-		saveList(head);
+		saveList(currP);
 	} else {
 		fprintf(stderr, "No note number: %d\n", n);
 	}
 }
 
 /* Deletes all notes. Non interactive. */
-void deleteA(node *currP, node *head) {
-	currP = head;
+void deleteA(node *currP) {
+	currP = currP->root;
 	if (listLength(currP)) {
 		deleteAll(currP);
-		saveList(head);
+		saveList(currP);
 	} else {
 		fprintf(stderr, "Nothing to delete\n");
 	}
 }
 
 /* Enters UI loop */
-void uiLoop(node *currP, node *head) {
+void uiLoop(node *currP) {
 	char opt;
-	int lastNoteNum = 0;
 	menuMessage();
 
 	while (keepRunning) {
 
 		/* Loop until we get something other then a newline */
-		while ((opt = getchar()) == '\n')
-			;
+		while ((opt = getchar()) == '\n');
 
 		/* Prevents the switch being executed one last time on SIGINT */
 		if (keepRunning == 0)
 			break;
 
-		lastNoteNum = currP->note_num;
+		if (currP->note_num == 0 && currP->next != NULL)
+			currP = currP->next;
 
 		switch (opt) {
 
@@ -326,9 +323,9 @@ void uiLoop(node *currP, node *head) {
 			/* Next */
 		case 'd':
 			if (listLength(currP)) {
-				currP = next(head, currP);
+				currP = next(currP);
 				/* Don't print the note if nothing changed. */
-				if (lastNoteNum != currP->note_num && lastNoteNum != 0)
+				if ( currP->note_num != 0 )
 					printCurrent(stdout, "nptm", currP);
 			}
 			break;
@@ -336,17 +333,16 @@ void uiLoop(node *currP, node *head) {
 			/* Previous */
 		case 'a':
 			if (listLength(currP)) {
-				currP = previous(head, currP);
+				currP = previous(currP);
 				/* Don't print the note if nothing changed. */
-				if (lastNoteNum != currP->note_num && lastNoteNum != 0)
+				if (currP->note_num != 0)
 					printCurrent(stdout, "nptm", currP);
 			}
 			break;
 
 			/* Get input and append to list */
 		case 'w':
-			currP = appendNoteInteractive(inputBuffer, MAX_MESSAGE_SIZE, currP,
-					head);
+			currP = appendNoteInteractive(inputBuffer, MAX_MESSAGE_SIZE, currP);
 			break;
 
 			/* Print */
@@ -356,13 +352,13 @@ void uiLoop(node *currP, node *head) {
 
 			/* Delete all notes */
 		case 'g':
-			deleteAllNotesInteractive(currP, head);
-			currP = head;
+			deleteAllNotesInteractive(currP);
+			currP = currP->root;
 			break;
 
 			/* Find and print all notes containing search term */
 		case 'f':
-			printAllWithSubStringInteractive(currP, head);
+			printAllWithSubStringInteractive(currP);
 			break;
 
 			/* Print menu message */
@@ -372,7 +368,7 @@ void uiLoop(node *currP, node *head) {
 
 			/* Delete Current note */
 		case 'c':
-			currP = deleteCurrentInteractive(currP, head);
+			currP = deleteCurrentInteractive(currP);
 			break;
 
 		default:
@@ -391,16 +387,16 @@ void sigintHandler(int sig) {
 /* Runs Terminote in interactive mode */
 void runInteractive() {
 
-	node *head, *currP;
-	create_list(&head, &currP);
+	node *currP;
+	create_list(&currP);
 
 	loadList(currP);
 
 	signal(SIGINT, sigintHandler);
 
-	uiLoop(currP, head);
+	uiLoop(currP);
 
-	saveList(head);
+	saveList(currP);
 	destroy(currP);
 }
 
@@ -410,9 +406,9 @@ void runNonInteractive(Options *options, int argc, char **argv) {
 	/* If there are no arguments we'll go ahead and add the data to the list */
 	if (argc <= 1) {
 		/* Set up the list */
-		node *head, *currP;
-		create_list(&head, &currP);
-		loadList(head);
+		node *currP;
+		create_list(&currP);
+		loadList(currP);
 
 		/* Read data from the pipe */
 		if (getInputPipe(inputBuffer, MAX_MESSAGE_SIZE) >= MAX_MESSAGE_SIZE)
@@ -424,7 +420,7 @@ void runNonInteractive(Options *options, int argc, char **argv) {
 		} else {
 			/* Otherwise append to list and save */
 			append(currP, inputBuffer);
-			saveList(head);
+			saveList(currP);
 		}
 
 	} else {
@@ -433,12 +429,12 @@ void runNonInteractive(Options *options, int argc, char **argv) {
 		parseOptions(options, argc, argv);
 
 		/* Set up the list */
-		node *head, *currP;
-		create_list(&head, &currP);
-		loadList(head);
+		node *currP;
+		create_list(&currP);
+		loadList(currP);
 
 		/* Execute options and quit */
-		executeOptions(options, currP, head);
+		executeOptions(options, currP);
 		exit(0);
 	}
 
@@ -625,7 +621,7 @@ void validateOptions(Options *opts) {
 }
 
 /* Executes options then destroys the list */
-void executeOptions(Options *opts, node *currP, node *head) {
+void executeOptions(Options *opts, node *currP) {
 	FILE *outStream = NULL;
 
 	outStream = stdout;
@@ -634,31 +630,31 @@ void executeOptions(Options *opts, node *currP, node *head) {
 		outStream = fopen(opts->outFile, "w");
 
 	if (opts->pop) {
-		popNote(outStream, currP, head);
+		popNote(outStream, currP);
 	} else if (opts->popN) {
-		popN(outStream, currP, head, opts->popN);
+		popN(outStream, currP, opts->popN);
 	} else if (opts->delA) {
-		deleteA(currP, head);
+		deleteA(currP);
 	} else if (opts->delN) {
-		deleteN(currP, head, opts->delN);
+		deleteN(currP, opts->delN);
 	} else if (opts->printN) {
-		printN(outStream, currP, head, opts->printN);
+		printN(outStream, currP, opts->printN);
 	} else if (opts->printA) {
-		printAll(outStream, currP, head);
+		printAll(outStream, currP);
 	} else if (opts->searchNotes) {
 		printAllWithSubString(currP, opts->searchTerm);
 	} else if (opts->append) {
 		append(currP, opts->appendStr);
-		saveList(head);
+		saveList(currP);
 	} else if (opts->version) {
 		printf("%.1f\n", VERSION_NUM);
 	} else if (opts->usage) {
 		printUsage(outStream);
 	} else if (opts->popA) {
-		popNoteInfo(outStream, currP, head);
+		popNoteInfo(outStream, currP);
 	}
 
 	fclose(outStream);
-	destroy(head);
+	destroy(currP);
 }
 

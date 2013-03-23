@@ -36,21 +36,21 @@ void init(node *currP) {
 }
 
 /* Creates and initializes the list */
-void create_list(node **head, node **currP) {
+void create_list(node **head) {
 	if (DEBUG)
 		printf("Creating list\n");
 
 	/* Allocate memory for the head */
 	*head = (node *) calloc(1, sizeof(node));
-	*currP = *head;
 
 	/* Initialize all the elements */
-	init(*currP);
+	init(*head);
 }
 
 /* Appends a note to the end of the list */
 node *append(node *currP, char *noteText) {
 	int old_note_num;
+	node *root = currP->root;
 
 	while (currP->next != NULL ) {
 		currP = currP->next;
@@ -67,6 +67,9 @@ node *append(node *currP, char *noteText) {
 
 	/* Update note_num */
 	currP->note_num = ++old_note_num;
+
+	/* Add root */
+	currP->root = root;
 
 	/* Get and store path information */
 	char *path = getcwd(NULL, 0);
@@ -113,8 +116,8 @@ node *append(node *currP, char *noteText) {
 }
 
 /* Returns the last node in the list. If currP is the root node, returns NULL */
-node *lastNode(node *currP, node *head) {
-	currP = head;
+node *lastNode(node *currP) {
+	currP = currP->root;
 	if (currP->next == NULL )
 		return NULL ;
 
@@ -124,8 +127,8 @@ node *lastNode(node *currP, node *head) {
 }
 
 /* Returns the first node in the list. If the first node is the root node, returns NULL */
-node *firstNode(node *currP, node *head) {
-	currP = head;
+node *firstNode(node *currP) {
+	currP = currP->root;
 	if (currP->next)
 		return currP->next;
 	else
@@ -135,20 +138,21 @@ node *firstNode(node *currP, node *head) {
 /* Returns the next node in the list. If currP is the last node,
  * returns a pointer to the first node: ie, head->next to skip root node.
  * If there is only one node in the list (not counting root) it returns currP unchanged. */
-node *next(node *head, node *currP) {
+node *next(node *currP) {
 	if (currP->next != NULL ) {
 		if (DEBUG)
 			printf("Next to: %d\n", (currP->next)->note_num);
 		return currP->next;
-	} else {
-		if (DEBUG)
-			printf("Next to: %d\n", (head->next)->note_num);
-		return head->next;
 	}
+
+	if (DEBUG)
+			printf("Next to start\n");
+
+	return currP->root;
 }
 
 /* Returns the previous node in the list. If there is only one node (not counting root) returns currP unchanged.  */
-node *previous(node *head, node *currP) {
+node *previous(node *currP) {
 	int noteNum = currP->note_num;
 
 	if (noteNum == 1) {
@@ -162,8 +166,8 @@ node *previous(node *head, node *currP) {
 		/* And return a pointer to the end */
 		return currP;
 	} else {
-		/* We are not at the start, so reset currP to head */
-		currP = head;
+		/* We are not at the start, so reset currP to root */
+		currP = currP->root;
 
 		/* And loop through to noteNum -1, ie the previous node */
 		while (currP->next != NULL && currP->note_num != noteNum - 1)
@@ -179,9 +183,9 @@ node *previous(node *head, node *currP) {
 
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */
-node *searchByNoteNum(node *currP, node *head, int noteNum) {
+node *searchByNoteNum(node *currP, int noteNum) {
 	/* Reset to first node */
-	currP = head;
+	currP = currP->root;
 
 	/* Nothing to search if the list is empty */
 	if (listLength(currP) == 0)
@@ -220,6 +224,7 @@ int listLength(node *currP) {
 /* Reorders the noteNums */
 void orderList(node *currP) {
 	/* Don't count root node */
+	currP = currP->root;
 	currP = currP->next;
 
 	int num = 0;
@@ -234,8 +239,8 @@ void orderList(node *currP) {
 /* Delete a node by noteNum */
 /* Warning: this function leaves the list unordered,
  * you need to call orderList() after using it. */
-void deleteNode(node *currP, node *head, int noteNum) {
-	currP = head;
+void deleteNode(node *currP, int noteNum) {
+	currP = currP->root;
 	/* Don't delete root node */
 	if (noteNum == 0)
 		return;
@@ -271,7 +276,7 @@ void deleteNode(node *currP, node *head, int noteNum) {
 /* Note: This function affects currP, so after using it you need to reset currP to head */
 void deleteAll(node *currP) {
 	node *tmp;
-
+	currP = currP->root;
 	/* Don't delete root node */
 	tmp = currP->next;
 	while (tmp != NULL ) {
@@ -286,24 +291,25 @@ void deleteAll(node *currP) {
 }
 
 /* Destroys the list freeing all memory */
-void destroy(node *head) {
+void destroy(node *currP) {
 	node *tmp;
-
+	currP = currP->root;
 	/* Loop through the list freeing all the memory */
-	while (head != NULL ) {
+	while (currP != NULL ) {
 		if (DEBUG)
-			printf("Freeing Note #%d\n", head->note_num);
+			printf("Freeing Note #%d\n", currP->note_num);
 
-		tmp = head->next;
-		if (head)
-			free(head);
-		head = tmp;
+		tmp = currP->next;
+		if (currP)
+			free(currP);
+		currP = tmp;
 	}
 
 }
 
 /* Prints every note */
 void printList(node *currP) {
+	currP = currP->root;
 	/* Don't print root node */
 	if (currP->note_num == 0 && currP->next != NULL )
 		currP = currP->next;
@@ -326,37 +332,38 @@ void printList(node *currP) {
 }
 
 /* Writes the note structs to a file */
-void writeBinary(FILE *fp, node *head) {
-
+void writeBinary(FILE *fp, node *currP) {
+	currP = currP->root;
 	/* Don't write root node */
-	if (head->note_num == 0)
-		head = head->next;
+	if (currP->note_num == 0)
+		currP = currP->next;
 
-	while (head) {
+	while (currP) {
 		if (DEBUG)
-			printf("Writing Note #%d\n", head->note_num);
+			printf("Writing Note #%d\n", currP->note_num);
 
 		/* Get the length +1 (for NULL terminator), write the data. Repeat */
-		int len = strlen(head->message) + 1;
+		int len = strlen(currP->message) + 1;
 		fwrite(&len, sizeof(int), 1, fp);
-		fwrite(head->message, sizeof(char), len, fp);
+		fwrite(currP->message, sizeof(char), len, fp);
 
-		len = strlen(head->path) + 1;
+		len = strlen(currP->path) + 1;
 		fwrite(&len, sizeof(int), 1, fp);
-		fwrite(head->path, sizeof(char), len, fp);
+		fwrite(currP->path, sizeof(char), len, fp);
 
-		len = strlen(head->time) + 1;
+		len = strlen(currP->time) + 1;
 		fwrite(&len, sizeof(int), 1, fp);
-		fwrite(head->time, sizeof(char), len, fp);
+		fwrite(currP->time, sizeof(char), len, fp);
 
-		head = head->next;
+		currP = currP->next;
 	}
 }
 
 /* Reads the note data from a file and places in struct */
-void readBinary(FILE *fp, node *head) {
+void readBinary(FILE *fp, node *currP) {
 
 	int len, note_num;
+	node *root = currP->root;
 	note_num = 0;
 
 	char message[MAX_MESSAGE_SIZE];
@@ -369,11 +376,12 @@ void readBinary(FILE *fp, node *head) {
 			printf("Reading Note #%d\n", note_num);
 
 		/* Allocate memory for new note */
-		head->next = (node *) malloc(sizeof(node));
+		currP->next = malloc(sizeof(node));
 
 		/* Move to new note and set note->next to NULL */
-		head = head->next;
-		head->next = NULL;
+		currP = currP->next;
+		currP->next = NULL;
+		currP->root = root;
 
 		/* We got the first length in the loop condition.... */
 		fread(message, sizeof(char), len, fp);
@@ -385,25 +393,25 @@ void readBinary(FILE *fp, node *head) {
 		fread(time, sizeof(char), len, fp);
 
 		/* Insert strings into struct */
-		strcpy(head->message, message);
-		strcpy(head->path, path);
-		strcpy(head->time, time);
+		strcpy(currP->message, message);
+		strcpy(currP->path, path);
+		strcpy(currP->time, time);
 
-		head->note_num = note_num;
+		currP->note_num = note_num;
 
 	}
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
 /* Returns true on success or false on failure. */
-bool loadList(node *head) {
+bool loadList(node *currP) {
 	if (DEBUG)
 		printf("Loading list from: %s\n", path);
 
 	FILE *fp;
 
 	if (file_exists(path) && (fp = fopen(path, "rb")) != NULL ) {
-		readBinary(fp, head);
+		readBinary(fp, currP);
 		fclose(fp);
 		return true;
 	} else {
@@ -426,14 +434,14 @@ bool loadList(node *head) {
 
 /* Attempts to save the list at path. 			*/
 /* Returns true on success or false on failure. */
-bool saveList(node *head) {
+bool saveList(node *currP) {
 
 	if (DEBUG)
 		printf("Saving list at: %s\n", path);
 
 	FILE *fp = NULL;
 	if (file_exists(path) && (fp = fopen(path, "wb")) != NULL ) {
-		writeBinary(fp, head);
+		writeBinary(fp, currP);
 		fclose(fp);
 		return true;
 
@@ -445,7 +453,7 @@ bool saveList(node *head) {
 		fp = fopen(path, "wb");
 		if (fp != NULL ) {
 			fprintf(stderr, "Successfully created file\n");
-			writeBinary(fp, head);
+			writeBinary(fp, currP);
 			fclose(fp);
 			return true;
 

@@ -69,18 +69,18 @@ void printUsage( FILE *outStream );
 void printCurrent(FILE *outStream, char *args, node *currP);
 
 /* Prints note number n */
-void printN(FILE *outStream, node *currP, node *head, int n);
+void printN(FILE *outStream, node *currP, int n);
 
 /* Pops a note off the list. In other words, prints last note then deletes it. If there are no notes to print, send an error to stderr. */
 /* This function only prints the message, no path or number. */
-void popNote(FILE *outStream, node *currP, node *head);
+void popNote(FILE *outStream, node *currP);
 
 /* Pops note number n and deletes it. */
 /* This function only prints the message, no path or number. */
-void popN(FILE *outStream, node *currP, node *head, int n);
+void popN(FILE *outStream, node *currP, int n);
 
 /* Asks user for search term then prints all notes that contain it. */
-void printAllWithSubStringInteractive(node *currP, node *head);
+void printAllWithSubStringInteractive(node *currP);
 
 /* Prints all notes that contain substring */
 void printAllWithSubString(node *currP, char *subString);
@@ -91,26 +91,26 @@ bool promtUserChoice(char *prompt);
 
 /* Prompts user for input, appends input to list.
  * Returns pointer to the new node. */
-node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP, node *head);
+node *appendNoteInteractive(char inputBuffer[], int buffSize, node *currP);
 
 /* Asks user if they want to delete all notes. If so, deletes them */
-void deleteAllNotesInteractive(node *currP, node *head);
+void deleteAllNotesInteractive(node *currP);
 
 /* Deletes current currP. Returns pointer to head if successful or currP if not. This version asks the user if they want to delete and deletes if the answer is y */
-node *deleteCurrentInteractive(node *currP, node *head);
+node *deleteCurrentInteractive(node *currP);
 
 /* Deletes current currP.
  * WARNING: This version is for non-interactive, it doesn't return anything, prompt the user or clean up after itself. */
-void deleteCurrent(node *currP, node *head);
+void deleteCurrent(node *currP);
 
 /* Deletes note number n */
-void deleteN(node *currP, node *head, int n);
+void deleteN(node *currP, int n);
 
 /* Deletes all notes. Non interactive. */
-void deleteA(node *currP, node *head);
+void deleteA(node *currP);
 
 /* Enters UI loop */
-void uiLoop(node *currP, node *head);
+void uiLoop(node *currP);
 
 /* Handles SIGINT by killing run loop */
 void sigintHandler(int sig);
@@ -134,6 +134,6 @@ void parseOptions(Options *options, int argc, char **argv);
 void validateOptions(Options *opts);
 
 /* Executes options then destroys the list */
-void executeOptions(Options *opts, node *currP, node *head);
+void executeOptions(Options *opts, node *currP);
 
 #endif /* TERMINOTEFUNCTIONS_H_ */
