@@ -17,9 +17,8 @@
 */
 
 
-
+#include "defines.h"
 #include "helperFunctions.h"
-#include "linkedList.h"
 
 /* Returns a pointer to a string containing the current time */
 char *current_time() {

@@ -1,34 +1,22 @@
 /*
-    Terminote - a simple, terminal based note program.
-    Copyright (C) 2013  Facetoe.
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * defines.h
+ *
+ *  Created on: Mar 31, 2013
+ *      Author: fragmachine
+ */
 
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
 /* Buffers and buffer sizes */
 #define MAX_CWDBUFF_SIZE 300
-#define MAX_MESSAGE_SIZE 2048
-#define TIME_SIZE 30
+#define MAX_TIME_SIZE 30
 #define MAX_PATH_SIZE 200
 
 /* This is the number of options that exclude any other options, not the total of all options. */
 #define OPT_NUM 11
 
-#define DEBUG 0
+#define DEBUG 1
 #define VERSION_NUM 1.0
 
 #define DATA_FILE ".terminote.data"
@@ -38,7 +26,6 @@
 char Junk[16];
 
 /* Buffers for input */
-char inputBuffer[MAX_MESSAGE_SIZE];
 char pathBuffer[MAX_PATH_SIZE];
 char cwdBuffer[MAX_CWDBUFF_SIZE];
 
@@ -47,5 +34,6 @@ char *path;
 
 /* Condition for run loop */
 extern volatile int keepRunning;
+
 
 #endif /* DEFINES_H_ */

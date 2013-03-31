@@ -20,6 +20,10 @@
 #ifndef HELPERFUNCTIONS_H_
 #define HELPERFUNCTIONS_H_
 
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+
 #include <stdbool.h>
 #include <time.h>
 #include <sys/stat.h>
