@@ -389,6 +389,78 @@ void deleteNode(msgList *ml, int noteNum) {
 	}
 }
 
+/* Writes the note structs to a file */
+void writeBinary(FILE *fp, msgList *ml) {
+	ml = ml->rootM;
+	/* Don't write root node */
+	if (ml->num == 0)
+		ml = ml->next;
+
+	while (ml) {
+		if (DEBUG)
+			printf("Writing Note #%d\n", ml->num);
+
+		/* Get the length +1 (for NULL terminator), write the data. Repeat */
+		int len = ml->size;
+		fwrite(&len, sizeof(int), 1, fp);
+
+		node_t *tmpMsg = ml->message;
+		for (; tmpMsg; tmpMsg = tmpMsg->next)
+			fwrite(&tmpMsg->ch, sizeof(char), 1, fp);
+
+		len = strlen(ml->path) + 1;
+		fwrite(&len, sizeof(int), 1, fp);
+		fwrite(ml->path, sizeof(char), len, fp);
+
+		len = strlen(ml->time) + 1;
+		fwrite(&len, sizeof(int), 1, fp);
+		fwrite(ml->time, sizeof(char), len, fp);
+
+		ml = ml->next;
+	}
+}
+
+/* Reads the note data from a file and places in struct */
+void readBinary(FILE *fp, msgList *ml) {
+
+	int len, note_num;
+	note_num = 0;
+
+	char path[MAX_PATH_SIZE];
+	char time[MAX_TIME_SIZE];
+
+	while (fread(&len, sizeof(len), 1, fp)) {
+		note_num++;
+		if (DEBUG)
+			printf("Reading Note #%d\n", note_num);
+
+		/* Allocate memory for new node */
+		ml->next = msgList_getNode(ml);
+
+		/* Move to new node */
+		ml = ml->next;
+
+		/* We got the first length in the loop condition.... */
+		char message[len];
+		fread(message, sizeof(char), len, fp);
+		message[len] = '\0';
+
+		fread(&len, sizeof(len), 1, fp);
+		fread(path, sizeof(char), len, fp);
+
+		fread(&len, sizeof(len), 1, fp);
+		fread(time, sizeof(char), len, fp);
+
+		/* Insert strings into struct */
+		msgList_insertString(ml, message);
+		strcpy(ml->path, path);
+		strcpy(ml->time, time);
+
+		ml->num = note_num;
+
+	}
+}
+
 /* Deletes all notes freeing all the memory. */
 void deleteAll(msgList **ml) {
 	msgList *msgListP = *ml;
@@ -437,48 +509,22 @@ int main(void) {
 
 	msgList_appendMessage(currP, "One");
 	msgList_appendMessage(currP, "Two");
-	msgList_appendMessage(currP, "Three");
-	msgList_appendMessage(currP, "Four");
-	msgList_appendMessage(currP, "Five");
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	deleteNode(currP, 3);
-	previous(&currP);
-	previous(&currP);
-	previous(&currP);
-	next(&currP);
-	next(&currP);
-	next(&currP);
-	listLength(currP);
-	lastNode(&currP);
-	firstNode(&currP);
-	next(&currP);
-	printAll(stdout, currP);
 
+	FILE *fp = NULL;
+	fp = fopen("/Users/fragmachine/test.dat", "w");
+	if(fp)
+		writeBinary(fp, currP);
+	else
+		printf("Failed write\n");
+	fclose(fp);
 
-	printf("%d\n", listLength(currP));
-	deleteAll(&currP);
+	fp = fopen("/Users/fragmachine/test.dat", "r");
+	if(fp)
+		readBinary(fp, currP);
+	else
+		printf("Failed read\n");
+	fclose(fp);
 	printAll(stdout, currP);
-	deleteAll(&currP);
-	printAll(stdout, currP);
-	msgList_destroy(currP);
-
 
 
 
