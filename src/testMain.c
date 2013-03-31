@@ -140,6 +140,7 @@ void msgList_insertString(msgList *ml, char *str) {
 		printf("Added: %s\n", str);
 }
 
+/* Appends message to the end of the list */
 void msgList_appendMessage(msgList *ml, char *str) {
 
 	for (; ml->next; ml = ml->next)
@@ -205,6 +206,7 @@ void printMessage(FILE *outStream, char *args, msgList *ml) {
 	}
 }
 
+/* Prints all messages with all information */
 void printAll(FILE *outStream, msgList *ml) {
 	if( DEBUG )
 		if ( !ml )
@@ -221,6 +223,7 @@ void printAll(FILE *outStream, msgList *ml) {
 	}
 }
 
+/* Destroys the list freeing all memory */
 void msgList_destroy(msgList *ml) {
 	if( DEBUG )
 		if ( !ml )
