@@ -6,7 +6,7 @@
 
 int main(void) {
 
-	msgList *currP = NULL;
+	listNode *currP = NULL;
 
 		msgList_init(&currP);
 
@@ -22,6 +22,26 @@ int main(void) {
 		}
 
 		loadList(currP);
+		msgList_appendMessage(currP, "One");
+		msgList_appendMessage(currP, "two");
+		msgList_appendMessage(currP, "three");
+		msgList_appendMessage(currP, "four");
+		next(&currP);
+		next(&currP);
+		next(&currP);
+		next(&currP);
+		next(&currP);
+		next(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+		previous(&currP);
+
+
 		printAll(stdout, currP);
 		deleteAll(&currP);
 		saveList(currP);
