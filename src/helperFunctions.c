@@ -123,20 +123,19 @@ int getInputPipe(char buffer[], int bufferLen) {
 }
 
 /* Searches string for substring.
- * Returns a pointer to the substring if found,
- * otherwise returns NULL.
+ * Returns a true if found, false otherwise.
  */
-char *findSubstring(char *haystack, char *needle) {
+bool findSubstring(char *haystack, char *needle) {
 	char *pntr;
 
 	if ((pntr = strstr(haystack, needle)) == NULL ) {
-		return NULL ;
-
+		return false;
 	} else {
-
-		return pntr;
+		return true;
 	}
 }
+
+
 
 /* Places lowercase version of str in newString */
 void stringToLower(char str[], char newString[], int len) {

@@ -71,7 +71,7 @@ int getInputPipe(char buffer[], int bufferLen);
  * Returns a pointer to the substring if found,
  * otherwise returns NULL.
  */
-char *findSubstring(char *haystack, char *needle);
+bool findSubstring(char *haystack, char *needle);
 
 /* Places lowercase version of str in newString */
 void stringToLower(char str[], char newString[], int len);

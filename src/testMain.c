@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "helperFunctions.h"
 #include "linkedList.h"
+#include "dynamicArray.h"
 
 
 int main(void) {
@@ -21,31 +22,13 @@ int main(void) {
 			exit(1);
 		}
 
-		loadList(currP);
-		msgList_appendMessage(currP, "One");
-		msgList_appendMessage(currP, "two");
-		msgList_appendMessage(currP, "three");
-		msgList_appendMessage(currP, "four");
-		next(&currP);
-		next(&currP);
-		next(&currP);
-		next(&currP);
-		next(&currP);
-		next(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
-		previous(&currP);
+		dArr *arr = NULL;
+		dArr_init(&arr);
+		for (char *s = path; *s; s++) {
+			dArr_add(arr, *s);
+		}
 
-
-		printAll(stdout, currP);
-		deleteAll(&currP);
-		saveList(currP);
-		msgList_destroy(currP);
+		dArr_print(arr);
 
 	return 0;
 }
