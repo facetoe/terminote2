@@ -21,21 +21,21 @@ void msgList_init(listNode **root) {
 	if (!tmpNode || !tmpMsg) {
 		fprintf(stderr, "Unable to allocate memory\n");
 		exit(1);
-	} else {
-		tmpNode->ch = '\0';
-		tmpNode->index = -1;
-		tmpNode->next = NULL;
-		tmpNode->prev = NULL;
-
-		strncpy(tmpMsg->time, "\0", MAX_TIME_SIZE);
-		strncpy(tmpMsg->path, "\0", MAX_PATH_SIZE);
-		tmpMsg->num = 0;
-		tmpMsg->size = 0;
-		tmpMsg->rootN = tmpNode;
-		tmpMsg->rootM = tmpMsg;
-		tmpMsg->message = tmpNode;
-		tmpMsg->next = NULL;
 	}
+	tmpNode->ch = '\0';
+	tmpNode->index = -1;
+	tmpNode->next = NULL;
+	tmpNode->prev = NULL;
+
+	strncpy(tmpMsg->time, "\0", MAX_TIME_SIZE);
+	strncpy(tmpMsg->path, "\0", MAX_PATH_SIZE);
+	tmpMsg->num = 0;
+	tmpMsg->size = 0;
+	tmpMsg->rootN = tmpNode;
+	tmpMsg->rootM = tmpMsg;
+	tmpMsg->message = tmpNode;
+	tmpMsg->next = NULL;
+
 	*root = tmpMsg;
 }
 
@@ -43,7 +43,7 @@ void msgList_init(listNode **root) {
 listNode *msgList_getNode(listNode *ln) {
 	listNode *newMsg = NULL;
 	newMsg = malloc(sizeof(listNode));
-	if ( !newMsg) {
+	if ( !newMsg ) {
 		fprintf(stderr, "Failed to allocate memory in msgList_getNode()\n");
 		exit(1);
 	}
@@ -55,6 +55,7 @@ listNode *msgList_getNode(listNode *ln) {
 	newMsg->next = NULL;
 	strncpy(newMsg->time, "\0", MAX_TIME_SIZE);
 	strncpy(newMsg->path, "\0", MAX_PATH_SIZE);
+
 	return newMsg;
 }
 
@@ -81,9 +82,10 @@ int messageLength(noteNode *msg) {
 void msgList_insertString(listNode *ln, char *str) {
 	noteNode *prevNode = NULL;
 	int cnt = 0;
+	int num = ln->num;
 
 	ln->message = malloc(sizeof(noteNode));
-	ln->num = ++ln->num;
+	ln->num = ++num;
 
 	if (!ln->message) {
 		fprintf(stderr,
