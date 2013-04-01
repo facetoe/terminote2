@@ -20,17 +20,7 @@
 #ifndef HELPERFUNCTIONS_H_
 #define HELPERFUNCTIONS_H_
 
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-
-#include <stdbool.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <ctype.h>
-#include <unistd.h>
+#include "defines.h"
 
 /* Returns a pointer to a string containing the current time */
 char *current_time();

@@ -9,7 +9,7 @@ int main(void) {
 
 	listNode *currP = NULL;
 
-		msgList_init(&currP);
+	list_init(&currP);
 
 		if (currP)
 			printf("Initialized list\n");
@@ -21,6 +21,9 @@ int main(void) {
 			fprintf(stderr, "Failed to load data.\n");
 			exit(1);
 		}
+
+		list_appendMessage(currP, "Hello World!");
+		list_printAll(stdout, currP);
 
 		dArr *arr = NULL;
 		dArr_init(&arr);

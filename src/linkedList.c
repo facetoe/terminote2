@@ -11,7 +11,7 @@
 
 
 /* Allocates memory for initial nodes and sets default values. */
-void msgList_init(listNode **root) {
+void list_init(listNode **root) {
 	if (DEBUG)
 		printf("Initializing list\n");
 
@@ -40,7 +40,7 @@ void msgList_init(listNode **root) {
 }
 
 /* Allocates memory for a new node, sets values and returns initialized node */
-listNode *msgList_getNode(listNode *ln) {
+listNode *list_getNode(listNode *ln) {
 	listNode *newMsg = NULL;
 	newMsg = malloc(sizeof(listNode));
 	if ( !newMsg ) {
@@ -60,7 +60,7 @@ listNode *msgList_getNode(listNode *ln) {
 }
 
 /* Returns the length of the list */
-int listLength(listNode *ln) {
+int list_length(listNode *ln) {
 	int listSize = 0;
 	ln = ln->rootM;
 	if ( ln->next ) {
@@ -71,7 +71,7 @@ int listLength(listNode *ln) {
 }
 
 /* Returns the message length */
-int messageLength(noteNode *msg) {
+int list_messageLength(noteNode *msg) {
 	int len = 0;
 	for (; msg; msg = msg->next, len++);
 	return len;
@@ -79,7 +79,7 @@ int messageLength(noteNode *msg) {
 
 
 /* Inserts a string into a msgList node */
-void msgList_insertString(listNode *ln, char *str) {
+void list_insertString(listNode *ln, char *str) {
 	noteNode *prevNode = NULL;
 	int cnt = 0;
 	int num = ln->num;
@@ -117,25 +117,25 @@ void msgList_insertString(listNode *ln, char *str) {
 		prevNode = ln->message;
 	}
 	ln->message = ln->rootN;
-	ln->size = messageLength(ln->message);
+	ln->size = list_messageLength(ln->message);
 	if (DEBUG)
 		printf("Added: %s\n", str);
 }
 
 /* Appends message to the end of the list */
-void msgList_appendMessage(listNode *ln, char *str) {
+void list_appendMessage(listNode *ln, char *str) {
 
 	for (; ln->next; ln = ln->next)
 		;
 
 	/* Allocate memory for next node */
-	ln->next = msgList_getNode(ln);
+	ln->next = list_getNode(ln);
 
 	/* Move to node */
 	ln = ln->next;
 
 	/* Insert string */
-	msgList_insertString(ln, str);
+	list_insertString(ln, str);
 
 	/* Get and store path information */
 	char *path = getcwd(NULL, 0);
@@ -164,7 +164,7 @@ void msgList_appendMessage(listNode *ln, char *str) {
  * p: Path
  * t: Time
  * m: Message */
-void printMessage(FILE *outStream, char *args, listNode *ln) {
+void list_printMessage(FILE *outStream, char *args, listNode *ln) {
 	if (ln == NULL || ln->num == 0)
 		fprintf(outStream, "Nothing to print.\n");
 	else {
@@ -194,7 +194,7 @@ void printMessage(FILE *outStream, char *args, listNode *ln) {
 }
 
 /* Prints all messages with all information */
-void printAll(FILE *outStream, listNode *ln) {
+void list_printAll(FILE *outStream, listNode *ln) {
 	if( DEBUG )
 		if ( !ln )
 			fprintf(stderr, "Null pointer passed to printAll\n");
@@ -205,13 +205,13 @@ void printAll(FILE *outStream, listNode *ln) {
 	} else {
 		ln = ln->next;
 		for (; ln; ln = ln->next) {
-			printMessage(outStream, "nptm", ln);
+			list_printMessage(outStream, "nptm", ln);
 		}
 	}
 }
 
 /* Destroys the list freeing all memory */
-void msgList_destroy(listNode *ln) {
+void list_destroy(listNode *ln) {
 	if( DEBUG )
 		if ( !ln )
 			fprintf(stderr, "Null pointer passed to msgList_destroy\n");
@@ -241,7 +241,7 @@ void msgList_destroy(listNode *ln) {
 
 /* Moves list pointer to last node in the list.
  * If it is already the last node then leaves the pointer unchanged. */
-void lastNode(listNode **ln) {
+void list_lastNode(listNode **ln) {
 	listNode *tmp = *ln;
 	if (tmp->next == NULL )
 		return;
@@ -252,7 +252,7 @@ void lastNode(listNode **ln) {
 
 /* Moves list pointer to the first node in the list.
  * If the first node is the root node then leaves the pointer unchanged. */
-void firstNode(listNode **ln) {
+void list_firstNode(listNode **ln) {
 	listNode *tmp = *ln;
 	tmp = tmp->rootM;
 	if (tmp->next)
@@ -263,7 +263,7 @@ void firstNode(listNode **ln) {
 /* Moves the list pointer to the next node in the list. If it is the last node,
  * moves the pointer to the first node: ie, head->next to skip root node.
  * If there is only one node in the list (not counting root) it returns currP unchanged. */
-void next(listNode **ln) {
+void list_next(listNode **ln) {
 	listNode *tmp = *ln;
 	if (tmp->next != NULL ) {
 		tmp = tmp->next;
@@ -275,15 +275,15 @@ void next(listNode **ln) {
 
 /* Moves the list pointer to the previous node in the list.
  * If there is only one node (not counting root) leaves the pointer unchanged.  */
-void previous(listNode **ln) {
+void list_previous(listNode **ln) {
 	listNode *tmp = *ln;
 	int noteNum = tmp->num;
 	if (noteNum == 1) {
 		/* We are at the start of the list, so grab the last node */
-		lastNode(&tmp);
+		list_lastNode(&tmp);
 	} else {
 		/* We are not at the start, so grab the first node */
-		firstNode(&tmp);
+		list_firstNode(&tmp);
 
 		/* And loop through to noteNum -1, ie the previous node */
 		for (;tmp->next != NULL && tmp->num != noteNum - 1; tmp = tmp->next);
@@ -293,12 +293,12 @@ void previous(listNode **ln) {
 
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */
-listNode *searchByNoteNum(listNode *ln, int noteNum) {
+listNode *list_searchByNoteNum(listNode *ln, int noteNum) {
 	/* Reset to first node */
 	ln = ln->rootM;
 
 	/* Nothing to search if the list is empty */
-	if (listLength(ln) == 0)
+	if (list_length(ln) == 0)
 		return NULL ;
 
 	/* don't check root node */
@@ -313,7 +313,7 @@ listNode *searchByNoteNum(listNode *ln, int noteNum) {
 }
 
 /* Reorders the noteNums */
-void orderList(listNode *ln) {
+void list_orderList(listNode *ln) {
 	int nNum = 1;
 	/* Don't count root node */
 	ln = ln->rootM;
@@ -329,7 +329,7 @@ void orderList(listNode *ln) {
 }
 
 /* Delete a node by noteNum */
-void deleteNode(listNode *ln, int noteNum) {
+void list_deleteNode(listNode *ln, int noteNum) {
 	ln = ln->rootM;
 	/* Don't delete root node */
 	if (noteNum == 0)
@@ -367,7 +367,7 @@ void deleteNode(listNode *ln, int noteNum) {
 				free(tmpList);
 
 			/* Reorder the list */
-			orderList(ln);
+			list_orderList(ln);
 			return;
 		} else {
 			tmpList = ln;
@@ -377,7 +377,7 @@ void deleteNode(listNode *ln, int noteNum) {
 }
 
 /* Writes the note structs to a file */
-void writeBinary(FILE *fp, listNode *ln) {
+void list_writeBinary(FILE *fp, listNode *ln) {
 	ln = ln->rootM;
 	/* Don't write root node */
 	if (ln->num == 0)
@@ -408,7 +408,7 @@ void writeBinary(FILE *fp, listNode *ln) {
 }
 
 /* Reads the note data from a file and places in struct */
-void readBinary(FILE *fp, listNode *ln) {
+void list_readBinary(FILE *fp, listNode *ln) {
 
 	int len, note_num;
 	note_num = 0;
@@ -422,7 +422,7 @@ void readBinary(FILE *fp, listNode *ln) {
 			printf("Reading Note #%d\n", note_num);
 
 		/* Allocate memory for new node */
-		ln->next = msgList_getNode(ln);
+		ln->next = list_getNode(ln);
 
 		/* Move to new node */
 		ln = ln->next;
@@ -439,7 +439,7 @@ void readBinary(FILE *fp, listNode *ln) {
 		fread(time, sizeof(char), len, fp);
 
 		/* Insert strings into struct */
-		msgList_insertString(ln, message);
+		list_insertString(ln, message);
 		strcpy(ln->path, path);
 		strcpy(ln->time, time);
 
@@ -449,7 +449,7 @@ void readBinary(FILE *fp, listNode *ln) {
 }
 
 /* Deletes all notes freeing all the memory. */
-void deleteAll(listNode **ln) {
+void list_deleteAll(listNode **ln) {
 	listNode *msgListP = *ln;
 	listNode *root = msgListP->rootM;
 	msgListP = msgListP->rootM;
@@ -485,14 +485,14 @@ void deleteAll(listNode **ln) {
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
 /* Returns true on success or false on failure. */
-bool loadList(listNode *ln) {
+bool list_load(listNode *ln) {
 	if (DEBUG)
 		printf("Loading list from: %s\n", path);
 
 	FILE *fp;
 
 	if (file_exists(path) && (fp = fopen(path, "rb")) != NULL ) {
-		readBinary(fp, ln);
+		list_readBinary(fp, ln);
 		fclose(fp);
 		return true;
 	} else {
@@ -515,14 +515,14 @@ bool loadList(listNode *ln) {
 
 /* Attempts to save the list at path. */
 /* Returns true on success or false on failure. */
-bool saveList(listNode *ln) {
+bool list_save(listNode *ln) {
 
 	if (DEBUG)
 		printf("Saving list at: %s\n", path);
 
 	FILE *fp = NULL;
 	if (file_exists(path) && (fp = fopen(path, "wb")) != NULL ) {
-		writeBinary(fp, ln);
+		list_writeBinary(fp, ln);
 		fclose(fp);
 		return true;
 
@@ -534,7 +534,7 @@ bool saveList(listNode *ln) {
 		fp = fopen(path, "wb");
 		if (fp != NULL ) {
 			fprintf(stderr, "Successfully created file\n");
-			writeBinary(fp, ln);
+			list_writeBinary(fp, ln);
 			fclose(fp);
 			return true;
 

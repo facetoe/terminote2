@@ -7,14 +7,8 @@
 
 #ifndef DYNAMICARRAY_H_
 #define DYNAMICARRAY_H_
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 
-
-/*  Initial size of the dynamic array */
-#define DYNA_SIZE 10
+#include "defines.h"
 
 typedef struct dynamicArray {
 	int maxSize;

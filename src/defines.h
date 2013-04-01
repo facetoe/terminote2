@@ -8,10 +8,24 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <ctype.h>
+#include <unistd.h>
+
 /* Buffers and buffer sizes */
 #define MAX_CWDBUFF_SIZE 300
 #define MAX_TIME_SIZE 30
 #define MAX_PATH_SIZE 200
+
+/*  Initial size of the dynamic array */
+#define DYNA_SIZE 10
 
 /* This is the number of options that exclude any other options, not the total of all options. */
 #define OPT_NUM 11
