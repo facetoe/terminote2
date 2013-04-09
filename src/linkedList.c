@@ -545,5 +545,19 @@ bool list_save(listNode *ln) {
 	}
 }
 
+/* Searches the listNode's message for substring. Returns true if it does,
+ * false if not. */
+bool list_messageHasSubstring(listNode *ln, char *subStr) {
+    char str[ln->size];
+    int cnt = 0;
+    noteNode *tmpNode = ln->message;
+    for (; tmpNode ; tmpNode = tmpNode->next, cnt++) {
+        str[cnt] = tmpNode->ch;
+    }
+    str[cnt] = '\0';
+    return strstr(str, subStr) != NULL;
+}
+
+
 
 
