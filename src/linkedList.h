@@ -52,7 +52,7 @@ int list_messageLength(noteNode *msg);
 void list_insertString(listNode *ln, char *str);
 
 /* Appends message to the end of the list */
-void list_append(listNode *ln, char *str);
+void list_appendMessage(listNode *ln, char *str);
 
 /* Prints current note according to args. Args are:
  * n: Note number
