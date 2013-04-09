@@ -111,4 +111,8 @@ bool list_load(listNode *ln);
 /* Returns true on success or false on failure. */
 bool list_save(listNode *ln);
 
+/* Searches the listNode's message for substring. Returns true if it does,
+ * false if not. */
+bool list_messageHasSubstring(listNode *ln, char *subStr);
+
 #endif /* LINKEDLIST_H_ */

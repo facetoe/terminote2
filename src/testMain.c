@@ -22,16 +22,15 @@ int main(void) {
 			exit(1);
 		}
 
-		list_appendMessage(currP, "Hello World!");
-		list_printAll(stdout, currP);
+		list_appendMessage(currP, "Hello");
+		list_appendMessage(currP, "So many words in hear...");
+		list_appendMessage(currP, "Hello there yayayayaa");
+		list_appendMessage(currP, "Hello");
 
-		dArr *arr = NULL;
-		dArr_init(&arr);
-		for (char *s = path; *s; s++) {
-			dArr_add(arr, *s);
+		for (; currP ; currP=currP->next) {
+			if( list_messageHasSubstring(currP, "in") )
+				list_printMessage(stdout, "m", currP);
 		}
-
-		dArr_print(arr);
 
 	return 0;
 }
