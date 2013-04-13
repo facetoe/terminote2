@@ -5,8 +5,10 @@
  *      Author: facetoe
  */
 
-#include "nonInteractive.h"
 #include "linkedList.h"
+#include "helperFunctions.h"
+#include "nonInteractive.h"
+
 
 /* Initialize options struct */
 void initOptions(Options *opts) {
@@ -205,34 +207,44 @@ void executeOptions(Options *opts, listNode *currP) {
 		outStream = fopen(opts->outFile, "w");
 
 	if (opts->pop) {
-
+		nonInteractive_pop(stdout, currP, "m", list_length(currP));
 	} else if (opts->popN) {
-		printf("popN");
+		nonInteractive_pop(stdout, currP, "nptm", opts->popN);
 	} else if (opts->delA) {
-		printf("delA");
-	} else if (opts->delN) {
-		printf("delN");
+		list_deleteAll(&currP);
+	} else if (opts->delN) {\
+		if ( list_length(currP) >=  opts->delN)
+			list_deleteNode(currP, opts->delN);
+		else
+			fprintf(stderr, "Nothing to delete at position: %d\n", opts->delN);
+
 	} else if (opts->printN) {
-		printf("printN");
+		listNode *tmp = NULL;
+		if ( (tmp = list_searchByNoteNum(currP, opts->printN))  )
+			list_printMessage(outStream, "nptm", tmp);
+		else
+			fprintf(stderr, "Nothing to print at position: %d\n", opts->printN);
+
 	} else if (opts->printA) {
-		printf("printA");
+		list_printAll(outStream, currP);
 	} else if (opts->searchNotes) {
-		printf("search");
+		nonInteractive_search(outStream, currP, opts->searchTerm);
 	} else if (opts->append) {
-		printf("append");
+		list_appendMessage(currP, opts->appendStr);
 	} else if (opts->version) {
 		printf("%.1f\n", VERSION_NUM);
 	} else if (opts->usage) {
-		printf("version");
+		printUsage(stdout);
 	} else if (opts->popA) {
-		printf("popA");
+		nonInteractive_pop(stdout, currP, "nptm", list_length(currP));
 	}
 
-	fclose(outStream);
-	list_destroy(currP);
+	if (opts->outputToFile)
+		fclose(outStream);
 }
 
-void pop_nonInteractive(FILE *outStream, listNode *currP, char *args, int noteNum) {
+/* Pops noteNum note and prints with args sections then deletes note */
+void nonInteractive_pop(FILE *outStream, listNode *currP, char *args, int noteNum) {
 
 	if ( list_length(currP) == 0 || noteNum == 0 ) {
 		fprintf(stderr, "Nothing to print\n");
@@ -248,4 +260,36 @@ void pop_nonInteractive(FILE *outStream, listNode *currP, char *args, int noteNu
 	}
 
 }
+
+/* Searches through messages printing them if they contain searchTerm */
+void nonInteractive_search(FILE *outStream, listNode *ln, char *searchTerm) {
+	for (; ln ; ln = ln->next) {
+		if( list_messageHasSubstring(ln, searchTerm) )
+			list_printMessage(outStream, "nptm", ln);
+	}
+}
+
+/* Prints usage */
+void printUsage(FILE *outStream) {
+	fprintf(outStream,
+			"Terminote version %.1f - a command line note tool.\n\n"
+			"Terminote reacts differently depending on how you call it.\n"
+			"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n"
+			"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n"
+			"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n"
+			" -h: Print this message and quit.\n"
+			" -P: Prints the last note only, no path or number, then deletes it.\n"
+			" -F: Prints the last note with full info (path/time/num) then deletes it.\n"
+			" -N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n"
+			" -D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n"
+			" -R: Deletes all notes.\n"
+			" -p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n"
+			" -l: Prints all the notes leaving them intact.\n"
+			" -f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n"
+			" -a: Appends a note to the list. Requires a string argument.\n\n"
+			"CONTACT:\n"
+			" Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n",
+			VERSION_NUM);
+}
+
 

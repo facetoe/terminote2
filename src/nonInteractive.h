@@ -10,7 +10,6 @@
 
 #include "defines.h"
 #include "linkedList.h"
-#include "helperFunctions.h"
 
 typedef struct{
 	/* Pop last note ( only the message )*/
@@ -65,9 +64,13 @@ void validateOptions(Options *opts);
 /* Executes options then destroys the list */
 void executeOptions(Options *opts, listNode *currP);
 
-void pop_nonInteractive(FILE *outStream, listNode *currP, char *args, int noteNum);
+/* Pops noteNum note and prints with args sections then deletes note */
+void nonInteractive_pop(FILE *outStream, listNode *currP, char *args, int noteNum);
 
+/* Searches through messages printing them if they contain searchTerm */
+void nonInteractive_search(FILE *outStream, listNode *ln, char *searchTerm);
 
-
+/* Prints usage */
+void printUsage(FILE *outStream);
 
 #endif /* NONINTERACTIVE_H_ */
