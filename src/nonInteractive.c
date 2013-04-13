@@ -5,13 +5,12 @@
  *      Author: facetoe
  */
 
-#include "linkedList.h"
-#include "helperFunctions.h"
 #include "nonInteractive.h"
 
 
 /* Initialize options struct */
 void initOptions(Options *opts) {
+
 	opts->pop = 0;
 	opts->popN = 0;
 
@@ -24,7 +23,8 @@ void initOptions(Options *opts) {
 	opts->version = 0;
 
 	opts->searchNotes = 0;
-	strncpy(opts->searchTerm, "\0", MAX_SEARCHTERM_SIZE-1);
+	opts->searchTerm = NULL;
+
 
 	opts->outputToFile = 0;
 	opts->append = 0;
@@ -91,7 +91,7 @@ void parseOptions(Options *options, int argc, char **argv) {
 			/* Search for notes containing sub string */
 		case 'f':
 			options->searchNotes = 1;
-			strncpy(options->searchTerm, optarg, MAX_SEARCHTERM_SIZE-1);
+			options->searchTerm = optarg;
 			break;
 
 			/* Append note to list */
@@ -291,5 +291,59 @@ void printUsage(FILE *outStream) {
 			" Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n",
 			VERSION_NUM);
 }
+
+/* Reads from stdin until EOF growing the buffer as needed */
+void nonInteractive_readPipe(dArr *buffer) {
+	int ch = 0;
+
+	while( (ch = getchar()) != EOF ) {
+		dArr_add(buffer, ch);
+	}
+}
+
+/* Run in non-interactive mode */
+void nonInteractive_run(Options *opts, int argc, char **argv) {
+
+	listNode *list = NULL;
+	list_init(&list);
+	if( !list ) {
+		fprintf(stderr, "Failed to create list\n");
+		abort();
+	}
+
+	list_load(list);
+
+	/* If there are no arguments we'll just append the input to the list */
+	if (argc <= 1) {
+
+		/* Set up the input buffer and read the data */
+		dArr *inputBuffer;
+		dArr_init(&inputBuffer);
+		nonInteractive_readPipe(inputBuffer);
+
+		/* If there is only a newline in the buffer don't do anything */
+		if (inputBuffer->currSize == 1) {
+			fprintf(stderr, "Nothing read\n");
+			dArr_destroy(&inputBuffer);
+			exit(0);
+		}	else {
+			/* Otherwise append the input to the list */
+			list_appendMessage(list, inputBuffer->contents);
+		}
+
+	} else {
+
+		/* If we get here there are command line arguments, parse and execute them */
+		parseOptions(opts, argc, argv);
+		validateOptions(opts);
+		executeOptions(opts, list);
+
+	}
+
+	/* Clean up */
+	list_save(list);
+	list_destroy(list);
+}
+
 
 

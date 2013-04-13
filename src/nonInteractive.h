@@ -10,6 +10,9 @@
 
 #include "defines.h"
 #include "linkedList.h"
+#include "helperFunctions.h"
+#include "dynamicArray.h"
+
 
 typedef struct{
 	/* Pop last note ( only the message )*/
@@ -31,7 +34,7 @@ typedef struct{
 
 	/* Search notes for search term */
 	int searchNotes;
-	char searchTerm[MAX_SEARCHTERM_SIZE-1];
+	char *searchTerm;
 
 	/* Append note */
 	int append;
@@ -72,5 +75,11 @@ void nonInteractive_search(FILE *outStream, listNode *ln, char *searchTerm);
 
 /* Prints usage */
 void printUsage(FILE *outStream);
+
+/* Reads from stdin until EOF growing the buffer as needed */
+void nonInteractive_readPipe(dArr *buffer);
+
+/* Run in non-interactive mode */
+void nonInteractive_run(Options *opts, int argc, char **argv);
 
 #endif /* NONINTERACTIVE_H_ */

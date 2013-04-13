@@ -6,11 +6,10 @@
 #include "nonInteractive.h"
 
 
+
 int main(int argc, char **argv) {
 
-	listNode *currP = NULL;
 
-	list_init(&currP);
 
 
 	if (getDataPath(pathBuffer, MAX_PATH_SIZE, DATA_FILE))
@@ -21,16 +20,10 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-
-	list_load(currP);
-
-	nonInteractive_search(stdout, currP, "Hell");
 	Options opts;
 	initOptions(&opts);
-	parseOptions(&opts, argc, argv);
-	executeOptions(&opts, currP);
-	list_save(currP);
-	list_destroy(currP);
+
+	nonInteractive_run(&opts, argc, argv);
 
 
 	return 0;

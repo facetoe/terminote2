@@ -56,10 +56,10 @@ bool dArr_grow(dArr *arr) {
 void dArr_add(dArr *arr, char ch) {
 	if( !dArr_isFull(arr) ) {
 		arr->contents[arr->currSize] = ch;
-		arr->currSize++;
+		++arr->currSize;
 	} else if ( dArr_grow(arr) ) {
 		arr->contents[arr->currSize] = ch;
-		arr->currSize++;
+		++arr->currSize;
 	} else {
 		fprintf(stderr, "Failed to grow array, aborting\n");
 		abort();
@@ -71,7 +71,5 @@ void dArr_destroy(dArr **arr) {
 	dArr *tmp = *arr;
 	free(tmp->contents);
 	free(tmp);
-	tmp = NULL;
-	*arr = tmp;
 }
 
