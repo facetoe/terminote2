@@ -18,8 +18,11 @@
 #include <pwd.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <getopt.h>
+
 
 /* Buffers and buffer sizes */
+#define MAX_SEARCHTERM_SIZE 300
 #define MAX_CWDBUFF_SIZE 300
 #define MAX_TIME_SIZE 30
 #define MAX_PATH_SIZE 200

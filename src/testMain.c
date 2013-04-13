@@ -3,9 +3,10 @@
 #include "helperFunctions.h"
 #include "linkedList.h"
 #include "dynamicArray.h"
+#include "nonInteractive.h"
 
 
-int main(void) {
+int main(int argc, char **argv) {
 
 	listNode *currP = NULL;
 
@@ -22,15 +23,15 @@ int main(void) {
 			exit(1);
 		}
 
-		list_appendMessage(currP, "Hello");
-		list_appendMessage(currP, "So many words in hear...");
-		list_appendMessage(currP, "Hello there yayayayaa");
-		list_appendMessage(currP, "Hello");
 
-		for (; currP ; currP=currP->next) {
-			if( list_messageHasSubstring(currP, "in") )
-				list_printMessage(stdout, "m", currP);
-		}
+
+		Options opts;
+		initOptions(&opts);
+		parseOptions(&opts, argc, argv);
+		executeOptions(&opts, currP);
+
+
+
 
 	return 0;
 }
