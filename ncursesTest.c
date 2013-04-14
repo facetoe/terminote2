@@ -41,14 +41,16 @@ void showWins() {
 	endwin();
 
 
+	/* Get the screen coordinates and recreate windows*/
 	int xt, yt;
 	getmaxyx(stdscr, yt, xt);
 	topWin = newwin(1, xt, 0, 0);
-
 	midWin = newwin(yt, xt, 1, 0);
 	mvwprintw(midWin, 0, 0, "THINGSHERE");
+	/* Refresh midWin before topWin or the screen gets all messed up */
 	wrefresh(midWin);
 
+	/* Turn colors back on */
 	start_color();
 	init_pair(1, COLOR_BLACK, COLOR_WHITE);
 	wattron(topWin,COLOR_PAIR(1));
@@ -57,10 +59,10 @@ void showWins() {
 	char noteStr[100];
 	sprintf(noteStr, "Note #%d", win->noteNum);
 
-	mvwprintw(topWin, 0, (xt/2)-(win->pathLen/2), win->path);
-	mvwprintw(topWin, 0, 0, noteStr);
-
-	mvwprintw(topWin, 0, xt-(win->timeLen+1), win->time);
+	/* Print heading text to screen */
+	mvwprintw(topWin, 0, (xt/2)-(win->pathLen/2), win->path); // Middle
+	mvwprintw(topWin, 0, 0, noteStr); // Left
+	mvwprintw(topWin, 0, xt-(win->timeLen+2), win->time); // Right
 	wrefresh(topWin);
 }
 
