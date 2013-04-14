@@ -11,8 +11,8 @@
 
 typedef struct topWin {
 	WINDOW *win;
-	int numLines;
-	int numCols;
+	int pathLen;
+	int timeLen;
 	int noteNum;
 	char path[100];
 	char time[30];
@@ -21,32 +21,32 @@ typedef struct topWin {
 int x, y;
 WINDOW *topWin, *midWin;
 _topWin *winStruct;
+_topWin *win;
+
 
 void init_topWin(_topWin **win) {
 	_topWin *p = NULL;
-	p = malloc(sizeof(p));
-	p->numLines = 0;
-	p->numCols = 0;
+	p = malloc(sizeof(_topWin));
+	p->pathLen = 0;
+	p->timeLen = 0;
 	p->noteNum = 0;
-	memset(p->path, '\0', 100);
-	memset(p->time, '\0', 30);
 
 	*win = p;
 }
 
-void draw() {
-	endwin();
+void showWins() {
+	/* Kill the window and delete it. Otherwise you get ugly effects */
 	if (topWin)
 		delwin(topWin);
+	endwin();
 
-	char str[100];
+
 	int xt, yt;
-	char *sprintfKey = "/home/fragmachine/people/lol/hahahga";
-	int len = strlen(sprintfKey);
 	getmaxyx(stdscr, yt, xt);
 	topWin = newwin(1, xt, 0, 0);
 
-	midWin = newwin(yt, xt, 2, 2);
+	midWin = newwin(yt, xt, 1, 0);
+	mvwprintw(midWin, 0, 0, "THINGSHERE");
 	wrefresh(midWin);
 
 	start_color();
@@ -54,18 +54,19 @@ void draw() {
 	wattron(topWin,COLOR_PAIR(1));
 	wbkgd(topWin,COLOR_PAIR(1));
 
-	sprintf(str, "Coords: x: %d y: %d", xt, yt);
-	mvwprintw(topWin, 0, (xt/2)-(len/2), sprintfKey);
-	mvwprintw(topWin, 0, 0, "Note #2");
-	char *time = "03/12/23 23:10";
-	len = strlen(time);
-	mvwprintw(topWin, 0, xt-(len+1), "03/12/23 23:10");
+	char noteStr[100];
+	sprintf(noteStr, "Note #%d", win->noteNum);
+
+	mvwprintw(topWin, 0, (xt/2)-(win->pathLen/2), win->path);
+	mvwprintw(topWin, 0, 0, noteStr);
+
+	mvwprintw(topWin, 0, xt-(win->timeLen+1), win->time);
 	wrefresh(topWin);
 }
 
 static void hndlSigwinch (int sig)
 {
-	draw();
+	showWins();
 }
 
 void initNcurses() {
@@ -79,9 +80,8 @@ void initNcurses() {
 
 void setTop(_topWin *win) {
 	win->noteNum = 1;
-	win->numLines = 4;
+	win->pathLen = 4;
 }
-
 
 
 int main (int argc, char *argv[])
@@ -91,35 +91,22 @@ int main (int argc, char *argv[])
 	sa.sa_handler = hndlSigwinch;
 
 
+	init_topWin(&win);
+
+	if(win) {
+
+	win->noteNum = 2;
+	strcpy(win->path, "/home/fragmachine/things/yes");
+	strcpy(win->time, "03/12/1922 12:34");
+	win->timeLen = strlen(win->time);
+	win->pathLen = strlen(win->path);
+	}
 	initNcurses();
-
-	char str[100];
-	char *sprintfKey = "/home/facetoe/git/workspace/asss/lol";
-
-	getmaxyx(stdscr, y, x);
-	topWin = newwin(1, x, 0, 0);
-
-	start_color();
-	init_pair(1, COLOR_BLACK, COLOR_WHITE);
-	wattron(topWin,COLOR_PAIR(1));
-	wbkgd(topWin,COLOR_PAIR(1));
+	showWins();
 
 
-	midWin = newwin(y, x, 0, 0);
-	wrefresh(midWin);
 
-	int len = strlen(sprintfKey);
-	sprintf(str, "Coords: x: %d y: %d", x, y);
-	mvwprintw(topWin, 0, (x/2)-(len/2), sprintfKey);
-	mvwprintw(topWin, 0, 0, "Note #2");
-	mvwprintw(topWin, 0, x-10, "Hello");
-	wrefresh(topWin);
-
-	sigemptyset(&sa.sa_mask);
-			    sa.sa_flags = SA_RESTART; /* Restart functions if
-			                                 interrupted by handler */
-
-	while (wgetch(topWin)) {
+	while (wgetch(topWin) != 'q') {
 
 		    if (sigaction(SIGWINCH, &sa, NULL) == -1)
 		        printw("SADSADAS");
@@ -128,7 +115,7 @@ int main (int argc, char *argv[])
 	}
 
 
-
+	free(win);
 	endwin();			/* End curses mode		  */
 	return 0;
 }
