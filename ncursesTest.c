@@ -4,8 +4,6 @@
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
-
-
 #include <ncurses.h>
 
 
@@ -16,12 +14,14 @@ typedef struct topWin {
 	int noteNum;
 	char path[100];
 	char time[30];
+	char longString[500];
+	int longStrLen;
 }_topWin;
 
 int x, y;
-WINDOW *topWin, *midWin;
-_topWin *winStruct;
+WINDOW *topWin, *midWin, *botWin;
 _topWin *win;
+bool needsRefresh = false;
 
 
 void init_topWin(_topWin **win) {
@@ -47,8 +47,6 @@ void showWins() {
 	topWin = newwin(1, xt, 0, 0);
 	midWin = newwin(yt, xt, 1, 0);
 	mvwprintw(midWin, 0, 0, "THINGSHERE");
-	/* Refresh midWin before topWin or the screen gets all messed up */
-	wrefresh(midWin);
 
 	/* Turn colors back on */
 	start_color();
@@ -64,6 +62,9 @@ void showWins() {
 	mvwprintw(topWin, 0, 0, noteStr); // Left
 	mvwprintw(topWin, 0, xt-(win->timeLen+2), win->time); // Right
 	wrefresh(topWin);
+	mvwprintw(midWin, 0, 0, win->longString);
+	wmove(midWin, 0, 0);
+	wrefresh(midWin);
 }
 
 static void hndlSigwinch (int sig)
@@ -95,27 +96,66 @@ int main (int argc, char *argv[])
 
 	init_topWin(&win);
 
+	char *str = "This goes in midWin\nNewlines work\nfoo bar bla";
+
 	if(win) {
 
-	win->noteNum = 2;
-	strcpy(win->path, "/home/fragmachine/things/yes");
-	strcpy(win->time, "03/12/1922 12:34");
-	win->timeLen = strlen(win->time);
-	win->pathLen = strlen(win->path);
+		win->noteNum = 2;
+		strcpy(win->path, "/home/fragmachine/things/yes");
+		strcpy(win->time, "03/12/1922 12:34");
+		strcpy(win->longString, str);
+		win->timeLen = strlen(win->time);
+		win->pathLen = strlen(win->path);
+		win->longStrLen = strlen(str);
+
+	} else {
+		abort();
 	}
 	initNcurses();
 	showWins();
 
+	char ch;
 
+	while ( (ch = wgetch(topWin) ) != 'q') {
 
-	while (wgetch(topWin) != 'q') {
+		if (sigaction(SIGWINCH, &sa, NULL) == -1)
+			printw("SADSADAS");
 
-		    if (sigaction(SIGWINCH, &sa, NULL) == -1)
-		        printw("SADSADAS");
+		switch (ch) {
+			case 'd':
+				win->noteNum = 2;
+				strcpy(win->path, "/home/fragmachine/Diffpath");
+				strcpy(win->time, "03/12/1922 01:24");
+				strcpy(win->longString, str);
+				win->timeLen = strlen(win->time);
+				win->pathLen = strlen(win->path);
+				win->longStrLen = strlen(str);
+				needsRefresh = true;
+				break;
 
+			case 'a':
+				win->noteNum = 3;
+				strcpy(win->path, "IS CHANGING!");
+				strcpy(win->time, "04/12/1922 12:34");
+				strcpy(win->longString, str);
+				win->timeLen = strlen(win->time);
+				win->pathLen = strlen(win->path);
+				win->longStrLen = strlen(str);
+				win->noteNum = (int)ch;
+				needsRefresh = true;
+				break;
 
+			default:
+				win->noteNum = (int)ch;
+				needsRefresh = true;
+				break;
+		}
+
+		if (needsRefresh) {
+			showWins();
+			needsRefresh = false;
+		}
 	}
-
 
 	free(win);
 	endwin();			/* End curses mode		  */
