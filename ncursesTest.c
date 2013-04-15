@@ -79,8 +79,8 @@ void showTopWin(){
 void showMidWin() {
 	if (midWin)
 		delwin(midWin);
-
 	endwin();
+
 	midWin = newwin(y - MIDWINPAD, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
@@ -135,6 +135,11 @@ void showMenu() {
 	showMidWin();
 }
 
+void hideMenu() {
+	unpost_menu(footerMenu);
+	wrefresh(botWin);
+}
+
 static void hndSIGWINCH (int sig)
 {
 	showWins();
@@ -146,10 +151,46 @@ void initNcurses() {
 	nonl();
 	noecho();
 	cbreak();
-	//keypad(stdscr, TRUE);
+	keypad(stdscr, TRUE);
 }
 
+void doMenu() {
 
+	showBotWin();
+	showMenu();
+	int ch;
+	ITEM *currItem;
+	bool keepGoing = true;
+	while ( keepGoing ) {
+		ch = wgetch(botWin);
+		switch (ch) {
+		case KEY_LEFT:
+			menu_driver(footerMenu, REQ_PREV_ITEM);
+			break;
+
+		case KEY_RIGHT:
+			menu_driver(footerMenu, REQ_NEXT_ITEM);
+			break;
+
+		case 13: /* Enter */
+			currItem = current_item(footerMenu);
+			strcpy(win->longString, item_name(currItem));
+			hideMenu();
+			showWins();
+
+			keepGoing = false;
+			break;
+
+		default:
+			hideMenu();
+			showWins();
+			needsRefresh = true;
+			keepGoing = false;
+			endwin();
+			break;
+		}
+	}
+}
 
 
 int main (int argc, char *argv[])
@@ -189,6 +230,7 @@ int main (int argc, char *argv[])
 			printw("SADSADAS");
 
 		switch (ch) {
+
 		case 'd':
 			win->noteNum = 2;
 			strcpy(win->path, "/home/fragmachine/Diffpath");
@@ -212,29 +254,8 @@ int main (int argc, char *argv[])
 			needsRefresh = true;
 			break;
 
-		case KEY_LEFT:
-			menu_driver(footerMenu, REQ_PREV_ITEM);
-			break;
-
-		case KEY_RIGHT:
-			menu_driver(footerMenu, REQ_NEXT_ITEM);
-			break;
-
-		case 13: /* Enter */
-		{	ITEM *cur;
-
-			cur = current_item(footerMenu);
-			strcpy(win->longString, item_name(cur));
-			pos_menu_cursor(footerMenu);
-			needsRefresh = true;
-			break;
-		}
-		break;
-
-
 		case 6:
-			strcpy(win->longString, "You Pressed the modify key");
-			showMenu();
+			doMenu();
 			break;
 
 		default:
