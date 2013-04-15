@@ -7,11 +7,17 @@
 #include <menu.h>
 
 #include <signal.h>
-
-#define SIGWINCH 28
-
+#include <sys/ioctl.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+
+#define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH
+struct sigaction sa;
+
+struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
+
+
 
 typedef struct topWin {
 	WINDOW *win;
@@ -30,12 +36,13 @@ char *choices[] = {
 		(char *)NULL,
 };
 
+/* Global variables */
 WINDOW *topWin, *midWin, *botWin;
 _topWin *win;
 ITEM **menuItems;
 MENU *footerMenu;
 bool needsRefresh = false;
-int x, y;
+int COLS, ROWS;
 
 /* Allocate memory for data struct */
 void init_topWin(_topWin **win) {
@@ -44,33 +51,34 @@ void init_topWin(_topWin **win) {
 	*win = p;
 }
 
+void getScrnSize(int *COLS, int *ROWS) {
+	ioctl(0, TIOCGWINSZ, &wSize);
+	*COLS = wSize.ws_col;
+	*ROWS = wSize.ws_row;
+}
+
 /* Setup and print the top window to screen */
 void showTopWin(){
-	/* If the window already exists, delete it. Otherwise you get ugly effects. */
-
-
+	endwin();
 	/* Create the window*/
-	topWin = newwin(1, x, 0, 0);
+	topWin = newwin(1, COLS, 0, 0);
 
 	/* Turn colors on */
 	wattron(topWin,COLOR_PAIR(1));
 	wbkgd(topWin,COLOR_PAIR(1));
 
 	char noteStr[100];
-	sprintf(noteStr, "Note #%d", win->noteNum);
+	sprintf(noteStr, "Note #%d", COLS);
 
-	/* Print heading text to screen */
-	mvwprintw(topWin, 0, (x/2)-(win->pathLen/2), win->path); // Middle
-	mvwprintw(topWin, 0, 0, noteStr); // Left
-	mvwprintw(topWin, 0, x-(win->timeLen+2), win->time); // Right
+	mvwprintw(topWin, 0, (COLS/2)-(win->pathLen/2), win->path );
+	mvwprintw(topWin, 0, 0, noteStr);
+	mvwprintw(topWin, 0, (COLS-win->timeLen)-2, win->time);
 	wnoutrefresh(topWin);
 }
 
 /* Setup and print the middle window to screen */
 void showMidWin() {
-	/* If the window already exists, delete it. Otherwise you get ugly effects. */
-
-	midWin = newwin(y - 1, x, 1, 0);
+	midWin = newwin(ROWS - 3, COLS, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
 	wnoutrefresh(midWin);
@@ -78,8 +86,7 @@ void showMidWin() {
 
 /* Setup and print the middle window to screen */
 void showBotWin() {
-
-	botWin = newwin(1, x, y- 1, 0);
+	botWin = newwin(1, COLS, ROWS- 1, 0);
 
 	wattron(botWin,COLOR_PAIR(2));
 	wbkgd(botWin,COLOR_PAIR(2));
@@ -106,7 +113,7 @@ void setMenu() {
 
 	/* Set main window and sub window */
 	set_menu_win(footerMenu, botWin);
-	set_menu_sub(footerMenu, derwin(botWin, 1, x, 1, 1));
+	set_menu_sub(footerMenu, derwin(botWin, 1, COLS, 1, 1));
 	set_menu_format(footerMenu, 0, 6);
 
 	/* Get key events from the bottom window */
@@ -119,7 +126,7 @@ void setMenu() {
 
 /* Show the windows (and remove botWin if it exists) */
 void showWins() {
-	getmaxyx(stdscr, y, x);
+	getScrnSize(&COLS, &ROWS);
 	showTopWin();
 	showMidWin();
 	wrefresh(curscr);
@@ -127,7 +134,7 @@ void showWins() {
 
 /* Shows the menu along the bottom of the screen */
 void showMenu() {
-	getmaxyx(stdscr, y, x);
+	getScrnSize(&COLS, &ROWS);
 	showBotWin();
 	setMenu();
 }
@@ -199,6 +206,7 @@ void doMenu() {
 	}
 }
 
+/* Free all memory and quit */
 void quit() {
 	int s = ARRAY_SIZE(choices);
 	for(int i = 0; i < s; ++i)
@@ -209,34 +217,30 @@ void quit() {
 	exit(0);
 }
 
-int main (int argc, char *argv[])
-{
-	struct sigaction sa;
+/* Set up the SIGWINCH handler */
+void initSigaction() {
 	memset (&sa, '\0', sizeof(sa));
 	sa.sa_handler = hndSIGWINCH;
+}
 
-	init_topWin(&win);
-
+/* run main GUI loop */
+void guiLoop() {
 	char *str = "This goes in midWin\nNewlines work\nfoo bar bla";
 
 	if(win) {
 
 		win->noteNum = 2;
-		strcpy(win->path, "/home/fragmachine/things/yes");
-		strcpy(win->time, "03/12/1922 12:34");
+		strcpy(win->path, "/home/fragmachine/Diffpath");
+		strcpy(win->time, "03/12/1922 01:24");
 		strcpy(win->longString, str);
 		win->timeLen = strlen(win->time);
 		win->pathLen = strlen(win->path);
 		win->longStrLen = strlen(str);
+		needsRefresh = true;
 
 	} else {
 		abort();
 	}
-
-	initNcurses();
-	initMenu();
-	showWins();
-
 
 	int ch;
 
@@ -286,6 +290,17 @@ int main (int argc, char *argv[])
 		}
 	}
 
+}
+
+int main (int argc, char *argv[])
+{
+
+	initSigaction();
+	init_topWin(&win);
+	initNcurses();
+	initMenu();
+	showWins();
+	guiLoop();
 	quit();
 
 	/* Shouldn't get here... */
