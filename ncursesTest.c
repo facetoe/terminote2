@@ -8,6 +8,8 @@
 
 #include <signal.h>
 
+#define SIGWINCH 28
+
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -45,9 +47,7 @@ void init_topWin(_topWin **win) {
 /* Setup and print the top window to screen */
 void showTopWin(){
 	/* If the window already exists, delete it. Otherwise you get ugly effects. */
-	if (topWin)
-		delwin(topWin);
-	endwin();
+
 
 	/* Create the window*/
 	topWin = newwin(1, x, 0, 0);
@@ -63,33 +63,27 @@ void showTopWin(){
 	mvwprintw(topWin, 0, (x/2)-(win->pathLen/2), win->path); // Middle
 	mvwprintw(topWin, 0, 0, noteStr); // Left
 	mvwprintw(topWin, 0, x-(win->timeLen+2), win->time); // Right
-	wrefresh(topWin);
+	wnoutrefresh(topWin);
 }
 
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	/* If the window already exists, delete it. Otherwise you get ugly effects. */
-	if (midWin)
-		delwin(midWin);
-	endwin();
 
 	midWin = newwin(y - 1, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
-	wrefresh(midWin);
+	wnoutrefresh(midWin);
 }
 
 /* Setup and print the middle window to screen */
 void showBotWin() {
-	if (botWin)
-		delwin(botWin);
-	endwin();
 
 	botWin = newwin(1, x, y- 1, 0);
 
 	wattron(botWin,COLOR_PAIR(2));
 	wbkgd(botWin,COLOR_PAIR(2));
-	wrefresh(botWin);
+	wnoutrefresh(botWin);
 }
 
 /* Initialize the menu but don't show it */
@@ -120,18 +114,15 @@ void setMenu() {
 
 	/* Post the menu */
 	post_menu(footerMenu);
-	wrefresh(botWin);
+	wnoutrefresh(botWin);
 }
 
 /* Show the windows (and remove botWin if it exists) */
 void showWins() {
-	if ( botWin )
-		delwin(botWin);
-	endwin();
 	getmaxyx(stdscr, y, x);
-	refresh(); // You need this refresh of stdscrn here or you get an ugly line at the bottom of the screen on resize
 	showTopWin();
 	showMidWin();
+	wrefresh(curscr);
 }
 
 /* Shows the menu along the bottom of the screen */
@@ -171,6 +162,8 @@ void doMenu() {
 	/* Show the menu along the bottom of the screen */
 	showBotWin();
 	showMenu();
+	wnoutrefresh(botWin);
+	doupdate();
 
 	int ch;
 	ITEM *currItem;
@@ -201,7 +194,6 @@ void doMenu() {
 			showWins();
 			needsRefresh = true;
 			keepGoing = false;
-			endwin();
 			break;
 		}
 	}
