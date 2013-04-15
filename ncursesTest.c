@@ -6,14 +6,10 @@
 #include <ncurses.h>
 #include <menu.h>
 
-#include <sys/types.h>
 #include <signal.h>
 
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-#define MIDWINPAD 2
-#define BOTWINPAD 1
 
 typedef struct topWin {
 	WINDOW *win;
@@ -27,12 +23,11 @@ typedef struct topWin {
 }_topWin;
 
 char *choices[] = {
-		" ", "Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
+		"Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
 		"Choice 6",
 		(char *)NULL,
 };
 
-int x, y;
 WINDOW *topWin, *midWin, *botWin;
 _topWin *win;
 ITEM **menuItems;
@@ -40,29 +35,24 @@ MENU *footerMenu;
 bool needsRefresh = false;
 int x, y;
 
-
+/* Allocate memory for data struct */
 void init_topWin(_topWin **win) {
 	_topWin *p = NULL;
 	p = malloc(sizeof(_topWin));
-	p->pathLen = 0;
-	p->timeLen = 0;
-	p->noteNum = 0;
-
 	*win = p;
 }
 
+/* Setup and print the top window to screen */
 void showTopWin(){
-	/* Kill the window and delete it. Otherwise you get ugly effects */
+	/* If the window already exists, delete it. Otherwise you get ugly effects. */
 	if (topWin)
 		delwin(topWin);
 	endwin();
 
-	/* Get the screen coordinates and recreate window*/
+	/* Create the window*/
 	topWin = newwin(1, x, 0, 0);
 
-	/* Turn colors back on */
-	start_color();
-	init_pair(1, COLOR_BLACK, COLOR_WHITE);
+	/* Turn colors on */
 	wattron(topWin,COLOR_PAIR(1));
 	wbkgd(topWin,COLOR_PAIR(1));
 
@@ -76,22 +66,33 @@ void showTopWin(){
 	wrefresh(topWin);
 }
 
+/* Setup and print the middle window to screen */
 void showMidWin() {
+	/* If the window already exists, delete it. Otherwise you get ugly effects. */
 	if (midWin)
 		delwin(midWin);
 	endwin();
 
-	midWin = newwin(y - MIDWINPAD, x, 1, 0);
+	midWin = newwin(y - 1, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
 	wrefresh(midWin);
 }
 
+/* Setup and print the middle window to screen */
 void showBotWin() {
-	botWin = newwin(4, x, y-BOTWINPAD, 0);
-	mvwprintw(midWin, 0, 0, win->longString);
+	if (botWin)
+		delwin(botWin);
+	endwin();
+
+	botWin = newwin(1, x, y- 1, 0);
+
+	wattron(botWin,COLOR_PAIR(2));
+	wbkgd(botWin,COLOR_PAIR(2));
+	wrefresh(botWin);
 }
 
+/* Initialize the menu but don't show it */
 void initMenu() {
 	/* Create items */
 	int nItems;
@@ -104,9 +105,8 @@ void initMenu() {
 	footerMenu = new_menu((ITEM **)menuItems);
 }
 
+/* Setup and show the menu */
 void setMenu() {
-	unpost_menu(footerMenu);
-
 	/* Set menu option not to show the description */
 	menu_opts_off(footerMenu, O_SHOWDESC);
 
@@ -115,36 +115,45 @@ void setMenu() {
 	set_menu_sub(footerMenu, derwin(botWin, 1, x, 1, 1));
 	set_menu_format(footerMenu, 0, 6);
 
+	/* Get key events from the bottom window */
+	keypad(botWin, TRUE);
+
 	/* Post the menu */
 	post_menu(footerMenu);
-	keypad(botWin, TRUE);
 	wrefresh(botWin);
 }
 
+/* Show the windows (and remove botWin if it exists) */
 void showWins() {
+	if ( botWin )
+		delwin(botWin);
+	endwin();
 	getmaxyx(stdscr, y, x);
+	refresh(); // You need this refresh of stdscrn here or you get an ugly line at the bottom of the screen on resize
 	showTopWin();
 	showMidWin();
 }
 
+/* Shows the menu along the bottom of the screen */
 void showMenu() {
 	getmaxyx(stdscr, y, x);
-	showTopWin();
 	showBotWin();
 	setMenu();
-	showMidWin();
 }
 
+/* Hides the menu at the bottom of the screen */
 void hideMenu() {
 	unpost_menu(footerMenu);
 	wrefresh(botWin);
 }
 
+/* Handles screen resizes */
 static void hndSIGWINCH (int sig)
 {
 	showWins();
 }
 
+/* Setup ncurses */
 void initNcurses() {
 	initscr();
 	raw();
@@ -152,12 +161,17 @@ void initNcurses() {
 	noecho();
 	cbreak();
 	keypad(stdscr, TRUE);
+	start_color();
+	init_pair(1, COLOR_BLACK, COLOR_WHITE);
+	init_pair(2, COLOR_WHITE, COLOR_BLACK);
 }
 
+/* Select and execute options from the menu */
 void doMenu() {
-
+	/* Show the menu along the bottom of the screen */
 	showBotWin();
 	showMenu();
+
 	int ch;
 	ITEM *currItem;
 	bool keepGoing = true;
@@ -182,6 +196,7 @@ void doMenu() {
 			break;
 
 		default:
+			/* Hide the menu and break out of the loop */
 			hideMenu();
 			showWins();
 			needsRefresh = true;
@@ -192,6 +207,15 @@ void doMenu() {
 	}
 }
 
+void quit() {
+	int s = ARRAY_SIZE(choices);
+	for(int i = 0; i < s; ++i)
+		free_item(menuItems[i]);
+	free_menu(footerMenu);
+	free(win);
+	endwin();
+	exit(0);
+}
 
 int main (int argc, char *argv[])
 {
@@ -270,11 +294,8 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	int s = ARRAY_SIZE(choices);
-	for(int i = 0; i < s; ++i)
-		free_item(menuItems[i]);
-	free_menu(footerMenu);
-	free(win);
-	endwin();
+	quit();
+
+	/* Shouldn't get here... */
 	return 0;
 }
