@@ -27,7 +27,7 @@ typedef struct topWin {
 }_topWin;
 
 char *choices[] = {
-		"Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
+		" ", "Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
 		"Choice 6",
 		(char *)NULL,
 };
@@ -77,6 +77,10 @@ void showTopWin(){
 }
 
 void showMidWin() {
+	if (midWin)
+		delwin(midWin);
+
+	endwin();
 	midWin = newwin(y - MIDWINPAD, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
@@ -85,7 +89,7 @@ void showMidWin() {
 
 void showBotWin() {
 	botWin = newwin(4, x, y-BOTWINPAD, 0);
-	wrefresh(botWin);
+	mvwprintw(midWin, 0, 0, win->longString);
 }
 
 void initMenu() {
@@ -120,9 +124,15 @@ void setMenu() {
 void showWins() {
 	getmaxyx(stdscr, y, x);
 	showTopWin();
+	showMidWin();
+}
+
+void showMenu() {
+	getmaxyx(stdscr, y, x);
+	showTopWin();
 	showBotWin();
 	setMenu();
-	showMidWin(); // If you set midWin last then that's where the cursor ends up.
+	showMidWin();
 }
 
 static void hndSIGWINCH (int sig)
@@ -136,13 +146,10 @@ void initNcurses() {
 	nonl();
 	noecho();
 	cbreak();
-	keypad(stdscr, TRUE);
+	//keypad(stdscr, TRUE);
 }
 
-void setTop(_topWin *win) {
-	win->noteNum = 1;
-	win->pathLen = 4;
-}
+
 
 
 int main (int argc, char *argv[])
@@ -150,7 +157,6 @@ int main (int argc, char *argv[])
 	struct sigaction sa;
 	memset (&sa, '\0', sizeof(sa));
 	sa.sa_handler = hndSIGWINCH;
-
 
 	init_topWin(&win);
 
@@ -170,16 +176,14 @@ int main (int argc, char *argv[])
 		abort();
 	}
 
-
 	initNcurses();
 	initMenu();
 	showWins();
 
 
-
 	int ch;
 
-	while ( (ch = wgetch(botWin) ) != 'q') {
+	while ( (ch = wgetch(midWin) ) != 'q') {
 
 		if (sigaction(SIGWINCH, &sa, NULL) == -1)
 			printw("SADSADAS");
@@ -208,14 +212,29 @@ int main (int argc, char *argv[])
 			needsRefresh = true;
 			break;
 
-
-
 		case KEY_LEFT:
 			menu_driver(footerMenu, REQ_PREV_ITEM);
 			break;
 
 		case KEY_RIGHT:
 			menu_driver(footerMenu, REQ_NEXT_ITEM);
+			break;
+
+		case 13: /* Enter */
+		{	ITEM *cur;
+
+			cur = current_item(footerMenu);
+			strcpy(win->longString, item_name(cur));
+			pos_menu_cursor(footerMenu);
+			needsRefresh = true;
+			break;
+		}
+		break;
+
+
+		case 6:
+			strcpy(win->longString, "You Pressed the modify key");
+			showMenu();
 			break;
 
 		default:
@@ -235,6 +254,6 @@ int main (int argc, char *argv[])
 		free_item(menuItems[i]);
 	free_menu(footerMenu);
 	free(win);
-	endwin();			/* End curses mode		  */
+	endwin();
 	return 0;
 }
