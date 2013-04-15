@@ -12,6 +12,9 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+#define MIDWINPAD 2
+#define BOTWINPAD 1
+
 typedef struct topWin {
 	WINDOW *win;
 	int pathLen;
@@ -33,6 +36,7 @@ int x, y;
 WINDOW *topWin, *midWin, *botWin;
 _topWin *win;
 ITEM **menuItems;
+MENU *footerMenu;
 bool needsRefresh = false;
 int x, y;
 
@@ -73,18 +77,18 @@ void showTopWin(){
 }
 
 void showMidWin() {
-	midWin = newwin(y - 5, x, 1, 0);
+	midWin = newwin(y - MIDWINPAD, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
 	wrefresh(midWin);
 }
 
 void showBotWin() {
-	botWin = newwin(4, x, y-4, 0);
+	botWin = newwin(4, x, y-BOTWINPAD, 0);
 	wrefresh(botWin);
 }
 
-void setMenu() {
+void initMenu() {
 	/* Create items */
 	int nItems;
 	nItems = ARRAY_SIZE(choices);
@@ -93,27 +97,32 @@ void setMenu() {
 		menuItems[i] = new_item(choices[i], choices[i]);
 
 	/* Create menu */
-	menuItems = new_menu((ITEM **)menuItems);
+	footerMenu = new_menu((ITEM **)menuItems);
+}
+
+void setMenu() {
+	unpost_menu(footerMenu);
 
 	/* Set menu option not to show the description */
-	menu_opts_off(menuItems, O_SHOWDESC);
+	menu_opts_off(footerMenu, O_SHOWDESC);
 
 	/* Set main window and sub window */
-	set_menu_win(menuItems, botWin);
-	set_menu_sub(menuItems, derwin(botWin, 6, 68, 1, 1));
-	set_menu_format(menuItems, 3, 6);
+	set_menu_win(footerMenu, botWin);
+	set_menu_sub(footerMenu, derwin(botWin, 1, x, 1, 1));
+	set_menu_format(footerMenu, 0, 6);
 
 	/* Post the menu */
-	post_menu(menuItems);
+	post_menu(footerMenu);
+	keypad(botWin, TRUE);
 	wrefresh(botWin);
 }
 
 void showWins() {
 	getmaxyx(stdscr, y, x);
 	showTopWin();
-	showMidWin();
 	showBotWin();
 	setMenu();
+	showMidWin(); // If you set midWin last then that's where the cursor ends up.
 }
 
 static void hndSIGWINCH (int sig)
@@ -163,11 +172,14 @@ int main (int argc, char *argv[])
 
 
 	initNcurses();
+	initMenu();
 	showWins();
 
-	char ch;
 
-	while ( (ch = wgetch(topWin) ) != 'q') {
+
+	int ch;
+
+	while ( (ch = wgetch(botWin) ) != 'q') {
 
 		if (sigaction(SIGWINCH, &sa, NULL) == -1)
 			printw("SADSADAS");
@@ -196,6 +208,16 @@ int main (int argc, char *argv[])
 			needsRefresh = true;
 			break;
 
+
+
+		case KEY_LEFT:
+			menu_driver(footerMenu, REQ_PREV_ITEM);
+			break;
+
+		case KEY_RIGHT:
+			menu_driver(footerMenu, REQ_NEXT_ITEM);
+			break;
+
 		default:
 			win->noteNum = (int)ch;
 			needsRefresh = true;
@@ -208,6 +230,10 @@ int main (int argc, char *argv[])
 		}
 	}
 
+	int s = ARRAY_SIZE(choices);
+	for(int i = 0; i < s; ++i)
+		free_item(menuItems[i]);
+	free_menu(footerMenu);
 	free(win);
 	endwin();			/* End curses mode		  */
 	return 0;
