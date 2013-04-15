@@ -1,11 +1,16 @@
-
+#define _POSIX_SOURCE // You need this here to get rid of the warning with sigaction
 #include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ncurses.h>
+#include <menu.h>
 
+#include <sys/types.h>
+#include <signal.h>
+
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 typedef struct topWin {
 	WINDOW *win;
@@ -18,10 +23,18 @@ typedef struct topWin {
 	int longStrLen;
 }_topWin;
 
+char *choices[] = {
+		"Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
+		"Choice 6",
+		(char *)NULL,
+};
+
 int x, y;
 WINDOW *topWin, *midWin, *botWin;
 _topWin *win;
+ITEM **menuItems;
 bool needsRefresh = false;
+int x, y;
 
 
 void init_topWin(_topWin **win) {
@@ -34,19 +47,14 @@ void init_topWin(_topWin **win) {
 	*win = p;
 }
 
-void showWins() {
+void showTopWin(){
 	/* Kill the window and delete it. Otherwise you get ugly effects */
 	if (topWin)
 		delwin(topWin);
 	endwin();
 
-
-	/* Get the screen coordinates and recreate windows*/
-	int xt, yt;
-	getmaxyx(stdscr, yt, xt);
-	topWin = newwin(1, xt, 0, 0);
-	midWin = newwin(yt, xt, 1, 0);
-	mvwprintw(midWin, 0, 0, "THINGSHERE");
+	/* Get the screen coordinates and recreate window*/
+	topWin = newwin(1, x, 0, 0);
 
 	/* Turn colors back on */
 	start_color();
@@ -58,16 +66,57 @@ void showWins() {
 	sprintf(noteStr, "Note #%d", win->noteNum);
 
 	/* Print heading text to screen */
-	mvwprintw(topWin, 0, (xt/2)-(win->pathLen/2), win->path); // Middle
+	mvwprintw(topWin, 0, (x/2)-(win->pathLen/2), win->path); // Middle
 	mvwprintw(topWin, 0, 0, noteStr); // Left
-	mvwprintw(topWin, 0, xt-(win->timeLen+2), win->time); // Right
+	mvwprintw(topWin, 0, x-(win->timeLen+2), win->time); // Right
 	wrefresh(topWin);
+}
+
+void showMidWin() {
+	midWin = newwin(y - 5, x, 1, 0);
 	mvwprintw(midWin, 0, 0, win->longString);
 	wmove(midWin, 0, 0);
 	wrefresh(midWin);
 }
 
-static void hndlSigwinch (int sig)
+void showBotWin() {
+	botWin = newwin(4, x, y-4, 0);
+	wrefresh(botWin);
+}
+
+void setMenu() {
+	/* Create items */
+	int nItems;
+	nItems = ARRAY_SIZE(choices);
+	menuItems = (ITEM **)calloc(nItems, sizeof(ITEM *));
+	for(int i = 0; i < nItems; ++i)
+		menuItems[i] = new_item(choices[i], choices[i]);
+
+	/* Create menu */
+	menuItems = new_menu((ITEM **)menuItems);
+
+	/* Set menu option not to show the description */
+	menu_opts_off(menuItems, O_SHOWDESC);
+
+	/* Set main window and sub window */
+	set_menu_win(menuItems, botWin);
+	set_menu_sub(menuItems, derwin(botWin, 6, 68, 1, 1));
+	set_menu_format(menuItems, 3, 6);
+
+	/* Post the menu */
+	post_menu(menuItems);
+	wrefresh(botWin);
+}
+
+void showWins() {
+	getmaxyx(stdscr, y, x);
+	showTopWin();
+	showMidWin();
+	showBotWin();
+	setMenu();
+}
+
+static void hndSIGWINCH (int sig)
 {
 	showWins();
 }
@@ -91,7 +140,7 @@ int main (int argc, char *argv[])
 {
 	struct sigaction sa;
 	memset (&sa, '\0', sizeof(sa));
-	sa.sa_handler = hndlSigwinch;
+	sa.sa_handler = hndSIGWINCH;
 
 
 	init_topWin(&win);
@@ -111,6 +160,8 @@ int main (int argc, char *argv[])
 	} else {
 		abort();
 	}
+
+
 	initNcurses();
 	showWins();
 
@@ -122,33 +173,33 @@ int main (int argc, char *argv[])
 			printw("SADSADAS");
 
 		switch (ch) {
-			case 'd':
-				win->noteNum = 2;
-				strcpy(win->path, "/home/fragmachine/Diffpath");
-				strcpy(win->time, "03/12/1922 01:24");
-				strcpy(win->longString, str);
-				win->timeLen = strlen(win->time);
-				win->pathLen = strlen(win->path);
-				win->longStrLen = strlen(str);
-				needsRefresh = true;
-				break;
+		case 'd':
+			win->noteNum = 2;
+			strcpy(win->path, "/home/fragmachine/Diffpath");
+			strcpy(win->time, "03/12/1922 01:24");
+			strcpy(win->longString, str);
+			win->timeLen = strlen(win->time);
+			win->pathLen = strlen(win->path);
+			win->longStrLen = strlen(str);
+			needsRefresh = true;
+			break;
 
-			case 'a':
-				win->noteNum = 3;
-				strcpy(win->path, "IS CHANGING!");
-				strcpy(win->time, "04/12/1922 12:34");
-				strcpy(win->longString, str);
-				win->timeLen = strlen(win->time);
-				win->pathLen = strlen(win->path);
-				win->longStrLen = strlen(str);
-				win->noteNum = (int)ch;
-				needsRefresh = true;
-				break;
+		case 'a':
+			win->noteNum = 3;
+			strcpy(win->path, "IS CHANGING!");
+			strcpy(win->time, "04/12/1922 12:34");
+			strcpy(win->longString, str);
+			win->timeLen = strlen(win->time);
+			win->pathLen = strlen(win->path);
+			win->longStrLen = strlen(str);
+			win->noteNum = (int)ch;
+			needsRefresh = true;
+			break;
 
-			default:
-				win->noteNum = (int)ch;
-				needsRefresh = true;
-				break;
+		default:
+			win->noteNum = (int)ch;
+			needsRefresh = true;
+			break;
 		}
 
 		if (needsRefresh) {
