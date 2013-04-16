@@ -54,9 +54,9 @@ char cwdBuffer[MAX_CWDBUFF_SIZE];
 char *path;
 
 /* Condition for gui loop */
-extern volatile bool needsRefresh;
-extern volatile int NCOLS;
-extern volatile int NROWS;
+extern bool needsRefresh;
+extern int NCOLS;
+extern int NROWS;
 
 #define NUM_CHOICES 6
 #define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH

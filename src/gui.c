@@ -18,9 +18,9 @@ struct sigaction sa;
 
 struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
 
-volatile GUIDATA *gd;
-volatile int NCOLS;
-volatile int NROWS;
+extern GUIDATA *gd;
+int NCOLS;
+int NROWS;
 
 /* Allocate memory for data struct */
 void init_topWin(_topWin **win) {
@@ -87,7 +87,7 @@ void showWins() {
 /* Initialize the menu but don't show it */
 void initMenu(char *choices[]) {
 	gd->menuItems = (ITEM **)calloc(NUM_CHOICES, sizeof(ITEM *));
-	for(int i = 0; (char*)choices[i] != (char*)NULL; ++i)
+	for(int i = 0; i < NUM_CHOICES ; ++i)
 		gd->menuItems[i] = new_item(choices[i], choices[i]);
 
 	/* Create menu */
@@ -192,7 +192,7 @@ void doMenu() {
 /* Free all memory and quit */
 void quit() {
 	unpost_menu(gd->footerMenu);
-	for(int i = 0; (char*)gd->menuItems[i] != (char*)NULL ; ++i)
+	for(int i = 0; i < NUM_CHOICES ; ++i)
 		free_item(gd->menuItems[i]);
 	free_menu(gd->footerMenu);
 	free(gd->menuItems);

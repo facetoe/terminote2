@@ -8,21 +8,19 @@
 #include "gui.h"
 
 
-volatile bool needsRefresh = false;
-volatile int NCOLS = 0;
-volatile int NROWS = 0;
-volatile GUIDATA *gd;
+bool needsRefresh = false;
+int NCOLS = 0;
+int NROWS = 0;
+GUIDATA *gd = NULL;
 
 char *choices[]  = {
 		"Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
-		"Choice 6",(char *)NULL,
+		"Choice 6"
 };
 
 
 int main (int argc, char *argv[])
 {
-
-	gd = NULL;
 	gd = malloc(sizeof(gd));
 
 	initSigaction();
@@ -31,8 +29,11 @@ int main (int argc, char *argv[])
 	showWins(gd);
 	guiLoop(gd);
 	quit();
-	free(gd);
+	//free(gd);
 
 	return 0;
 }
+
+
+
 
