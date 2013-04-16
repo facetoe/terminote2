@@ -31,7 +31,6 @@ typedef struct guiData {
 	WINDOW *topWin;
 	WINDOW *midWin;
 	WINDOW *botWin;
-	ITEM **menuItems;
 	MENU *footerMenu;
 }GUIDATA;
 
@@ -66,6 +65,8 @@ void hideMenu();
 
 /* Setup ncurses */
 void initNcurses();
+
+void initWins();
 
 /* Select and execute options from the menu */
 void doMenu();

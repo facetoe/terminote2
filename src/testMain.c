@@ -11,28 +11,31 @@
 bool needsRefresh = false;
 int NCOLS = 0;
 int NROWS = 0;
-GUIDATA *gd = NULL;
+
+WINDOW *topWin, *midWin, *botWin;
+_topWin *win;
+ITEM **menuItems;
+MENU *footerMenu;
 
 char *choices[]  = {
 		"Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5",
-		"Choice 6"
+		"Choice 6", (char *)NULL,
 };
 
 
 int main (int argc, char *argv[])
 {
-	gd = malloc(sizeof(gd));
-
 	initSigaction();
 	initNcurses();
+	showWins();
 	initMenu(choices);
-	showWins(gd);
-	guiLoop(gd);
-	quit();
-	//free(gd);
+	initWins();
+	guiLoop();
+	quit(choices);
 
 	return 0;
 }
+
 
 
 

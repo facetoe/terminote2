@@ -58,8 +58,10 @@ extern bool needsRefresh;
 extern int NCOLS;
 extern int NROWS;
 
-#define NUM_CHOICES 6
+#define NUM_CHOICES 7
 #define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 
 #endif /* DEFINES_H_ */

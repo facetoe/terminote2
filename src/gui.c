@@ -18,9 +18,12 @@ struct sigaction sa;
 
 struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
 
-extern GUIDATA *gd;
 int NCOLS;
 int NROWS;
+
+extern WINDOW *topWin, *midWin, *botWin;
+extern ITEM **menuItems;
+extern MENU *footerMenu;
 
 /* Allocate memory for data struct */
 void init_topWin(_topWin **win) {
@@ -38,40 +41,38 @@ void getScrnSize() {
 /* Setup and print the top window to screen */
 void showTopWin(){
 	/* Create the window*/
-	if ( !gd->topWin )
-		gd->topWin = newwin(1, NCOLS, 0, 0);
+	if ( !topWin )
+		topWin = newwin(1, NCOLS, 0, 0);
 
 	/* Turn colors on */
-	wattron(gd->topWin,COLOR_PAIR(1));
-	wbkgd(gd->topWin,COLOR_PAIR(1));
+	wattron( topWin,COLOR_PAIR(1));
+	wbkgd( topWin,COLOR_PAIR(1));
 
 	char noteStr[100];
 	sprintf(noteStr, "Note #%d", NCOLS);
 
 	// win stuff was here
-	wprintw(gd->topWin, "%d %d", NROWS, NCOLS);
+	mvwprintw(topWin, 0, 0, "Harro");
 
-	wnoutrefresh(gd->topWin);
+	wnoutrefresh( topWin);
 }
 
 /* Setup and print the middle window to screen */
 void showMidWin() {
-	if (!gd->midWin)
-		gd->midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-	wmove(gd->midWin, 0, 0);
-	wprintw(gd->midWin, "FUCKFUYCKFYCJ");
-	wnoutrefresh(gd->midWin);
+	if (! midWin)
+		 midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+	wnoutrefresh( midWin);
 }
 
 /* Setup and print the middle window to screen */
 void showBotWin() {
-	if (!gd->botWin)
-		gd->botWin = newwin(1, NCOLS, NROWS- 1, 0);
-	wattron(gd->botWin,COLOR_PAIR(2));
-	wbkgd(gd->botWin,COLOR_PAIR(2));
+	if (!botWin)
+		 botWin = newwin(1, NCOLS, NROWS- 1, 0);
+	wattron( botWin,COLOR_PAIR(2));
+	wbkgd( botWin,COLOR_PAIR(2));
 
-	wnoutrefresh(gd->botWin);
-	keypad(gd->botWin, true);
+	wnoutrefresh( botWin);
+	keypad( botWin, true);
 }
 
 
@@ -79,38 +80,50 @@ void showBotWin() {
 void showWins() {
 	getScrnSize();
 	resizeterm(NROWS, NCOLS);
-	showTopWin(gd);
-	showMidWin(gd);
-	wrefresh(curscr); // This redraws everything
+	showTopWin();
+	showMidWin();
+	doupdate();
+}
+
+void initWins() {
+	getScrnSize();
+	resizeterm(NROWS, NCOLS);
+	showTopWin();
+	showMidWin();
+	showBotWin();
+	setMenu();
+	hideMenu();
+	doupdate();
 }
 
 /* Initialize the menu but don't show it */
 void initMenu(char *choices[]) {
-	gd->menuItems = (ITEM **)calloc(NUM_CHOICES, sizeof(ITEM *));
-	for(int i = 0; i < NUM_CHOICES ; ++i)
-		gd->menuItems[i] = new_item(choices[i], choices[i]);
+	menuItems = (ITEM **)calloc(NUM_CHOICES, sizeof(ITEM *));
+	for(int i = 0; i < NUM_CHOICES ; ++i) {
+		menuItems[i] = new_item(choices[i], choices[i]);
+	}
 
 	/* Create menu */
-	gd->footerMenu = new_menu((ITEM **)gd->menuItems);
+	 footerMenu = new_menu((ITEM **)menuItems);
 }
 
 
 /* Setup and show the menu */
 void setMenu() {
 	/* Set menu option not to show the description */
-	menu_opts_off(gd->footerMenu, O_SHOWDESC);
+	menu_opts_off( footerMenu, O_SHOWDESC);
 
 	/* Set main window and sub window */
-	set_menu_win(gd->footerMenu, gd->botWin);
-	set_menu_sub(gd->footerMenu, derwin(gd->botWin, 1, NCOLS, 1, 1));
-	set_menu_format(gd->footerMenu, 0, 6);
+	set_menu_win( footerMenu,  botWin);
+	set_menu_sub( footerMenu, derwin( botWin, 1, NCOLS, 1, 1));
+	set_menu_format( footerMenu, 0, 6);
 
 	/* Get key events from the bottom window */
-	keypad(gd->botWin, TRUE);
+	keypad( botWin, TRUE);
 
 	/* Post the menu */
-	post_menu(gd->footerMenu);
-	wnoutrefresh(gd->botWin);
+	post_menu( footerMenu);
+	wnoutrefresh( botWin);
 }
 
 
@@ -118,15 +131,15 @@ void setMenu() {
 void showMenu() {
 	getScrnSize(NCOLS, NROWS);
 	resizeterm(NROWS, NCOLS);
-	setMenu(gd);
-	showBotWin(gd);
-	wrefresh(curscr);
+	showBotWin();
+	setMenu();
+	doupdate();
 }
 
 /* Hides the menu at the bottom of the screen */
 void hideMenu() {
-	unpost_menu(gd->footerMenu);
-	wrefresh(gd->botWin);
+	unpost_menu( footerMenu);
+	wrefresh( botWin);
 }
 
 /* Handles screen resizes */
@@ -151,37 +164,37 @@ void initNcurses() {
 /* Select and execute options from the menu */
 void doMenu() {
 	/* Show the menu along the bottom of the screen */
-	showBotWin(gd);
-	showMenu(gd);
-	wnoutrefresh(gd->botWin);
+	showBotWin();
+	showMenu( );
+	wnoutrefresh( botWin);
 	doupdate();
 
 	int ch;
 	ITEM *currItem;
 	bool keepGoing = true;
 	while ( keepGoing ) {
-		ch = wgetch(gd->botWin);
+		ch = wgetch( botWin );
 		switch (ch) {
 		case KEY_LEFT:
-			menu_driver(gd->footerMenu, REQ_PREV_ITEM);
+			menu_driver( footerMenu, REQ_PREV_ITEM);
 			break;
 
 		case KEY_RIGHT:
-			menu_driver(gd->footerMenu, REQ_NEXT_ITEM);
+			menu_driver( footerMenu, REQ_NEXT_ITEM);
 			break;
 
 		case 13: /* Enter */
-			currItem = current_item(gd->footerMenu);
-			hideMenu(gd);
-			showWins(gd);
-
+			currItem = current_item(footerMenu);
+			wprintw(midWin, "%s\n", item_name(currItem));
+			hideMenu();
+			showWins();
 			keepGoing = false;
 			break;
 
 		default:
 			/* Hide the menu and break out of the loop */
-			hideMenu(gd);
-			showWins(gd);
+			hideMenu();
+			showWins();
 			needsRefresh = true;
 			keepGoing = false;
 			break;
@@ -191,13 +204,12 @@ void doMenu() {
 
 /* Free all memory and quit */
 void quit() {
-	unpost_menu(gd->footerMenu);
+	unpost_menu( footerMenu);
 	for(int i = 0; i < NUM_CHOICES ; ++i)
-		free_item(gd->menuItems[i]);
-	free_menu(gd->footerMenu);
-	free(gd->menuItems);
-
+		free_item(menuItems[i]);
+	free_menu( footerMenu);
 	endwin();
+	exit(0);
 }
 
 /* Set up the SIGWINCH handler */
@@ -207,11 +219,11 @@ void initSigaction() {
 }
 
 /* run main GUI loop */
-void guiLoop(GUIDATA  *gd) {
+void guiLoop() {
 
 	int ch;
 
-	while ( (ch = wgetch(gd->midWin) ) != 'q') {
+	while ( (ch = wgetch(midWin) ) != 'q') {
 
 		if (sigaction(SIGWINCH, &sa, NULL) == -1)
 			printw("SADSADAS");
@@ -229,7 +241,7 @@ void guiLoop(GUIDATA  *gd) {
 			break;
 
 		case 6:
-			doMenu(gd);
+			doMenu();
 			break;
 
 		default:
@@ -238,7 +250,7 @@ void guiLoop(GUIDATA  *gd) {
 		}
 
 		if (needsRefresh) {
-			showWins(gd);
+			showWins();
 			needsRefresh = false;
 		}
 	}
