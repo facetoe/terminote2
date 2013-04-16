@@ -20,6 +20,10 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include <menu.h>
+#include <ncurses.h>
+
+
 
 /* Buffers and buffer sizes */
 #define MAX_SEARCHTERM_SIZE 300
@@ -49,8 +53,13 @@ char cwdBuffer[MAX_CWDBUFF_SIZE];
 /* Location of data file */
 char *path;
 
-/* Condition for run loop */
-extern volatile int keepRunning;
+/* Condition for gui loop */
+extern volatile bool needsRefresh;
+extern volatile int NCOLS;
+extern volatile int NROWS;
+
+#define NUM_CHOICES 6
+#define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH
 
 
 #endif /* DEFINES_H_ */
