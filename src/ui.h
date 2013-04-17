@@ -1,17 +1,23 @@
 /*
- * gui.h
+ * ui.h
  *
- *  Created on: 16/04/2013
+ *  Created on: 17/04/2013
  *      Author: facetoe
  */
 
-#ifndef GUI_H_
-#define GUI_H_
+#ifndef UI_H_
+#define UI_H_
+
+#define _POSIX_SOURCE // You need this here to get rid of the warning with sigaction
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ncurses.h>
 #include <menu.h>
+
 #include <signal.h>
 #include <sys/ioctl.h>
-#include "defines.h"
 
 
 typedef struct topWin {
@@ -23,19 +29,10 @@ typedef struct topWin {
 	char time[30];
 	char longString[500];
 	int longStrLen;
-}_topWin;
-
-
-
-typedef struct guiData {
-	WINDOW *topWin;
-	WINDOW *midWin;
-	WINDOW *botWin;
-	MENU *footerMenu;
-}GUIDATA;
+} _topWin;
 
 /* Allocate memory for data struct */
-void init_topWin(_topWin **win);
+void init_topWin();
 
 void getScrnSize();
 
@@ -49,7 +46,7 @@ void showMidWin();
 void showBotWin();
 
 /* Initialize the menu but don't show it */
-void initMenu(char *choices[]);
+void initMenu();
 
 /* Setup and show the menu */
 void setMenu();
@@ -63,10 +60,11 @@ void showMenu();
 /* Hides the menu at the bottom of the screen */
 void hideMenu();
 
+/* Handles screen resizes */
+static void hndSIGWINCH(int sig);
+
 /* Setup ncurses */
 void initNcurses();
-
-void initWins();
 
 /* Select and execute options from the menu */
 void doMenu();
@@ -80,4 +78,5 @@ void initSigaction();
 /* run main GUI loop */
 void guiLoop();
 
-#endif /* GUI_H_ */
+
+#endif /* UI_H_ */
