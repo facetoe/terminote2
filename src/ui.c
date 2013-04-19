@@ -55,6 +55,8 @@ void showTopWin() {
 }
 
 void showHelpScreen() {
+	getScrnSize();
+
 	/* Create the windows*/
 	topWin = newwin(1, NCOLS, 0, 0);
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
@@ -67,11 +69,32 @@ void showHelpScreen() {
 	sprintf(title, "Terminote %.1f Help", VERSION_NUM);
 	mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
 
-	char *helpHeading = "Terminote Interactive Help:";
+	char helpBody[][250] =			{
+			"Terminote version %.1f - a command line note tool.\n\n",
 
-	/* Print the help message */
-	mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(helpHeading) / 2), helpHeading);
-	waddstr(midWin, "\n\nTerminote interactive allows viewing, editing and creating notes in an interative manner.");
+			"Terminote reacts differently depending on how you call it.\n",
+			"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n",
+			"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n",
+			"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n",
+			"	-h: Print this message and quit.\n",
+			"	-P: Prints the last note only, no path or number, then deletes it.\n",
+			"	-F: Prints the last note with full info (path/time/num) then deletes it.\n",
+			"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n",
+			"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n",
+			"	-R: Deletes all notes.\n",
+			"	-p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n",
+			"	-l: Prints all the notes leaving them intact.\n",
+			"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n",
+			"	-a: Appends a note to the list. Requires a string argument.\n\n",
+			"CONTACT:\n",
+			"  Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n\n\n"
+	};
+
+	/* Print as many lines of the help message as we can */
+	int nLines = ARRAY_SIZE(helpBody);
+	for (int i = 0; i < NROWS-1 && i < nLines; ++i) {
+		waddstr(midWin, helpBody[i]);
+	}
 
 	/* Hide whichever menu got us here */
 	unpost_menu(startMenu);
@@ -82,8 +105,54 @@ void showHelpScreen() {
 	wnoutrefresh(topWin);
 	wnoutrefresh(midWin);
 	doupdate();
+
+
 	/* Wait for input on help screen so it doesn't instantly vanish */
-	wgetch(botWin);
+	keypad(botWin, true);
+	int ch;
+	bool keepGoing = true;
+	int startPos = 0;
+	while (keepGoing) {
+		ch = wgetch(botWin);
+		switch (ch) {
+
+		case KEY_DOWN:
+			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
+			for (int i = ++startPos; i < NROWS - 1 && i < nLines; ++i) {
+				waddstr(midWin, helpBody[i]);
+			}
+			wclrtoeol(midWin);
+			waddstr(midWin, "\0");
+			wrefresh(midWin);
+			mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
+			wrefresh(topWin);
+			break;
+
+		case KEY_UP:
+			if( startPos < 0 )
+				startPos = 0;
+			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
+			for (int i = --startPos; i < NROWS -1 && i < nLines; ++i) {
+				waddstr(midWin, helpBody[i]);
+			}
+
+			wclrtoeol(midWin);
+			waddstr(midWin, "\0");
+			wrefresh(midWin);
+			mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
+			wrefresh(topWin);
+			break;
+
+		default:
+			keepGoing = false;
+			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
+			wrefresh(midWin);
+			unpost_menu(startMenu);
+			unpost_menu(footerMenu);
+			showWins();
+			break;
+		}
+	}
 }
 
 /* Setup and print the middle window to screen */
@@ -332,6 +401,7 @@ void doStartMenu() {
 	while (keepGoing) {
 		ch = wgetch(botWin);
 		switch (ch) {
+
 		case KEY_LEFT:
 			menu_driver(startMenu, REQ_PREV_ITEM);
 			break;
