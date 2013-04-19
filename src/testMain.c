@@ -7,7 +7,7 @@
 #include "ui.h"
 
 
-
+listNode *list = NULL;
 int main(int argc, char **argv) {
 
 	if (getDataPath(pathBuffer, MAX_PATH_SIZE, DATA_FILE))
@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	listNode *list = NULL;
 	list_init(&list);
 	if( !list ) {
 		fprintf(stderr, "Failed to create list\n");
@@ -30,7 +29,8 @@ int main(int argc, char **argv) {
 	initSigaction();
 	init_topWin();
 	initNcurses();
-	initMenu();
+	initMainMenu();
+	initStartMenu();
 	showWins();
 	guiLoop(list);
 	quit();
