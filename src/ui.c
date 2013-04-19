@@ -41,10 +41,10 @@ void showTopWin() {
 	wbkgd(topWin, COLOR_PAIR(1));
 
 	char noteStr[100];
-	sprintf(noteStr, "Note #%d", win->noteNum);
+	snprintf(noteStr, 100, "Note #%d", win->noteNum);
 
-	mvwprintw(topWin, 0, (NCOLS / 2) - (win->pathLen / 2), win->path);
-	mvwprintw(topWin, 0, 0, noteStr);
+	mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(noteStr) / 2), noteStr);
+	mvwprintw(topWin, 0, 0, win->path);
 	mvwprintw(topWin, 0, (NCOLS - win->timeLen) - 2, win->time);
 	wnoutrefresh(topWin);
 }
@@ -209,9 +209,6 @@ void guiLoop(listNode *ln) {
 	char str[100];
 	noteNode *msg;
 
-	if(ln->num == 0)
-		ln = ln->next;
-
 	while ((ch = wgetch(midWin)) != 'q') {
 
 		if (sigaction(SIGWINCH, &sa, NULL) == -1)
@@ -220,12 +217,15 @@ void guiLoop(listNode *ln) {
 		switch (ch) {
 
 		case 'd':
+			list_next(&ln);
 			msg  = ln->message;
 			for (i = 0; msg ; msg = msg->next, ++i) {
 				str[i] = msg->ch;
 			}
+			str[i] = '\0';
 			strcpy(win->time, ln->time);
 			strcpy(win->path, ln->path);
+			strcpy(win->longString, str);
 			win->timeLen = strlen(win->time);
 			win->pathLen = strlen(win->path);
 			win->noteNum = ln->num;
@@ -233,14 +233,18 @@ void guiLoop(listNode *ln) {
 			break;
 
 		case 'a':
-			win->noteNum = 3;
-			strcpy(win->path, "IS CHANGING!");
-			strcpy(win->time, "04/12/1922 12:34");
+			list_previous(&ln);
+			msg  = ln->message;
+			for (i = 0; msg ; msg = msg->next, ++i) {
+				str[i] = msg->ch;
+			}
+			str[i] = '\0';
+			strcpy(win->time, ln->time);
+			strcpy(win->path, ln->path);
 			strcpy(win->longString, str);
 			win->timeLen = strlen(win->time);
 			win->pathLen = strlen(win->path);
-			win->longStrLen = strlen(str);
-			win->noteNum = (int) ch;
+			win->noteNum = ln->num;
 			needsRefresh = true;
 			break;
 
