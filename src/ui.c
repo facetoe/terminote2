@@ -41,7 +41,7 @@ void showTopWin() {
 	wbkgd(topWin, COLOR_PAIR(1));
 
 	char noteStr[100];
-	sprintf(noteStr, "%d %d", NCOLS, NROWS);
+	sprintf(noteStr, "Note #%d", win->noteNum);
 
 	mvwprintw(topWin, 0, (NCOLS / 2) - (win->pathLen / 2), win->path);
 	mvwprintw(topWin, 0, 0, noteStr);
@@ -52,8 +52,11 @@ void showTopWin() {
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-	mvwprintw(midWin, 0, 0, win->longString);
-	wmove(midWin, 0, 0);
+	for (char *s = win->longString; *s ; s++) {
+		waddch(midWin, *s);
+	}
+	//mvwprintw(midWin, 0, 0, win->longString);
+	//wmove(midWin, 0, 0);
 	wnoutrefresh(midWin);
 }
 
@@ -199,25 +202,15 @@ void initSigaction() {
 }
 
 /* run main GUI loop */
-void guiLoop() {
-	char *str = "This goes in midWin\nNewlines work\nfoo bar bla";
-
-	if (win) {
-
-		win->noteNum = 2;
-		strcpy(win->path, "/home/fragmachine/Diffpath");
-		strcpy(win->time, "03/12/1922 01:24");
-		strcpy(win->longString, str);
-		win->timeLen = strlen(win->time);
-		win->pathLen = strlen(win->path);
-		win->longStrLen = strlen(str);
-		needsRefresh = true;
-
-	} else {
-		abort();
-	}
+void guiLoop(listNode *ln) {
 
 	int ch;
+	int i;
+	char str[100];
+	noteNode *msg;
+
+	if(ln->num == 0)
+		ln = ln->next;
 
 	while ((ch = wgetch(midWin)) != 'q') {
 
@@ -227,13 +220,15 @@ void guiLoop() {
 		switch (ch) {
 
 		case 'd':
-			win->noteNum = 2;
-			strcpy(win->path, "/home/fragmachine/Diffpath");
-			strcpy(win->time, "03/12/1922 01:24");
-			strcpy(win->longString, str);
+			msg  = ln->message;
+			for (i = 0; msg ; msg = msg->next, ++i) {
+				str[i] = msg->ch;
+			}
+			strcpy(win->time, ln->time);
+			strcpy(win->path, ln->path);
 			win->timeLen = strlen(win->time);
 			win->pathLen = strlen(win->path);
-			win->longStrLen = strlen(str);
+			win->noteNum = ln->num;
 			needsRefresh = true;
 			break;
 

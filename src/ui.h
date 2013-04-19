@@ -9,15 +9,13 @@
 #define UI_H_
 
 #define _POSIX_SOURCE // You need this here to get rid of the warning with sigaction
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
+
 #include <ncurses.h>
 #include <menu.h>
-
 #include <signal.h>
 #include <sys/ioctl.h>
+#include "linkedList.h"
+
 
 
 typedef struct topWin {
@@ -76,7 +74,7 @@ void quit();
 void initSigaction();
 
 /* run main GUI loop */
-void guiLoop();
+void guiLoop(listNode *ln);
 
 
 #endif /* UI_H_ */

@@ -24,7 +24,6 @@
 #include <ncurses.h>
 
 
-
 /* Buffers and buffer sizes */
 #define MAX_SEARCHTERM_SIZE 300
 #define MAX_CWDBUFF_SIZE 300
