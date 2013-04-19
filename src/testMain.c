@@ -27,19 +27,10 @@ int main(int argc, char **argv) {
 	list_load(list);
 
 	initSigaction();
-	init_topWin();
 	initNcurses();
 	initMainMenu();
 	initStartMenu();
-	showWins();
 	guiLoop(list);
 	quit();
-
-	/* Clean up */
-	list_save(list);
-	list_destroy(list);
-
-
-
 	return 0;
 }

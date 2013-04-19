@@ -29,9 +29,6 @@ typedef struct topWin {
 	int longStrLen;
 } _topWin;
 
-/* Allocate memory for data struct */
-void init_topWin();
-
 void getScrnSize();
 
 /* Setup and print the top window to screen */
@@ -40,7 +37,7 @@ void showTopWin();
 /* Setup and print the middle window to screen */
 void showMidWin();
 
-/* Setup and print the middle window to screen */
+/* Setup and print the bottom window to screen */
 void showBotWin();
 
 /* Show the windows (and remove botWin if it exists) */
@@ -76,21 +73,20 @@ static void hndSIGWINCH(int sig);
 /* Setup ncurses */
 void initNcurses();
 
-/* Select and execute options from the menu */
-void doMenu();
-
-/* Select and execute options from the menu */
-void doStartMenu();
-
 /* Free all memory and quit */
 void quit();
 
 /* Set up the SIGWINCH handler */
 void initSigaction();
 
+/* Select and execute options from the menu */
+void doMenu();
+
+/* Select and execute options from the menu */
+void doStartMenu();
+
 /* run main GUI loop */
 void guiLoop();
-
 
 
 #endif /* UI_H_ */
