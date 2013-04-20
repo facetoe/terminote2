@@ -16,18 +16,14 @@
 #include <sys/ioctl.h>
 #include "linkedList.h"
 
+struct line {
+	int lNum;
+	int lSize;
+	char *line;
+	struct line *next;
+};
+typedef struct line LINE;
 
-
-typedef struct topWin {
-	WINDOW *win;
-	int pathLen;
-	int timeLen;
-	int noteNum;
-	char path[100];
-	char time[30];
-	char longString[500];
-	int longStrLen;
-} _topWin;
 
 void getScrnSize();
 

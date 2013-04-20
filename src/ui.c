@@ -14,7 +14,6 @@ char *startMenuStrings[] = { "New", "Browse", "Search", "Quit", "Help", (char *)
 
 /* Global variables */
 WINDOW *topWin, *midWin, *botWin;
-_topWin *win;
 ITEM **mainMenuItems;
 ITEM **startMenuItems;
 MENU *startMenu;
@@ -182,90 +181,78 @@ void showMidWin() {
 
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
+	LINE *line = (LINE*)malloc(sizeof(LINE));
+	LINE *root = line;
 	int nlines = 0;
-	int numChars = 0;
 
-	/* If we are not in the root node then print the message in the middle window */
-	if ( list->num > 0 )
-		for (; msg ; msg = msg->next) {
-			numChars++;
-			if (msg->ch != '\n' && msg->ch != '\0') {
-				dArr_add(lineBuffer, msg->ch);
-			} else {
-				nlines++;
-				dArr_add(lineBuffer, '\n');
-				dArr_add(lineBuffer, '\0');
-				waddstr(midWin, lineBuffer->contents);
-				dArr_clear(&lineBuffer);
-			}
-
-			if( nlines >= NROWS -2 ) {
-				dArr_clear(&lineBuffer);
-				break;
-			}
+	for (; msg ; msg = msg->next) {
+		if (msg->ch != '\n' && msg->ch != '\0') {
+			dArr_add(lineBuffer, msg->ch);
+		} else {
+			nlines++;
+			dArr_add(lineBuffer, '\n');
+			dArr_add(lineBuffer, '\0');
+			line->next = (LINE*)malloc(sizeof(LINE));
+			line->line = malloc( sizeof(char) * ( lineBuffer->currSize ) );
+			line->lSize = lineBuffer->currSize;
+			strcpy(line->line, lineBuffer->contents);
+			line->lNum = nlines;
+			line = line->next;
+			line->next = NULL;
+			dArr_clear(&lineBuffer);
 		}
 
+	}
+
+	for (line = root; line->lNum <= NROWS-2; line = line->next) {
+		waddstr(midWin, line->line);
+	}
+	wrefresh(midWin);
 	keypad(midWin, true);
 	int ch;
 	bool keepGoing = true;
 	nlines = 0;
+	int cursorPos = 0;
+	wmove(midWin, cursorPos, 0);
 	while (keepGoing) {
 		ch = wgetch(midWin);
 		switch (ch) {
 		sigaction(SIGWINCH, &sa, NULL);
 
 		case KEY_DOWN:
-			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-			keypad(midWin, true);
-			for (; msg ; msg = msg->next) {
-				numChars++;
-				if (msg->ch != '\n' && msg->ch != '\0') {
-					dArr_add(lineBuffer, msg->ch);
-				} else {
-					nlines++;
-					dArr_add(lineBuffer, '\n');
-					dArr_add(lineBuffer, '\0');
-					waddstr(midWin, lineBuffer->contents);
-					dArr_clear(&lineBuffer);
-				}
+			if ( cursorPos >= NROWS - 2 ) {
+				nlines++;
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
+				for (line = root; line->lNum <= nlines; line = line->next);
 
-				if( nlines >= NROWS -2 ) {
-					nlines = 0;
-					wrefresh(midWin);
-					break;
+				for (; line->lNum <= nlines+NROWS-2; line = line->next) {
+					waddstr(midWin, line->line);
 				}
+				wrefresh(midWin);
+				break;
 			}
+			wmove(midWin, ++cursorPos, 0);
 			wrefresh(midWin);
 			break;
 
 		case KEY_UP:
-			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-			keypad(midWin, true);
-
-			numChars -= ((NROWS * NCOLS) -2);
-			if ( numChars < 0 )
-				msg = list->message;
-			else
-				for (; msg->index > numChars ; msg = msg->prev);
-
-			for (; msg ; msg = msg->next) {
-				numChars++;
-				if (msg->ch != '\n' && msg->ch != '\0') {
-					dArr_add(lineBuffer, msg->ch);
-				} else {
-					nlines++;
-					dArr_add(lineBuffer, '\n');
-					dArr_add(lineBuffer, '\0');
-					waddstr(midWin, lineBuffer->contents);
-					dArr_clear(&lineBuffer);
-				}
-
-				if( nlines >= NROWS -2 ) {
-					nlines = 0;
-					wrefresh(midWin);
+			if( cursorPos <= NROWS -2 ) {
+				if ( nlines <= 0 )
 					break;
+
+				nlines--;
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
+				for (line = root; line->lNum <= nlines; line = line->next);
+
+				for (; line->lNum <= nlines+NROWS-2; line = line->next) {
+					waddstr(midWin, line->line);
 				}
+				wrefresh(midWin);
+				break;
 			}
+			wmove(midWin, --cursorPos, 0);
 			wrefresh(midWin);
 			break;
 
@@ -275,9 +262,6 @@ void showMidWin() {
 			break;
 		}
 	}
-
-
-	wnoutrefresh(midWin);
 }
 
 /* Setup and print the bottom window to screen */

@@ -9,6 +9,8 @@
 
 listNode *list = NULL;
 
+
+
 int main(int argc, char **argv) {
 
 	Options options;
@@ -33,8 +35,5 @@ int main(int argc, char **argv) {
 	} else {
 		nonInteractive_run(&options, argc, argv);
 	}
-
-
-
 	return 0;
 }
