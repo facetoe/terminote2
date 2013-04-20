@@ -36,7 +36,7 @@
 /* This is the number of options that exclude any other options, not the total of all options. */
 #define OPT_NUM 10
 
-#define DEBUG 1
+#define DEBUG 0
 #define VERSION_NUM 1.0
 
 #define DATA_FILE ".terminote.data"

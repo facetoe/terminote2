@@ -8,7 +8,10 @@
 
 
 listNode *list = NULL;
+
 int main(int argc, char **argv) {
+
+	Options options;
 
 	if (getDataPath(pathBuffer, MAX_PATH_SIZE, DATA_FILE))
 		path = pathBuffer;
@@ -18,19 +21,20 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	list_init(&list);
-	if( !list ) {
-		fprintf(stderr, "Failed to create list\n");
-		abort();
+	if (isatty(STDIN_FILENO) && argc == 1) {
+		list_init(&list);
+		list_load(list);
+		initSigaction();
+		initNcurses();
+		initMainMenu();
+		initStartMenu();
+		guiLoop(list);
+		quit();
+	} else {
+		nonInteractive_run(&options, argc, argv);
 	}
 
-	list_load(list);
 
-	initSigaction();
-	initNcurses();
-	initMainMenu();
-	initStartMenu();
-	guiLoop(list);
-	quit();
+
 	return 0;
 }

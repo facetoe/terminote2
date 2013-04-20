@@ -1,6 +1,7 @@
 
 #include "ui.h"
 #include "linkedList.h"
+#include "dynamicArray.h"
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH
@@ -75,6 +76,7 @@ void showHelpScreen() {
 			"Terminote reacts differently depending on how you call it.\n",
 			"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n",
 			"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n",
+			"Non-interactive mode\n",
 			"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n",
 			"	-h: Print this message and quit.\n",
 			"	-P: Prints the last note only, no path or number, then deletes it.\n",
@@ -107,7 +109,6 @@ void showHelpScreen() {
 	doupdate();
 
 
-	/* Wait for input on help screen so it doesn't instantly vanish */
 	keypad(botWin, true);
 	int ch;
 	bool keepGoing = true;
@@ -115,6 +116,7 @@ void showHelpScreen() {
 	while (keepGoing) {
 		ch = wgetch(botWin);
 		switch (ch) {
+		sigaction(SIGWINCH, &sa, NULL);
 
 		case KEY_DOWN:
 			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
@@ -145,11 +147,16 @@ void showHelpScreen() {
 
 		default:
 			keepGoing = false;
-			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
+			getScrnSize();
+			topWin = newwin(1, NCOLS, 0, 0);
+			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+			botWin = newwin(1, NCOLS, NROWS - 1, 0);
+			wrefresh(topWin);
+			wrefresh(botWin);
 			wrefresh(midWin);
 			unpost_menu(startMenu);
 			unpost_menu(footerMenu);
-			showWins();
+			needsRefresh = true;
 			break;
 		}
 	}
@@ -165,10 +172,110 @@ void showMidWin() {
 		abort();
 	}
 
+	if ( list->size < (NROWS * NCOLS) -2 ) {
+		for (; msg ; msg = msg->next) {
+			waddch(midWin, msg->ch);
+		}
+		wrefresh(midWin);
+		return;
+	}
+
+	dArr *lineBuffer;
+	dArr_init(&lineBuffer);
+	int nlines = 0;
+	int numChars = 0;
+
 	/* If we are not in the root node then print the message in the middle window */
 	if ( list->num > 0 )
-		for (int i = 0; msg ; msg = msg->next, ++i)
-			waddch(midWin, msg->ch);
+		for (; msg ; msg = msg->next) {
+			numChars++;
+			if (msg->ch != '\n' && msg->ch != '\0') {
+				dArr_add(lineBuffer, msg->ch);
+			} else {
+				nlines++;
+				dArr_add(lineBuffer, '\n');
+				dArr_add(lineBuffer, '\0');
+				waddstr(midWin, lineBuffer->contents);
+				dArr_clear(&lineBuffer);
+			}
+
+			if( nlines >= NROWS -2 ) {
+				dArr_clear(&lineBuffer);
+				break;
+			}
+		}
+
+	keypad(midWin, true);
+	int ch;
+	bool keepGoing = true;
+	nlines = 0;
+	while (keepGoing) {
+		ch = wgetch(midWin);
+		switch (ch) {
+		sigaction(SIGWINCH, &sa, NULL);
+
+		case KEY_DOWN:
+			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+			keypad(midWin, true);
+			for (; msg ; msg = msg->next) {
+				numChars++;
+				if (msg->ch != '\n' && msg->ch != '\0') {
+					dArr_add(lineBuffer, msg->ch);
+				} else {
+					nlines++;
+					dArr_add(lineBuffer, '\n');
+					dArr_add(lineBuffer, '\0');
+					waddstr(midWin, lineBuffer->contents);
+					dArr_clear(&lineBuffer);
+				}
+
+				if( nlines >= NROWS -2 ) {
+					nlines = 0;
+					wrefresh(midWin);
+					break;
+				}
+			}
+			wrefresh(midWin);
+			break;
+
+		case KEY_UP:
+			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+			keypad(midWin, true);
+
+			numChars -= ((NROWS * NCOLS) -2);
+			if ( numChars < 0 )
+				msg = list->message;
+			else
+				for (; msg->index > numChars ; msg = msg->prev);
+
+			for (; msg ; msg = msg->next) {
+				numChars++;
+				if (msg->ch != '\n' && msg->ch != '\0') {
+					dArr_add(lineBuffer, msg->ch);
+				} else {
+					nlines++;
+					dArr_add(lineBuffer, '\n');
+					dArr_add(lineBuffer, '\0');
+					waddstr(midWin, lineBuffer->contents);
+					dArr_clear(&lineBuffer);
+				}
+
+				if( nlines >= NROWS -2 ) {
+					nlines = 0;
+					wrefresh(midWin);
+					break;
+				}
+			}
+			wrefresh(midWin);
+			break;
+
+		default:
+			keepGoing = false;
+			needsRefresh = true;
+			break;
+		}
+	}
+
 
 	wnoutrefresh(midWin);
 }
@@ -394,7 +501,6 @@ void doMenu() {
 /* Select and execute options from the menu */
 void doStartMenu() {
 	showStartMenu();
-
 	int ch;
 	ITEM *currItem;
 	bool keepGoing = true;
@@ -420,7 +526,7 @@ void doStartMenu() {
 				list_next(&list);
 				keepGoing = false;
 			}
-			hideStartMenu();
+			//hideStartMenu();
 			showWins();
 			needsRefresh = true;
 			keepGoing = false;
@@ -434,14 +540,12 @@ void doStartMenu() {
 
 /* run main GUI loop */
 void guiLoop() {
+	unpost_menu(startMenu);
+	unpost_menu(footerMenu);
+	sigaction(SIGWINCH, &sa, NULL);
 	showWins();
 	int ch;
 	while ((ch = wgetch(midWin)) != 'q') {
-
-		if (sigaction(SIGWINCH, &sa, NULL) == -1) {
-			wprintw(topWin, "I wonder what this means");
-			wrefresh(topWin);
-		}
 
 		switch (ch) {
 

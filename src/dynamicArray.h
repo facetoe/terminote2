@@ -34,4 +34,7 @@ void dArr_add(dArr *arr, char ch);
 /* Destroy the array freeing all memory */
 void dArr_destroy(dArr **arr);
 
+/* Clear the array freeing all the contents */
+void dArr_clear(dArr **arr);
+
 #endif /* DYNAMICARRAY_H_ */

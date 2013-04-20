@@ -73,3 +73,19 @@ void dArr_destroy(dArr **arr) {
 	free(tmp);
 }
 
+/* Clear the array freeing all the contents */
+void dArr_clear(dArr **arr) {
+	dArr *tmp = *arr;
+	free(tmp->contents);
+	tmp->contents = (char *) malloc(sizeof(char) * DYNA_SIZE);
+	if( tmp->contents ) {
+		tmp->maxSize = DYNA_SIZE;
+		tmp->currSize = 0;
+		*arr = tmp;
+		return;
+	} else {
+		fprintf(stderr, "Malloc failed in dArr_init()\n");
+		return;
+	}
+}
+
