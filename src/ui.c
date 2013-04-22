@@ -20,7 +20,7 @@ LINE *lineData = NULL;
 LINE *lineRoot;
 
 bool needsRefresh = false;
-bool inMessage = false;
+bool inScrollMessage = false;
 
 int NCOLS, NROWS;
 int nlines = 0;
@@ -29,6 +29,7 @@ int cursorPos = 0;
 
 extern listNode *list;
 
+/* Get the size of the terminal screen */
 void getScrnSize() {
 	ioctl(0, TIOCGWINSZ, &wSize);
 	NCOLS = wSize.ws_col;
@@ -60,50 +61,81 @@ void showTopWin() {
 	wnoutrefresh(topWin);
 }
 
+/* Parses a listNode and separates each line into a LINE node for displaying in ncurses */
 void parseMessage() {
+	/* Create an initialize a dynamic array for the line buffer */
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
-	inMessage = true;
 
+	/* Set inMessage to true so we can deal with screen resizes */
+	inScrollMessage = true;
+
+	/* If lineData isn't NULL then something is wrong and we will have memory leaks.
+	 * Abort so we have a backtrace to debug with.*/
 	if( lineData )
 		abort();
 
+	/* Allocate memory for the lineData struct and set as root node */
 	lineData = malloc(sizeof(LINE));
 	lineRoot = lineData;
 
+	/* Assign the listNode message to a temporary variable */
 	noteNode *currMsg = NULL;
 	currMsg = list->message;
 
+	/* If there is no message then something is wrong. Abort */
 	if ( !currMsg ) {
 		fprintf(stderr, "Error displaying message in showMidWin()");
 		abort();
 	}
 
-	nlines = 0;
+	int totLines = 0;
+
 	for (; currMsg ; currMsg = currMsg->next) {
 		if (currMsg->ch != '\n' && currMsg->ch != '\0') {
+			/* If the current character isn't a newline or null then add to buffer */
 			dArr_add(lineBuffer, currMsg->ch);
 		} else {
-			nlines++;
+			/* Keep track of line count  */
+			totLines++;
+
+			/* Add a newline and terminator so the line will display correctly in ncurses */
 			dArr_add(lineBuffer, '\n');
 			dArr_add(lineBuffer, '\0');
-			lineData->next = (LINE*)malloc(sizeof(LINE));
-			lineData->line = malloc( sizeof(char) * ( lineBuffer->currSize ) );
-			lineData->lSize = lineBuffer->currSize;
+
+			/* Allocate memory for the new LINE node */
+			lineData->next = malloc(sizeof(LINE));
+			if( !lineData->next )
+				abort();
+
+			/* Allocate enough memory to lineData->line to accommodate the string waiting in the buffer */
+			lineData->line = malloc( sizeof(char) *  lineBuffer->currSize  );
+			if( !lineData->line )
+				abort();
+
+			/* Copy the contents of the buffer into the line */
 			strcpy(lineData->line, lineBuffer->contents);
-			lineData->lNum = nlines;
+
+			/* Set the size and note number */
+			lineData->lSize = lineBuffer->currSize;
+			lineData->lNum = totLines;
+
+			/* Move to the next node and initialize values */
 			lineData = lineData->next;
 			lineData->next = NULL;
 			lineData->line = NULL;
 			lineData->lSize = 0;
 			lineData->lNum = 0;
+
+			/* Clear the buffer for the next iteration */
 			dArr_clear(&lineBuffer);
 		}
 	}
+	/* Free the line buffer */
 	dArr_destroy(&lineBuffer);
-	nlines = 0;
 }
 
+/* Free all memory in the LINE struct */
 void destroyLineData() {
 	LINE *tmp;
 	lineData = lineRoot;
@@ -118,27 +150,31 @@ void destroyLineData() {
 	lineData = NULL;
 }
 
+/* Refresh the middle window */
 void refreshMidwin() {
-	if( !inMessage )
+
+	/* If we're in a scroll message, we need to repaint the right part of the message */
+	if( inScrollMessage )
 	{
+		getScrnSize();
+		resizeterm(NROWS, NCOLS);
+		showTopWin();
+		showBotWin();
+		midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+
+		for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
+			waddstr(midWin, lineData->line);
+		}
+		keypad(midWin, true);
+		wrefresh(midWin);
+	} else {
+
+		/* Otherwise just repaint everything */
 		showWins();
 		return;
 	}
 
-	getScrnSize();
-	resizeterm(NROWS, NCOLS);
-	if(!lineData)
-		parseMessage();
 
-	showTopWin();
-	showBotWin();
-	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
-		waddstr(midWin, lineData->line);
-	}
-	wmove(midWin, 0, 0);
-	keypad(midWin, true);
-	wrefresh(midWin);
 
 }
 
@@ -148,7 +184,7 @@ void showMidWin() {
 	noteNode *msg = NULL;
 	msg = list->message;
 
-	/* If there is no message then something is seriously wrong. Abort and debug more... */
+	/* If there is no message then something is seriously wrong. Abort and debug */
 	if ( !msg ) {
 		abort();
 	}
@@ -161,6 +197,7 @@ void showMidWin() {
 
 	/* There is no need to parse a message that can already fit on the screen. Just show it */
 	if ( list->size < (NROWS -2 ) * NCOLS ) {
+		inScrollMessage = false;
 		for (; msg ; msg = msg->next) {
 			waddch(midWin, msg->ch);
 		}
@@ -193,11 +230,6 @@ void showBotWin() {
 	botWin = newwin(1, NCOLS, NROWS - 1, 0);
 	wattron(botWin, COLOR_PAIR(2));
 	wbkgd(botWin, COLOR_PAIR(2));
-
-	/* If we are in the root node then we are at the opening screen so show the startMenu */
-	if ( list->num == 0 ) {
-		;
-	}
 	wnoutrefresh(botWin);
 }
 
@@ -357,21 +389,26 @@ void guiLoop() {
 	showWins();
 	int ch;
 	keypad(midWin, true);
+	cursorPos = 0;
 	while ( ( ch = wgetch(midWin) ) ) {
 
 		sigaction(SIGWINCH, &sa, NULL);
 
 		switch (ch) {
 
+		/* Change to next note in list struct */
 		case 'd':
+			/* Before we change free all the memory in the current lineData struct */
 			if(lineData)
 				destroyLineData();
+			/* And reset counters */
 			cursorPos = 0;
 			nlines = 0;
 			list_next(&list);
 			needsRefresh = true;
 			break;
 
+			/* Change to previous note in list struct */
 		case 'a':
 			if(lineData)
 				destroyLineData();
@@ -381,22 +418,28 @@ void guiLoop() {
 			needsRefresh = true;
 			break;
 
+			/* Show the menu along the bottom of the screen */
 		case 6:
-			//doMenu();
+			doMenu();
 			needsRefresh = true;
 			break;
 
+			/* Scroll up in the message */
 		case KEY_UP:
+			/* If there is no lineData then there is nothing to scroll */
 			if(!lineData)
 				break;
-			if( cursorPos <= NROWS -2 ) {
-				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-				keypad(midWin, true);
+
+			if( cursorPos <= NROWS) {
 
 				if(nlines <= 0)
 					nlines = 0;
 				else
 					nlines--;
+
+				/* Redraw a blank window */
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
 
 				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
 
@@ -408,8 +451,10 @@ void guiLoop() {
 			}
 			wmove(midWin, --cursorPos, 0);
 			wrefresh(midWin);
+			keypad(midWin, true);
 			break;
 
+			/* Scroll down in the message */
 		case KEY_DOWN:
 			if(!lineData)
 				break;
@@ -429,7 +474,7 @@ void guiLoop() {
 			wrefresh(midWin);
 			break;
 
-
+			/* Free all memory and exit */
 		case 'q':
 			quit();
 			break;
