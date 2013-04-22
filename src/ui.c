@@ -11,22 +11,27 @@ struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't 
 
 char *mainMenuStrings[] = { "New", "Browse", "Edit", "Search", "Quit", "Help", (char *) NULL, };
 
-/* Global variables */
-WINDOW *topWin, *midWin, *botWin;
-ITEM **mainMenuItems;
-MENU *footerMenu;
+/* Variables for ncurses */
+static WINDOW *topWin, *midWin, *botWin;
+static ITEM **mainMenuItems;
+static MENU *footerMenu;
 
-LINE *lineData = NULL;
-LINE *lineRoot;
+/* Line data pointers */
+static LINE *lineData = NULL;
+static LINE *lineRoot;
 
+/* Whether the screen needs to be refreshed */
 bool needsRefresh = false;
-bool inScrollMessage = false;
 
+/* Whether we're in a message that can be scrolled (For screen resizes) */
+static bool inScrollMessage = false;
+
+/* Terminal coordinates and scrollable message variables */
 int NCOLS, NROWS;
-int nlines = 0;
-int cursorPos = 0;
+static int nlines = 0;
+static int cursorPos = 0;
 
-
+/* External variable to hold the list. You should probably move this in here... */
 extern listNode *list;
 
 /* Get the size of the terminal screen */
@@ -189,8 +194,12 @@ void showMidWin() {
 		abort();
 	}
 
-	/* If we in the lists root node then just show a blank screen */
+	/* If we in the lists root node then we are in the startup screen.
+	 * If there are no notes, then say so, otherwise just print a blank screen  */
 	if( list->num == 0 ) {
+		char str[300];
+		sprintf(str, "You have %d notes stored\n", list->rootM->size);
+		mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(str) / 2), str);
 		wrefresh(midWin);
 		return;
 	}

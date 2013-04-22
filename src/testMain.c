@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
 		initNcurses();
 		initMainMenu();
 		guiLoop(list);
+
 		quit();
 
 	} else {

@@ -443,7 +443,9 @@ void list_readBinary(FILE *fp, listNode *ln) {
 		strcpy(ln->path, path);
 		strcpy(ln->time, time);
 
+		/* Update statistics */
 		ln->num = note_num;
+		ln->rootM->size = note_num;
 
 	}
 }
