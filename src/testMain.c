@@ -29,9 +29,12 @@ int main(int argc, char **argv) {
 		initSigaction();
 		initNcurses();
 		initMainMenu();
-		initStartMenu();
 		guiLoop(list);
 		quit();
+
+
+
+
 	} else {
 		nonInteractive_run(&options, argc, argv);
 	}

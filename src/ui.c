@@ -10,16 +10,13 @@ struct sigaction sa;
 struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
 
 char *mainMenuStrings[] = { "New", "Browse", "Edit", "Search", "Quit", "Help", (char *) NULL, };
-char *startMenuStrings[] = { "New", "Browse", "Search", "Quit", "Help", (char *)NULL, };
 
 /* Global variables */
 WINDOW *topWin, *midWin, *botWin;
 ITEM **mainMenuItems;
-ITEM **startMenuItems;
-MENU *startMenu;
 MENU *footerMenu;
 
-LINE *lineData;
+LINE *lineData = NULL;
 LINE *lineRoot;
 
 bool needsRefresh = false;
@@ -59,117 +56,11 @@ void showTopWin() {
 	wnoutrefresh(topWin);
 }
 
-void showHelpScreen() {
-	getScrnSize();
-
-	/* Create the windows*/
-	topWin = newwin(1, NCOLS, 0, 0);
-	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-	botWin = newwin(1, NCOLS, NROWS - 1, 0);
-
-	/* Turn colors on */
-	wattron(topWin, COLOR_PAIR(1));
-	wbkgd(topWin, COLOR_PAIR(1));
-	char title[50];
-	sprintf(title, "Terminote %.1f Help", VERSION_NUM);
-	mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
-
-	char helpBody[][250] =			{
-			"Terminote version %.1f - a command line note tool.\n\n",
-
-			"Terminote reacts differently depending on how you call it.\n",
-			"If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.\n",
-			"If you call terminote with no arguments from the shell, terminote will enter interactive mode.\n\n",
-			"Non-interactive mode\n",
-			"ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.\n",
-			"	-h: Print this message and quit.\n",
-			"	-P: Prints the last note only, no path or number, then deletes it.\n",
-			"	-F: Prints the last note with full info (path/time/num) then deletes it.\n",
-			"	-N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. \n",
-			"	-D: Deletes the note at supplied note number, if it exists. Requires an integer argument.\n",
-			"	-R: Deletes all notes.\n",
-			"	-p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.\n",
-			"	-l: Prints all the notes leaving them intact.\n",
-			"	-f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.\n",
-			"	-a: Appends a note to the list. Requires a string argument.\n\n",
-			"CONTACT:\n",
-			"  Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2\n\n\n"
-	};
-
-	/* Print as many lines of the help message as we can */
-	int nLines = ARRAY_SIZE(helpBody);
-	for (int i = 0; i < NROWS-1 && i < nLines; ++i) {
-		waddstr(midWin, helpBody[i]);
-	}
-
-	/* Hide whichever menu got us here */
-	unpost_menu(startMenu);
-	unpost_menu(footerMenu);
-
-	/* Refresh all the windows */
-	wnoutrefresh(botWin);
-	wnoutrefresh(topWin);
-	wnoutrefresh(midWin);
-	doupdate();
-
-
-	keypad(botWin, true);
-	int ch;
-	bool keepGoing = true;
-	int startPos = 0;
-	while (keepGoing) {
-		ch = wgetch(botWin);
-		switch (ch) {
-		sigaction(SIGWINCH, &sa, NULL);
-
-		case KEY_DOWN:
-			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
-			for (int i = ++startPos; i < NROWS - 1 && i < nLines; ++i) {
-				waddstr(midWin, helpBody[i]);
-			}
-			wclrtoeol(midWin);
-			waddstr(midWin, "\0");
-			wrefresh(midWin);
-			mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
-			wrefresh(topWin);
-			break;
-
-		case KEY_UP:
-			if( startPos < 0 )
-				startPos = 0;
-			midWin = newwin(NROWS - 1, NCOLS, 1, 0);
-			for (int i = --startPos; i < NROWS -1 && i < nLines; ++i) {
-				waddstr(midWin, helpBody[i]);
-			}
-
-			wclrtoeol(midWin);
-			waddstr(midWin, "\0");
-			wrefresh(midWin);
-			mvwprintw(topWin, 0, (NCOLS / 2) - (strlen(title) / 2), title);
-			wrefresh(topWin);
-			break;
-
-		default:
-			keepGoing = false;
-			getScrnSize();
-			topWin = newwin(1, NCOLS, 0, 0);
-			midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-			botWin = newwin(1, NCOLS, NROWS - 1, 0);
-			wrefresh(topWin);
-			wrefresh(botWin);
-			wrefresh(midWin);
-			unpost_menu(startMenu);
-			unpost_menu(footerMenu);
-			needsRefresh = true;
-			break;
-		}
-	}
-}
-
 void parseMessage() {
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
-	lineData = (LINE*)malloc(sizeof(LINE));
+
+	lineData = malloc(sizeof(LINE));
 	lineRoot = lineData;
 
 	noteNode *currMsg = NULL;
@@ -195,6 +86,9 @@ void parseMessage() {
 			lineData->lNum = nlines;
 			lineData = lineData->next;
 			lineData->next = NULL;
+			lineData->line = NULL;
+			lineData->lSize = 0;
+			lineData->lNum = 0;
 			dArr_clear(&lineBuffer);
 		}
 	}
@@ -203,13 +97,16 @@ void parseMessage() {
 
 void destroyLineData() {
 	LINE *tmp;
+	lineData = lineRoot;
 	while (lineData) {
 		tmp = lineData->next;
-		free(lineData->line);
+		if(lineData->line)
+			free(lineData->line);
 		free(lineData);
 		lineData = tmp;
 	}
 	free(lineData);
+	lineData = NULL;
 }
 
 /* Setup and print the middle window to screen */
@@ -232,6 +129,8 @@ void showMidWin() {
 
 
 	int nlines;
+	if(lineData)
+		abort();
 	parseMessage();
 	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
 		waddstr(midWin, lineData->line);
@@ -297,18 +196,13 @@ void showMidWin() {
 
 /* Setup and print the bottom window to screen */
 void showBotWin() {
-	if(botWin) {
-		if ( startMenu )
-			unpost_menu(startMenu);
-		delwin(botWin);
-	}
 	botWin = newwin(1, NCOLS, NROWS - 1, 0);
 	wattron(botWin, COLOR_PAIR(2));
 	wbkgd(botWin, COLOR_PAIR(2));
 
 	/* If we are in the root node then we are at the opening screen so show the startMenu */
 	if ( list->num == 0 ) {
-		//doStartMenu();
+		;
 	}
 	wnoutrefresh(botWin);
 }
@@ -373,52 +267,6 @@ void hideMainMenu() {
 	wrefresh(botWin);
 }
 
-/* Initialize the menu but don't show it */
-void initStartMenu() {
-	/* Create items */
-	int nItems;
-	nItems = ARRAY_SIZE(startMenuStrings);
-	startMenuItems = (ITEM **) calloc(nItems, sizeof(ITEM *));
-	for (int i = 0; i < nItems; ++i)
-		startMenuItems[i] = new_item(startMenuStrings[i], startMenuStrings[i]);
-
-	/* Create menu */
-	startMenu = new_menu((ITEM **) startMenuItems);
-}
-
-/* Setup and show the menu */
-void setStartMenu() {
-	/* Set menu option not to show the description */
-	menu_opts_off(startMenu, O_SHOWDESC);
-
-	int nItems = ARRAY_SIZE(startMenuStrings);
-
-	/* Set main window and sub window */
-	set_menu_win(startMenu, botWin);
-	set_menu_sub(startMenu, derwin(botWin, 1, NCOLS, 1, 1));
-	set_menu_format(startMenu, 0, nItems);
-
-	/* Get key events from the bottom window */
-	keypad(botWin, TRUE);
-
-	/* Post the menu */
-	post_menu(startMenu);
-	wnoutrefresh(botWin);
-}
-
-/* Shows the menu along the bottom of the screen */
-void showStartMenu() {
-	getScrnSize(NCOLS, NROWS);
-	setStartMenu();
-	doupdate();
-}
-
-/* Hides the menu at the bottom of the screen */
-void hideStartMenu() {
-	unpost_menu(startMenu);
-	wrefresh(botWin);
-}
-
 /* Handles screen resizes */
 static void hndSIGWINCH(int sig) {
 	showWins();
@@ -444,11 +292,6 @@ void quit() {
 		free_item(mainMenuItems[i]);
 	free_menu(footerMenu);
 
-	n = ARRAY_SIZE(startMenuStrings);
-	for (int i = 0; i < n; ++i)
-		free_item(startMenuItems[i]);
-
-	free_menu(startMenu);
 	endwin();
 
 	if(lineData)
@@ -499,7 +342,6 @@ void doMenu() {
 				keepGoing = false;
 				break;
 			} else if (!strcmp(item_name(currItem), "Help")) {
-				showHelpScreen();
 				keepGoing = false;
 				break;
 			}
@@ -518,56 +360,13 @@ void doMenu() {
 	}
 }
 
-/* Select and execute options from the menu */
-void doStartMenu() {
-	showStartMenu();
-	int ch;
-	ITEM *currItem;
-	bool keepGoing = true;
-	while (keepGoing) {
-		ch = wgetch(botWin);
-		switch (ch) {
-
-		case KEY_LEFT:
-			menu_driver(startMenu, REQ_PREV_ITEM);
-			break;
-
-		case KEY_RIGHT:
-			menu_driver(startMenu, REQ_NEXT_ITEM);
-			break;
-
-		case 13: /* Enter */
-			currItem = current_item(startMenu);
-			if ( !strcmp(item_name(currItem), "Quit") ) {
-				quit();
-			} else if( !strcmp(item_name(currItem), "Help") ) {
-				showHelpScreen();
-			} else if( !strcmp(item_name(currItem), "Browse") ) {
-				list_next(&list);
-				keepGoing = false;
-			}
-			hideStartMenu();
-			if(lineData)
-				destroyLineData();
-			showWins();
-			needsRefresh = true;
-			keepGoing = false;
-			break;
-
-		default:
-			break;
-		}
-	}
-}
-
 /* run main GUI loop */
 void guiLoop() {
-	unpost_menu(startMenu);
 	unpost_menu(footerMenu);
 	sigaction(SIGWINCH, &sa, NULL);
 	showWins();
 	int ch;
-	while ((ch = wgetch(midWin)) != 'q') {
+	while ( ( ch = wgetch(midWin) ) ) {
 
 		switch (ch) {
 
@@ -580,7 +379,7 @@ void guiLoop() {
 
 		case 'a':
 			if(lineData)
-							destroyLineData();
+				destroyLineData();
 			list_previous(&list);
 			needsRefresh = true;
 			break;
@@ -590,11 +389,21 @@ void guiLoop() {
 			needsRefresh = true;
 			break;
 
+		case 'q':
+			if(lineData)
+				destroyLineData();
+			quit();
+			break;
+
 		default:
+			if(lineData)
+				destroyLineData();
 			break;
 		}
 
 		if (needsRefresh) {
+			if(lineData)
+				destroyLineData();
 			showWins();
 			needsRefresh = false;
 		}

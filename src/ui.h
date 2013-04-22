@@ -30,13 +30,17 @@ void getScrnSize();
 /* Setup and print the top window to screen */
 void showTopWin();
 
+void parseMessage();
+
+void destroyLineData();
+
 /* Setup and print the middle window to screen */
 void showMidWin();
 
 /* Setup and print the bottom window to screen */
 void showBotWin();
 
-/* Show the windows (and remove botWin if it exists) */
+/* Show the windows */
 void showWins();
 
 /* Initialize the menu but don't show it */
@@ -50,18 +54,6 @@ void showMainMenu();
 
 /* Hides the menu at the bottom of the screen */
 void hideMainMenu();
-
-/* Initialize the menu but don't show it */
-void initStartMenu();
-
-/* Setup and show the menu */
-void setStartMenu();
-
-/* Shows the menu along the bottom of the screen */
-void showStartMenu();
-
-/* Hides the menu at the bottom of the screen */
-void hideStartMenu();
 
 /* Handles screen resizes */
 static void hndSIGWINCH(int sig);
@@ -78,11 +70,9 @@ void initSigaction();
 /* Select and execute options from the menu */
 void doMenu();
 
-/* Select and execute options from the menu */
-void doStartMenu();
-
 /* run main GUI loop */
 void guiLoop();
+
 
 
 #endif /* UI_H_ */
