@@ -61,7 +61,7 @@ void showMainMenu();
 void hideMainMenu();
 
 /* Handles screen resizes */
-static void hndSIGWINCH(int sig);
+void hndSIGWINCH(int sig);
 
 /* Setup ncurses */
 void initNcurses();
