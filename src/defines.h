@@ -37,7 +37,7 @@
 #define OPT_NUM 10
 
 #define DEBUG 0
-#define VERSION_NUM 1.0
+#define VERSION_NUM 0.3
 
 #define DATA_FILE ".terminote.data"
 
