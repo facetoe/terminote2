@@ -301,8 +301,9 @@ void hideMainMenu() {
 }
 
 /* Handles screen resizes */
-static void hndSIGWINCH(int sig) {
-	refreshMidwin();
+void hndSIGWINCH(int sig) {
+	if( sig == SIGWINCH )
+		refreshMidwin();
 }
 
 /* Setup ncurses */
