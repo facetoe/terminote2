@@ -18,8 +18,13 @@ ITEM **mainMenuItems;
 ITEM **startMenuItems;
 MENU *startMenu;
 MENU *footerMenu;
+
+LINE *lineData;
+LINE *lineRoot;
+
 bool needsRefresh = false;
 int NCOLS, NROWS;
+
 
 extern listNode *list;
 
@@ -161,6 +166,52 @@ void showHelpScreen() {
 	}
 }
 
+void parseMessage() {
+	dArr *lineBuffer;
+	dArr_init(&lineBuffer);
+	lineData = (LINE*)malloc(sizeof(LINE));
+	lineRoot = lineData;
+
+	noteNode *currMsg = NULL;
+	currMsg = list->message;
+
+	if ( !currMsg ) {
+		fprintf(stderr, "Error displaying message in showMidWin()");
+		abort();
+	}
+
+	int nlines = 0;
+	for (; currMsg ; currMsg = currMsg->next) {
+		if (currMsg->ch != '\n' && currMsg->ch != '\0') {
+			dArr_add(lineBuffer, currMsg->ch);
+		} else {
+			nlines++;
+			dArr_add(lineBuffer, '\n');
+			dArr_add(lineBuffer, '\0');
+			lineData->next = (LINE*)malloc(sizeof(LINE));
+			lineData->line = malloc( sizeof(char) * ( lineBuffer->currSize ) );
+			lineData->lSize = lineBuffer->currSize;
+			strcpy(lineData->line, lineBuffer->contents);
+			lineData->lNum = nlines;
+			lineData = lineData->next;
+			lineData->next = NULL;
+			dArr_clear(&lineBuffer);
+		}
+	}
+	dArr_destroy(&lineBuffer);
+}
+
+void destroyLineData() {
+	LINE *tmp;
+	while (lineData) {
+		tmp = lineData->next;
+		free(lineData->line);
+		free(lineData);
+		lineData = tmp;
+	}
+	free(lineData);
+}
+
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
@@ -171,7 +222,7 @@ void showMidWin() {
 		abort();
 	}
 
-	if ( list->size < (NROWS * NCOLS) -2 ) {
+	if ( list->size < (NROWS -2 ) * NCOLS ) {
 		for (; msg ; msg = msg->next) {
 			waddch(midWin, msg->ch);
 		}
@@ -179,33 +230,11 @@ void showMidWin() {
 		return;
 	}
 
-	dArr *lineBuffer;
-	dArr_init(&lineBuffer);
-	LINE *line = (LINE*)malloc(sizeof(LINE));
-	LINE *root = line;
-	int nlines = 0;
 
-	for (; msg ; msg = msg->next) {
-		if (msg->ch != '\n' && msg->ch != '\0') {
-			dArr_add(lineBuffer, msg->ch);
-		} else {
-			nlines++;
-			dArr_add(lineBuffer, '\n');
-			dArr_add(lineBuffer, '\0');
-			line->next = (LINE*)malloc(sizeof(LINE));
-			line->line = malloc( sizeof(char) * ( lineBuffer->currSize ) );
-			line->lSize = lineBuffer->currSize;
-			strcpy(line->line, lineBuffer->contents);
-			line->lNum = nlines;
-			line = line->next;
-			line->next = NULL;
-			dArr_clear(&lineBuffer);
-		}
-
-	}
-
-	for (line = root; line->lNum <= NROWS-2; line = line->next) {
-		waddstr(midWin, line->line);
+	int nlines;
+	parseMessage();
+	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
+		waddstr(midWin, lineData->line);
 	}
 	wrefresh(midWin);
 	keypad(midWin, true);
@@ -224,10 +253,10 @@ void showMidWin() {
 				nlines++;
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
-				for (line = root; line->lNum <= nlines; line = line->next);
+				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
 
-				for (; line->lNum <= nlines+NROWS-2; line = line->next) {
-					waddstr(midWin, line->line);
+				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
+					waddstr(midWin, lineData->line);
 				}
 				wrefresh(midWin);
 				break;
@@ -244,10 +273,10 @@ void showMidWin() {
 				nlines--;
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
-				for (line = root; line->lNum <= nlines; line = line->next);
+				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
 
-				for (; line->lNum <= nlines+NROWS-2; line = line->next) {
-					waddstr(midWin, line->line);
+				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
+					waddstr(midWin, lineData->line);
 				}
 				wrefresh(midWin);
 				break;
@@ -257,6 +286,8 @@ void showMidWin() {
 			break;
 
 		default:
+			if(lineData)
+				destroyLineData();
 			keepGoing = false;
 			needsRefresh = true;
 			break;
@@ -277,13 +308,15 @@ void showBotWin() {
 
 	/* If we are in the root node then we are at the opening screen so show the startMenu */
 	if ( list->num == 0 ) {
-		doStartMenu();
+		//doStartMenu();
 	}
 	wnoutrefresh(botWin);
 }
 
 /* Show the windows */
 void showWins() {
+	if(lineData)
+		destroyLineData();
 	getScrnSize(NCOLS, NROWS);
 	resizeterm(NROWS, NCOLS);
 	showTopWin();
@@ -418,6 +451,9 @@ void quit() {
 	free_menu(startMenu);
 	endwin();
 
+	if(lineData)
+		destroyLineData();
+
 	/* Save and destroy the list */
 	list_save(list);
 	list_destroy(list);
@@ -510,7 +546,9 @@ void doStartMenu() {
 				list_next(&list);
 				keepGoing = false;
 			}
-			//hideStartMenu();
+			hideStartMenu();
+			if(lineData)
+				destroyLineData();
 			showWins();
 			needsRefresh = true;
 			keepGoing = false;
@@ -534,17 +572,21 @@ void guiLoop() {
 		switch (ch) {
 
 		case 'd':
+			if(lineData)
+				destroyLineData();
 			list_next(&list);
 			needsRefresh = true;
 			break;
 
 		case 'a':
+			if(lineData)
+							destroyLineData();
 			list_previous(&list);
 			needsRefresh = true;
 			break;
 
 		case 6:
-			doMenu();
+			//doMenu();
 			needsRefresh = true;
 			break;
 
