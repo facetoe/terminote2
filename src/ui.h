@@ -24,15 +24,20 @@ struct line {
 };
 typedef struct line LINE;
 
-
+/* Get the size of the terminal screen */
 void getScrnSize();
 
 /* Setup and print the top window to screen */
 void showTopWin();
 
+/* Parses a listNode and separates each line into a LINE node for displaying in ncurses */
 void parseMessage();
 
+/* Free all memory in the LINE struct */
 void destroyLineData();
+
+/* Refresh the middle window */
+void refreshMidwin();
 
 /* Setup and print the middle window to screen */
 void showMidWin();
@@ -72,7 +77,6 @@ void doMenu();
 
 /* run main GUI loop */
 void guiLoop();
-
 
 
 #endif /* UI_H_ */
