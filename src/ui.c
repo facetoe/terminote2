@@ -60,6 +60,9 @@ void parseMessage() {
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
 
+	if( lineData )
+		destroyLineData();
+
 	lineData = malloc(sizeof(LINE));
 	lineRoot = lineData;
 
@@ -109,6 +112,24 @@ void destroyLineData() {
 	lineData = NULL;
 }
 
+void refreshMidwin() {
+	getScrnSize();
+	resizeterm(NROWS, NCOLS);
+	if(!lineData)
+		parseMessage();
+
+	showTopWin();
+	showBotWin();
+	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
+			waddstr(midWin, lineData->line);
+		}
+	wmove(midWin, 0, 0);
+	keypad(midWin, true);
+	wrefresh(midWin);
+
+}
+
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
@@ -127,11 +148,9 @@ void showMidWin() {
 		return;
 	}
 
-
 	int nlines;
-	if(lineData)
-		abort();
 	parseMessage();
+
 	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
 		waddstr(midWin, lineData->line);
 	}
@@ -209,8 +228,6 @@ void showBotWin() {
 
 /* Show the windows */
 void showWins() {
-	if(lineData)
-		destroyLineData();
 	getScrnSize(NCOLS, NROWS);
 	resizeterm(NROWS, NCOLS);
 	showTopWin();
@@ -269,7 +286,7 @@ void hideMainMenu() {
 
 /* Handles screen resizes */
 static void hndSIGWINCH(int sig) {
-	showWins();
+	refreshMidwin();
 }
 
 /* Setup ncurses */
@@ -363,23 +380,20 @@ void doMenu() {
 /* run main GUI loop */
 void guiLoop() {
 	unpost_menu(footerMenu);
-	sigaction(SIGWINCH, &sa, NULL);
 	showWins();
 	int ch;
 	while ( ( ch = wgetch(midWin) ) ) {
 
+		sigaction(SIGWINCH, &sa, NULL);
+
 		switch (ch) {
 
 		case 'd':
-			if(lineData)
-				destroyLineData();
 			list_next(&list);
 			needsRefresh = true;
 			break;
 
 		case 'a':
-			if(lineData)
-				destroyLineData();
 			list_previous(&list);
 			needsRefresh = true;
 			break;
@@ -390,21 +404,18 @@ void guiLoop() {
 			break;
 
 		case 'q':
-			if(lineData)
-				destroyLineData();
 			quit();
 			break;
 
 		default:
-			if(lineData)
-				destroyLineData();
 			break;
 		}
 
 		if (needsRefresh) {
-			if(lineData)
-				destroyLineData();
-			showWins();
+			if(!lineData)
+				showWins();
+			else
+				refreshMidwin();
 			needsRefresh = false;
 		}
 	}

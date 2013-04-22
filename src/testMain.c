@@ -32,9 +32,6 @@ int main(int argc, char **argv) {
 		guiLoop(list);
 		quit();
 
-
-
-
 	} else {
 		nonInteractive_run(&options, argc, argv);
 	}
