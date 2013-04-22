@@ -21,7 +21,10 @@ LINE *lineRoot;
 
 bool needsRefresh = false;
 bool inMessage = false;
+
 int NCOLS, NROWS;
+int nlines = 0;
+int cursorPos = 0;
 
 
 extern listNode *list;
@@ -76,7 +79,7 @@ void parseMessage() {
 		abort();
 	}
 
-	int nlines = 0;
+	nlines = 0;
 	for (; currMsg ; currMsg = currMsg->next) {
 		if (currMsg->ch != '\n' && currMsg->ch != '\0') {
 			dArr_add(lineBuffer, currMsg->ch);
@@ -98,6 +101,7 @@ void parseMessage() {
 		}
 	}
 	dArr_destroy(&lineBuffer);
+	nlines = 0;
 }
 
 void destroyLineData() {
@@ -130,8 +134,8 @@ void refreshMidwin() {
 	showBotWin();
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
-			waddstr(midWin, lineData->line);
-		}
+		waddstr(midWin, lineData->line);
+	}
 	wmove(midWin, 0, 0);
 	keypad(midWin, true);
 	wrefresh(midWin);
@@ -143,11 +147,19 @@ void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 	noteNode *msg = NULL;
 	msg = list->message;
+
+	/* If there is no message then something is seriously wrong. Abort and debug more... */
 	if ( !msg ) {
-		fprintf(stderr, "Error displaying message in showMidWin()");
 		abort();
 	}
 
+	/* If we in the lists root node then just show a blank screen */
+	if( list->num == 0 ) {
+		wrefresh(midWin);
+		return;
+	}
+
+	/* There is no need to parse a message that can already fit on the screen. Just show it */
 	if ( list->size < (NROWS -2 ) * NCOLS ) {
 		for (; msg ; msg = msg->next) {
 			waddch(midWin, msg->ch);
@@ -156,69 +168,24 @@ void showMidWin() {
 		return;
 	}
 
-	int nlines;
+	/* lineData should be NULL here, if it's not then something is wrong and you will have memory leaks. Abort and debug */
+	if(lineData)
+		abort();
+
+	/* Parse the message into the lineData struct */
 	parseMessage();
 
+	/* Print the message to the screen */
 	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
 		waddstr(midWin, lineData->line);
 	}
+
+	/* Position the cursor at the start of the message */
+	wmove(midWin, 0, 0);
+
 	wrefresh(midWin);
 	keypad(midWin, true);
-	int ch;
-	bool keepGoing = true;
-	nlines = 0;
-	int cursorPos = 0;
-	wmove(midWin, cursorPos, 0);
-	while (keepGoing) {
-		ch = wgetch(midWin);
-		switch (ch) {
-		sigaction(SIGWINCH, &sa, NULL);
 
-		case KEY_DOWN:
-			if ( cursorPos >= NROWS - 2 ) {
-				nlines++;
-				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-				keypad(midWin, true);
-				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
-
-				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
-					waddstr(midWin, lineData->line);
-				}
-				wrefresh(midWin);
-				break;
-			}
-			wmove(midWin, ++cursorPos, 0);
-			wrefresh(midWin);
-			break;
-
-		case KEY_UP:
-			if( cursorPos <= NROWS -2 ) {
-				if ( nlines <= 0 )
-					break;
-
-				nlines--;
-				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-				keypad(midWin, true);
-				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
-
-				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
-					waddstr(midWin, lineData->line);
-				}
-				wrefresh(midWin);
-				break;
-			}
-			wmove(midWin, --cursorPos, 0);
-			wrefresh(midWin);
-			break;
-
-		default:
-			if(lineData)
-				destroyLineData();
-			keepGoing = false;
-			needsRefresh = true;
-			break;
-		}
-	}
 }
 
 /* Setup and print the bottom window to screen */
@@ -389,6 +356,7 @@ void guiLoop() {
 	unpost_menu(footerMenu);
 	showWins();
 	int ch;
+	keypad(midWin, true);
 	while ( ( ch = wgetch(midWin) ) ) {
 
 		sigaction(SIGWINCH, &sa, NULL);
@@ -398,6 +366,8 @@ void guiLoop() {
 		case 'd':
 			if(lineData)
 				destroyLineData();
+			cursorPos = 0;
+			nlines = 0;
 			list_next(&list);
 			needsRefresh = true;
 			break;
@@ -405,6 +375,8 @@ void guiLoop() {
 		case 'a':
 			if(lineData)
 				destroyLineData();
+			cursorPos = 0;
+			nlines = 0;
 			list_previous(&list);
 			needsRefresh = true;
 			break;
@@ -413,6 +385,50 @@ void guiLoop() {
 			//doMenu();
 			needsRefresh = true;
 			break;
+
+		case KEY_UP:
+			if(!lineData)
+				break;
+			if( cursorPos <= NROWS -2 ) {
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
+
+				if(nlines <= 0)
+					nlines = 0;
+				else
+					nlines--;
+
+				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
+
+				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
+					waddstr(midWin, lineData->line);
+				}
+				wrefresh(midWin);
+				break;
+			}
+			wmove(midWin, --cursorPos, 0);
+			wrefresh(midWin);
+			break;
+
+		case KEY_DOWN:
+			if(!lineData)
+				break;
+			if ( cursorPos >= NROWS - 2 ) {
+				nlines++;
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
+				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
+
+				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
+					waddstr(midWin, lineData->line);
+				}
+				wrefresh(midWin);
+				break;
+			}
+			wmove(midWin, ++cursorPos, 0);
+			wrefresh(midWin);
+			break;
+
 
 		case 'q':
 			quit();
