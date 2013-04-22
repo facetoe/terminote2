@@ -20,6 +20,7 @@ LINE *lineData = NULL;
 LINE *lineRoot;
 
 bool needsRefresh = false;
+bool inMessage = false;
 int NCOLS, NROWS;
 
 
@@ -59,9 +60,10 @@ void showTopWin() {
 void parseMessage() {
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
+	inMessage = true;
 
 	if( lineData )
-		destroyLineData();
+		abort();
 
 	lineData = malloc(sizeof(LINE));
 	lineRoot = lineData;
@@ -113,6 +115,12 @@ void destroyLineData() {
 }
 
 void refreshMidwin() {
+	if( !inMessage )
+	{
+		showWins();
+		return;
+	}
+
 	getScrnSize();
 	resizeterm(NROWS, NCOLS);
 	if(!lineData)
@@ -355,7 +363,6 @@ void doMenu() {
 			} else if ( !strcmp(item_name(currItem), "Browse") ) {
 				hideMainMenu();
 				list_firstNode(&list);
-				showWins();
 				keepGoing = false;
 				break;
 			} else if (!strcmp(item_name(currItem), "Help")) {
@@ -389,11 +396,15 @@ void guiLoop() {
 		switch (ch) {
 
 		case 'd':
+			if(lineData)
+				destroyLineData();
 			list_next(&list);
 			needsRefresh = true;
 			break;
 
 		case 'a':
+			if(lineData)
+				destroyLineData();
 			list_previous(&list);
 			needsRefresh = true;
 			break;
