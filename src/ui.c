@@ -9,9 +9,9 @@ struct sigaction sa;
 
 struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
 
-char *mainMenuStrings[] = { "New", "Browse", "Edit", "Search", "Quit", "Help", (char *) NULL, };
 
 /* Variables for ncurses */
+char *mainMenuStrings[] = { "New", "Browse", "Edit", "Search", "Quit", "Help", (char *) NULL, };
 static WINDOW *topWin, *midWin, *botWin;
 static ITEM **mainMenuItems;
 static MENU *footerMenu;
@@ -50,7 +50,7 @@ void showTopWin() {
 	wattron(topWin, COLOR_PAIR(1));
 	wbkgd(topWin, COLOR_PAIR(1));
 
-	/* If the we are not in the root node then update the top window */
+	/* If the we are not in the root node then update the top window with time, number and path info*/
 	if ( list->num > 0 ) {
 		char noteStr[100];
 		snprintf(noteStr, 100, "Note #%d", list->num);
@@ -84,24 +84,23 @@ void parseMessage() {
 	lineData = malloc(sizeof(LINE));
 	lineRoot = lineData;
 
-	/* Assign the listNode message to a temporary variable */
+	/* Assign the current message to a temporary variable */
 	noteNode *currMsg = NULL;
 	currMsg = list->message;
 
-	/* If there is no message then something is wrong. Abort */
+	/* If there is no message then something is wrong. Abort. */
 	if ( !currMsg ) {
 		fprintf(stderr, "Error displaying message in showMidWin()");
 		abort();
 	}
-
+	/* Keep track of line count. */
 	int totLines = 0;
 
 	for (; currMsg ; currMsg = currMsg->next) {
+		/* If the current character isn't a newline or null terminator then add to buffer */
 		if (currMsg->ch != '\n' && currMsg->ch != '\0') {
-			/* If the current character isn't a newline or null then add to buffer */
 			dArr_add(lineBuffer, currMsg->ch);
 		} else {
-			/* Keep track of line count  */
 			totLines++;
 
 			/* Add a newline and terminator so the line will display correctly in ncurses */
@@ -158,7 +157,7 @@ void destroyLineData() {
 /* Refresh the middle window */
 void refreshMidwin() {
 
-	/* If we're in a scroll message, we need to repaint the right part of the message */
+	/* If we're in a scroll message, we need to repaint the right part of the message (You need to fix this so it works properly) */
 	if( inScrollMessage )
 	{
 		getScrnSize();
@@ -171,6 +170,7 @@ void refreshMidwin() {
 			waddstr(midWin, lineData->line);
 		}
 		keypad(midWin, true);
+		wmove(midWin, cursorPos, 0);
 		wrefresh(midWin);
 	} else {
 
@@ -194,17 +194,17 @@ void showMidWin() {
 		abort();
 	}
 
-	/* If we in the lists root node then we are in the startup screen.
-	 * If there are no notes, then say so, otherwise just print a blank screen  */
+	/* If we in the list's root node then we are in the startup screen.
+	 * Print the number of stored notes and return. */
 	if( list->num == 0 ) {
 		char str[300];
-		sprintf(str, "You have %d notes stored\n", list->rootM->size);
+		sprintf(str, "You have %d stored notes\n", list->rootM->size);
 		mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(str) / 2), str);
 		wrefresh(midWin);
 		return;
 	}
 
-	/* There is no need to parse a message that can already fit on the screen. Just show it */
+	/* There is no need to parse a message that can already fit on the screen. Just show it and return. */
 	if ( list->size < (NROWS -2 ) * NCOLS ) {
 		inScrollMessage = false;
 		for (; msg ; msg = msg->next) {
@@ -287,14 +287,14 @@ void setMainMenu() {
 
 
 
-/* Shows the menu along the bottom of the screen */
+/* Show the menu along the bottom of the screen */
 void showMainMenu() {
 	getScrnSize(NCOLS, NROWS);
 	showBotWin();
 	setMainMenu();
 }
 
-/* Hides the menu at the bottom of the screen */
+/* Hide the menu at the bottom of the screen */
 void hideMainMenu() {
 	unpost_menu(footerMenu);
 	wrefresh(botWin);
@@ -385,9 +385,7 @@ void doMenu() {
 		default:
 			/* Hide the menu and break out of the loop */
 			hideMainMenu();
-			showWins();
-			needsRefresh = true;
-			keepGoing = false;
+			return;
 			break;
 		}
 	}
@@ -399,7 +397,6 @@ void guiLoop() {
 	showWins();
 	int ch;
 	keypad(midWin, true);
-	cursorPos = 0;
 	while ( ( ch = wgetch(midWin) ) ) {
 
 		sigaction(SIGWINCH, &sa, NULL);
@@ -431,7 +428,6 @@ void guiLoop() {
 			/* Show the menu along the bottom of the screen */
 		case 6:
 			doMenu();
-			needsRefresh = true;
 			break;
 
 			/* Scroll up in the message */
