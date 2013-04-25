@@ -10,6 +10,10 @@
 
 #include "defines.h"
 
+#define MAX_TIME_SIZE 30
+#define MAX_PATH_SIZE 200
+
+
 struct node {
 	char ch;
 	int index;

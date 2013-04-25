@@ -2,6 +2,7 @@
 #include "ui.h"
 #include "linkedList.h"
 #include "dynamicArray.h"
+#include "lineData.h"
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define SIGWINCH 28 // Needed because OSX doesn't recognize SIGWINCH
@@ -17,8 +18,7 @@ static ITEM **mainMenuItems;
 static MENU *footerMenu;
 
 /* Line data pointers */
-static LINE *lineData = NULL;
-static LINE *lineRoot;
+static LINEDATA *lineData = NULL;
 
 /* Whether the screen needs to be refreshed */
 bool needsRefresh = false;
@@ -66,94 +66,8 @@ void showTopWin() {
 	wnoutrefresh(topWin);
 }
 
-/* Parses a listNode and separates each line into a LINE node for displaying in ncurses */
-void parseMessage() {
-	/* Create an initialize a dynamic array for the line buffer */
-	dArr *lineBuffer;
-	dArr_init(&lineBuffer);
 
-	/* Set inMessage to true so we can deal with screen resizes */
-	inScrollMessage = true;
 
-	/* If lineData isn't NULL then something is wrong and we will have memory leaks.
-	 * Abort so we have a backtrace to debug with.*/
-	if( lineData )
-		abort();
-
-	/* Allocate memory for the lineData struct and set as root node */
-	lineData = malloc(sizeof(LINE));
-	lineRoot = lineData;
-
-	/* Assign the current message to a temporary variable */
-	noteNode *currMsg = NULL;
-	currMsg = list->message;
-
-	/* If there is no message then something is wrong. Abort. */
-	if ( !currMsg ) {
-		fprintf(stderr, "Error displaying message in showMidWin()");
-		abort();
-	}
-	/* Keep track of line count. */
-	int totLines = 0;
-
-	for (; currMsg ; currMsg = currMsg->next) {
-		/* If the current character isn't a newline or null terminator then add to buffer */
-		if (currMsg->ch != '\n' && currMsg->ch != '\0') {
-			dArr_add(lineBuffer, currMsg->ch);
-		} else {
-			totLines++;
-
-			/* Add a newline and terminator so the line will display correctly in ncurses */
-			dArr_add(lineBuffer, '\n');
-			dArr_add(lineBuffer, '\0');
-
-			/* Allocate memory for the new LINE node */
-			lineData->next = malloc(sizeof(LINE));
-			if( !lineData->next )
-				abort();
-
-			/* Allocate enough memory to lineData->line to accommodate the string waiting in the buffer */
-			lineData->line = malloc( sizeof(char) *  lineBuffer->currSize  );
-			if( !lineData->line )
-				abort();
-
-			/* Copy the contents of the buffer into the line */
-			strcpy(lineData->line, lineBuffer->contents);
-
-			/* Set the size and note number */
-			lineData->lSize = lineBuffer->currSize;
-			lineData->lNum = totLines;
-
-			/* Move to the next node and initialize values */
-			lineData = lineData->next;
-			lineData->next = NULL;
-			lineData->line = NULL;
-			lineData->lSize = 0;
-			lineData->lNum = 0;
-
-			/* Clear the buffer for the next iteration */
-			dArr_clear(&lineBuffer);
-		}
-	}
-
-	/* Free the line buffer */
-	dArr_destroy(&lineBuffer);
-}
-
-/* Free all memory in the LINE struct */
-void destroyLineData() {
-	LINE *tmp;
-	lineData = lineRoot;
-	while (lineData) {
-		tmp = lineData->next;
-		if(lineData->line)
-			free(lineData->line);
-		free(lineData);
-		lineData = tmp;
-	}
-	free(lineData);
-	lineData = NULL;
-}
 
 /* Refresh the middle window */
 void refreshMidwin() {
@@ -167,9 +81,8 @@ void refreshMidwin() {
 		showBotWin();
 		midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 
-		for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
-			waddstr(midWin, lineData->line);
-		}
+		printRange(lineData, midWin, 0, NROWS -2);
+
 		keypad(midWin, true);
 		wmove(midWin, cursorPos, 0);
 		wrefresh(midWin);
@@ -187,45 +100,12 @@ void refreshMidwin() {
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
-	noteNode *msg = NULL;
-	msg = list->message;
-
-	/* If there is no message then something is seriously wrong. Abort and debug */
-	if ( !msg ) {
-		abort();
-	}
-
-	/* If we in the list's root node then we are in the startup screen.
-	 * Print the number of stored notes and return. */
-	if( list->num == 0 ) {
-		char str[300];
-		sprintf(str, "You have %d stored notes\n", list->rootM->size);
-		mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(str) / 2), str);
-		wrefresh(midWin);
-		return;
-	}
-
-	/* There is no need to parse a message that can already fit on the screen. Just show it and return. */
-	if ( list->size < (NROWS -2 ) * NCOLS ) {
-		inScrollMessage = false;
-		for (; msg ; msg = msg->next) {
-			waddch(midWin, msg->ch);
-		}
-		wrefresh(midWin);
-		return;
-	}
-
-	/* lineData should be NULL here, if it's not then something is wrong and you will have memory leaks. Abort and debug */
-	if(lineData)
-		abort();
 
 	/* Parse the message into the lineData struct */
-	parseMessage();
+	lineData_parseMessage(list, &lineData);
 
 	/* Print the message to the screen */
-	for (lineData = lineRoot; lineData->lNum <= NROWS-2; lineData = lineData->next) {
-		waddstr(midWin, lineData->line);
-	}
+	printRange(lineData, midWin, 0, NROWS);
 
 	/* Position the cursor at the start of the message */
 	wmove(midWin, 0, 0);
@@ -318,6 +198,7 @@ void initNcurses() {
 	start_color();
 	init_pair(1, COLOR_BLACK, COLOR_WHITE);
 	init_pair(2, COLOR_WHITE, COLOR_BLACK);
+	lineData_init(&lineData);
 }
 
 /* Free all memory and quit */
@@ -329,8 +210,7 @@ void quit() {
 
 	endwin();
 
-	if(lineData)
-		destroyLineData();
+	lineData_destroy(&lineData);
 
 	/* Save and destroy the list */
 	list_save(list);
@@ -407,8 +287,6 @@ void guiLoop() {
 		/* Change to next note in list struct */
 		case 'd':
 			/* Before we change free all the memory in the current lineData struct */
-			if(lineData)
-				destroyLineData();
 			/* And reset counters */
 			cursorPos = 0;
 			nlines = 0;
@@ -418,8 +296,6 @@ void guiLoop() {
 
 			/* Change to previous note in list struct */
 		case 'a':
-			if(lineData)
-				destroyLineData();
 			cursorPos = 0;
 			nlines = 0;
 			list_previous(&list);
@@ -448,11 +324,7 @@ void guiLoop() {
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
 
-				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
-
-				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
-					waddstr(midWin, lineData->line);
-				}
+				printRange(lineData, midWin, nlines, nlines+NROWS-2);
 				wrefresh(midWin);
 				break;
 			}
@@ -469,11 +341,7 @@ void guiLoop() {
 				nlines++;
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
-				for (lineData = lineRoot; lineData->lNum <= nlines; lineData = lineData->next);
-
-				for (; lineData->lNum <= nlines+NROWS-2; lineData = lineData->next) {
-					waddstr(midWin, lineData->line);
-				}
+				printRange(lineData, midWin, nlines, nlines+NROWS-2);
 				wrefresh(midWin);
 				break;
 			}

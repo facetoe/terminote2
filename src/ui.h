@@ -16,13 +16,7 @@
 #include <sys/ioctl.h>
 #include "linkedList.h"
 
-struct line {
-	int lNum;
-	int lSize;
-	char *line;
-	struct line *next;
-};
-typedef struct line LINE;
+
 
 /* Get the size of the terminal screen */
 void getScrnSize();
