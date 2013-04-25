@@ -113,8 +113,13 @@ void lineData_getMessage(LINEDATA **ld, int msgNum) {
 /* Parses a listNode into a LINEDATA list.
  * If the message already exists in the list it does nothing */
 void lineData_parseMessage(listNode *list, LINEDATA **ld) {
-	if( list->num == 0 || lineData_hasMessage(*ld, list->num))
+	if( list->num == 0 ) {
 		return;
+	} else if (  lineData_hasMessage(*ld, list->num) ) {
+		lineData_getMessage(ld, list->num);
+		return;
+	}
+
 
 	LINEDATA *lineData = *ld;
 

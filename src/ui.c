@@ -92,20 +92,26 @@ void refreshMidwin() {
 		showWins();
 		return;
 	}
-
-
-
 }
 
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 
+	if(list->num == 0) {
+		char str[40];
+		sprintf(str, "You have %d notes stored.", list->size);
+		mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(str) / 2), str);
+		wrefresh(midWin);
+		keypad(midWin, true);
+		return;
+	}
+
 	/* Parse the message into the lineData struct */
 	lineData_parseMessage(list, &lineData);
 
 	/* Print the message to the screen */
-	printRange(lineData, midWin, 0, NROWS);
+	printRange(lineData, midWin, 0, NROWS-2);
 
 	/* Position the cursor at the start of the message */
 	wmove(midWin, 0, 0);
@@ -208,13 +214,12 @@ void quit() {
 		free_item(mainMenuItems[i]);
 	free_menu(footerMenu);
 
-	endwin();
-
 	lineData_destroy(&lineData);
 
 	/* Save and destroy the list */
 	list_save(list);
 	list_destroy(list);
+	endwin();
 	exit(0);
 }
 
@@ -309,9 +314,6 @@ void guiLoop() {
 
 			/* Scroll up in the message */
 		case KEY_UP:
-			/* If there is no lineData then there is nothing to scroll */
-			if(!lineData)
-				break;
 
 			if( cursorPos <= NROWS) {
 
@@ -359,10 +361,7 @@ void guiLoop() {
 		}
 
 		if (needsRefresh) {
-			if(!lineData)
-				showWins();
-			else
-				refreshMidwin();
+			showWins();
 			needsRefresh = false;
 		}
 	}

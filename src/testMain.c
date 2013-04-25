@@ -23,13 +23,13 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+
 	if (isatty(STDIN_FILENO) && argc == 1) {
 		list_init(&list);
 		list_load(list);
 		initSigaction();
 		initNcurses();
 		initMainMenu();
-		list_next(&list);
 		guiLoop(list);
 
 		quit();
