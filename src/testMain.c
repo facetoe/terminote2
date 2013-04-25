@@ -76,7 +76,7 @@ void lineData_init(LINEDATA **ld) {
 	*ld = tmp;
 }
 
-LINEDATA *lineData_getNode() {
+LINEDATA *lineData_getNode(LINEDATA *ld) {
 	LINEDATA *tmp = NULL;
 	tmp = malloc(sizeof(LINEDATA));
 
@@ -93,13 +93,45 @@ LINEDATA *lineData_getNode() {
 	tmp->next = NULL;
 	tmp->prev = NULL;
 	tmp->lines = NULL;
+	tmp->root = ld->root;
 
 	return tmp;
 }
 
+bool lineData_hasMessage(LINEDATA *ld, int msgNum) {
+	ld = ld->root;
+	if( !ld->next )
+		return false;
+
+	ld = ld->next;
+
+	for (; ld ; ld = ld->next) {
+		if( ld->messageNum == msgNum )
+			return true;
+	}
+	return false;
+}
+
+void lineData_getMessage(LINEDATA **ld, int msgNum) {
+	LINEDATA *tmp = *ld;
+	tmp = tmp->root;
+
+	if( !tmp->next )
+		return;
+
+	tmp = tmp->next;
+	for (; tmp; tmp = tmp->next) {
+		if( tmp->messageNum == msgNum ) {
+			*ld = tmp;
+			return;
+		}
+	}
+
+}
+
 /* Parses a listNode and separates each line into a LINE node for displaying in ncurses */
 void lineData_parseMessage(LINEDATA **ld) {
-	if( list->num == 0 )
+	if( list->num == 0 || lineData_hasMessage(*ld, list->num))
 		return;
 
 	LINEDATA *lineData = *ld;
@@ -108,7 +140,7 @@ void lineData_parseMessage(LINEDATA **ld) {
 	dArr *lineBuffer;
 	dArr_init(&lineBuffer);
 
-	lineData->next = lineData_getNode();
+	lineData->next = lineData_getNode(*ld);
 	lineData = lineData->next;
 
 	noteNode *currMsg = list->message;
@@ -187,7 +219,13 @@ void lineData_destroy(LINEDATA **ld) {
 }
 
 void printLineStats(LINEDATA *ld) {
-	printf("Lines: %d\nChars %ld\n", ld->numLines, ld->numChars);
+	ld = ld->root;
+	if( !ld->next )
+		return;
+
+	ld = ld->next;
+	for (; ld ; ld = ld->next)
+		printf("Lines: %d\nChars %ld\nNum: %d\n\n", ld->numLines, ld->numChars, ld->messageNum);
 }
 
 void printRange(LINEDATA *ld, int start, int end) {
@@ -233,10 +271,37 @@ int main(int argc, char **argv) {
 
 	list_next(&list);
 	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
+	list_next(&list);
+	lineData_parseMessage(&lineData);
 
+	if(lineData_hasMessage(lineData, 4))
+		printf("Yes");
 
-	printRange(lineData, 120, 130);
-	printRange(lineData, 100, 110);
+	printLineStats(lineData);
+
+	lineData_getMessage(&lineData, 4);
+
+	printRange(lineData, 0, 50);
 
 	lineData_destroy(&root);
 
