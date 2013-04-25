@@ -135,6 +135,7 @@ void parseMessage() {
 			dArr_clear(&lineBuffer);
 		}
 	}
+
 	/* Free the line buffer */
 	dArr_destroy(&lineBuffer);
 }
