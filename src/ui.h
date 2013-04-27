@@ -18,7 +18,7 @@
 
 
 
-/* Get the size of the terminal screen */
+/* Get the size of the terminal	 screen */
 void getScrnSize();
 
 /* Setup and print the top window to screen */

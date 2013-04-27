@@ -53,7 +53,7 @@ char cwdBuffer[MAX_CWDBUFF_SIZE];
 char *path;
 
 /* Condition for gui loop */
-extern bool needsRefresh;
+extern bool inScrollMessage;
 extern int NCOLS;
 extern int NROWS;
 
