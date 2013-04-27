@@ -113,8 +113,13 @@ void lineData_getMessage(LINEDATA **ld, int msgNum) {
 /* Parses a listNode into a LINEDATA list.
  * If the message already exists in the list it does nothing */
 void lineData_parseMessage(listNode *list, LINEDATA **ld) {
-	if( list->num == 0 || lineData_hasMessage(*ld, list->num))
+
+	if( list->num == 0 ) {
 		return;
+	} else if ( lineData_hasMessage(*ld, list->num) ) {
+		lineData_getMessage(ld, list->num);
+		return;
+	}
 
 	LINEDATA *lineData = *ld;
 
@@ -221,6 +226,16 @@ void printLineStats(LINEDATA *ld) {
 		printf("Lines: %d\nChars %ld\nNum: %d\n\n", ld->numLines, ld->numChars, ld->messageNum);
 }
 
+void printAll(LINEDATA *ld, int start, WINDOW *win) {
+	LINE *tmp = ld->lines;
+	for (; tmp->lNum < start && tmp->next; tmp = tmp->next);
+
+	for (;  tmp->next; tmp = tmp->next) {
+		waddstr(win, tmp->currLine);
+	}
+	wrefresh(win);
+}
+
 void printRange(LINEDATA *ld, WINDOW *win,  int start, int end) {
 	LINE *tmp = ld->lines;
 
@@ -229,20 +244,30 @@ void printRange(LINEDATA *ld, WINDOW *win,  int start, int end) {
 		fprintf(stderr, "Error in print range: No lines...");
 	}
 
-	if( start == 0 )
-		start = 1;
+	/* If the whole message will fit on the screen just print it */
+	if( ld->numLines <= end ) {
+		for (;tmp->prev ; tmp = tmp->prev);
 
-	if( tmp->lNum >= start ) {
-		for (; tmp->lNum >= start && tmp->prev ; tmp = tmp->prev);
+		for (;tmp->next; tmp = tmp->next)
+			waddstr(win, tmp->currLine);
 
-		for (; tmp->lNum <= end && tmp->next; tmp = tmp->next) {
+		inScrollMessage = false;
+		return;
+	}
+
+	inScrollMessage = true;
+
+	if( tmp->lNum > start ) {
+		for (; tmp->lNum > start && tmp->prev ; tmp = tmp->prev);
+
+		for (; tmp->lNum < end && tmp->next; tmp = tmp->next) {
 			waddstr(win, tmp->currLine);
 		}
 
 	} else {
-		for (; tmp->lNum <= start && tmp->next; tmp = tmp->next);
+		for (; tmp->lNum < start && tmp->next; tmp = tmp->next);
 
-		for (; tmp->lNum <= end && tmp->next; tmp = tmp->next) {
+		for (; tmp->lNum < end && tmp->next; tmp = tmp->next) {
 			waddstr(win, tmp->currLine);
 		}
 	}

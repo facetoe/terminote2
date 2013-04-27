@@ -68,6 +68,8 @@ void lineData_destroy(LINEDATA **ld);
 /* Print stats for debugging */
 void printLineStats(LINEDATA *ld);
 
+void printAll(LINEDATA *ld, int start, WINDOW *win);
+
 void printRange(LINEDATA *ld, WINDOW *win, int start, int end);
 
 

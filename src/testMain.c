@@ -29,7 +29,6 @@ int main(int argc, char **argv) {
 		initSigaction();
 		initNcurses();
 		initMainMenu();
-		list_next(&list);
 		guiLoop(list);
 
 		quit();

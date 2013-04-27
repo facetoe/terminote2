@@ -24,12 +24,14 @@ static LINEDATA *lineData = NULL;
 bool needsRefresh = false;
 
 /* Whether we're in a message that can be scrolled (For screen resizes) */
-static bool inScrollMessage = false;
+bool inScrollMessage;
 
 /* Terminal coordinates and scrollable message variables */
 int NCOLS, NROWS;
 static int nlines = 0;
-static int cursorPos = 0;
+static int cursorRow = 0;
+static int cursorCol = 0;
+
 
 /* External variable to hold the list. You should probably move this in here... */
 extern listNode *list;
@@ -71,41 +73,36 @@ void showTopWin() {
 
 /* Refresh the middle window */
 void refreshMidwin() {
-
-	/* If we're in a scroll message, we need to repaint the right part of the message (You need to fix this so it works properly) */
-	if( inScrollMessage )
-	{
 		getScrnSize();
 		resizeterm(NROWS, NCOLS);
 		showTopWin();
 		showBotWin();
 		midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 
-		printRange(lineData, midWin, 0, NROWS -2);
+		printRange(lineData, midWin, nlines, (nlines+NROWS)-2);
 
 		keypad(midWin, true);
-		wmove(midWin, cursorPos, 0);
+		wmove(midWin, cursorRow, cursorCol);
 		wrefresh(midWin);
-	} else {
-
-		/* Otherwise just repaint everything */
-		showWins();
-		return;
-	}
-
-
-
 }
 
 /* Setup and print the middle window to screen */
 void showMidWin() {
 	midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 
+	if( list->num == 0 ) {
+		char str[30];
+		sprintf(str, "You had %d stored notes.", list->size);
+		mvwprintw(midWin, 0, (NCOLS / 2) - (strlen(str) / 2), str);
+		wrefresh(midWin);
+		return;
+	}
+
 	/* Parse the message into the lineData struct */
 	lineData_parseMessage(list, &lineData);
 
 	/* Print the message to the screen */
-	printRange(lineData, midWin, 0, NROWS);
+	printRange(lineData, midWin, 0, NROWS -2);
 
 	/* Position the cursor at the start of the message */
 	wmove(midWin, 0, 0);
@@ -129,7 +126,10 @@ void showWins() {
 	resizeterm(NROWS, NCOLS);
 	showTopWin();
 	showBotWin();
-	showMidWin();
+	if( inScrollMessage )
+		refreshMidwin();
+	else
+		showMidWin();
 	doupdate();
 }
 
@@ -275,7 +275,10 @@ void doMenu() {
 /* run main GUI loop */
 void guiLoop() {
 	unpost_menu(footerMenu);
+	cursorCol = 0;
+	cursorRow = 0;
 	showWins();
+	char str[30];
 	int ch;
 	keypad(midWin, true);
 	while ( ( ch = wgetch(midWin) ) ) {
@@ -286,18 +289,20 @@ void guiLoop() {
 
 		/* Change to next note in list struct */
 		case 'd':
-			/* Before we change free all the memory in the current lineData struct */
-			/* And reset counters */
-			cursorPos = 0;
+			cursorRow = 0;
+			cursorCol = 0;
 			nlines = 0;
 			list_next(&list);
+			inScrollMessage = false;
 			needsRefresh = true;
 			break;
 
 			/* Change to previous note in list struct */
 		case 'a':
-			cursorPos = 0;
+			cursorRow = 0;
+			cursorCol = 0;
 			nlines = 0;
+			inScrollMessage = false;
 			list_previous(&list);
 			needsRefresh = true;
 			break;
@@ -309,44 +314,85 @@ void guiLoop() {
 
 			/* Scroll up in the message */
 		case KEY_UP:
-			/* If there is no lineData then there is nothing to scroll */
-			if(!lineData)
+
+			if( cursorRow >= 0 ) {
+				wmove(midWin, --cursorRow, cursorCol);
+				wmove(midWin, cursorRow, cursorCol);
+				wrefresh(midWin);
 				break;
+			} else if( cursorRow <= NROWS -2) {
 
-			if( cursorPos <= NROWS) {
-
-				if(nlines <= 0)
+				if (nlines <= 0)
 					nlines = 0;
 				else
-					nlines--;
+					nlines -= NROWS -2;
+
+				cursorRow = 0;
 
 				/* Redraw a blank window */
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
+				printRange(lineData, midWin, nlines, (nlines+NROWS)-2);
+				wmove(midWin, cursorRow, cursorCol);
 
-				printRange(lineData, midWin, nlines, nlines+NROWS-2);
 				wrefresh(midWin);
 				break;
 			}
-			wmove(midWin, --cursorPos, 0);
-			wrefresh(midWin);
-			keypad(midWin, true);
 			break;
 
 			/* Scroll down in the message */
 		case KEY_DOWN:
-			if(!lineData)
+
+			if( lineData->numLines <= NROWS -2 )
 				break;
-			if ( cursorPos >= NROWS - 2 ) {
-				nlines++;
+
+			if( nlines + (NROWS*2)-4 >= lineData->numLines ) {
 				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
 				keypad(midWin, true);
-				printRange(lineData, midWin, nlines, nlines+NROWS-2);
+				printAll(lineData, nlines + NROWS-2,  midWin);
+				wmove(midWin, cursorRow, cursorCol);
 				wrefresh(midWin);
 				break;
 			}
-			wmove(midWin, ++cursorPos, 0);
+
+			if ( cursorRow >= NROWS - 2 ) {
+				nlines += NROWS -2;
+
+				midWin = newwin(NROWS - 2, NCOLS, 1, 0);
+				keypad(midWin, true);
+				printRange(lineData, midWin, nlines, (nlines+NROWS)-2);
+				cursorRow = NROWS-2;
+				wmove(midWin, cursorRow, cursorCol);
+				wrefresh(midWin);
+				break;
+			}
+			wmove(midWin, ++cursorRow, cursorCol);
 			wrefresh(midWin);
+			keypad(midWin, true);
+			break;
+
+		case KEY_LEFT:
+			if( cursorCol <= 0 ) {
+				cursorRow--;
+				cursorCol = NCOLS;
+			} else {
+				cursorCol--;
+			}
+			wmove(midWin, cursorRow, cursorCol);
+			wrefresh(midWin);
+			keypad(midWin, true);
+			break;
+
+		case KEY_RIGHT:
+			if( cursorCol >= NCOLS ) {
+				cursorRow++;
+				cursorCol = 0;
+			} else {
+				cursorCol++;
+			}
+			wmove(midWin, cursorRow, cursorCol);
+			wrefresh(midWin);
+			keypad(midWin, true);
 			break;
 
 			/* Free all memory and exit */
@@ -359,10 +405,7 @@ void guiLoop() {
 		}
 
 		if (needsRefresh) {
-			if(!lineData)
-				showWins();
-			else
-				refreshMidwin();
+			showWins();
 			needsRefresh = false;
 		}
 	}
