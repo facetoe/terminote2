@@ -352,7 +352,7 @@ void guiLoop() {
 				wrefresh(midWin);
 				break;
 			}
-			wmove(midWin, --cursorPos, 0);
+			wmove(midWin, --cursorRow, 0);
 			wrefresh(midWin);
 			keypad(midWin, true);
 			break;
