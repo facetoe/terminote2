@@ -9,7 +9,9 @@
  */
 
 #include <getopt.h>
+
 #include "helperFunctions.h"
+
 #include "linkedList.h"
 #include "options.h"
 #include "defines.h"
@@ -71,6 +73,7 @@ void nonInteractive_printAllWithSubString( FILE *outStream, MESSAGE *msg,
 
 /* Reads from stdin until EOF growing the buffer as needed */
 void nonInteractive_appendMessage( MESSAGE *msg ) {
+
 
     /* Loop to the end of the message */
     msg = msg->root;
