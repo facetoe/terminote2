@@ -37,6 +37,7 @@ OPTIONS *options_new() {
     opts->outputToFile = 0;
     opts->append = 0;
     opts->usage = 0;
+    opts->size = 0;
     opts->interactive = 0;
     opts->popA = 0;
 
@@ -50,8 +51,12 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     char *nArg, *dArg, *pArg, *fArg, *oArg;
     nArg = dArg = pArg = fArg = oArg = NULL;
 
-    while ( ( opt = getopt( argc, argv, "ivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "sivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
         switch ( opt ) {
+
+        case 's':
+            options->size = 1;
+            break;
 
         case 'i':
             options->interactive = 1;
@@ -227,6 +232,8 @@ void options_execute( OPTIONS *opts ) {
         printf( "** Run Interactive **\n" );
     } else if ( opts->popA ) {
         nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
+    } else if (opts->size) {
+        fprintf(outStream, "%d\n", msg->root->totalMessages);
     }
 
     if ( opts->outputToFile )

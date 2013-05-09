@@ -30,6 +30,7 @@ typedef struct {
 
     /* Print n note */
     int printN;
+
     /* Print all notes */
     int printA;
 
@@ -49,6 +50,9 @@ typedef struct {
 
     /* Run in interactive mode */
     int interactive;
+
+    /* Number of messages */
+    int size;
 
     /* Output to file instead of stdout */
     int outputToFile;
