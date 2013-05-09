@@ -8,40 +8,31 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <getopt.h>
 
 #include "helperFunctions.h"
 
 #include "linkedList.h"
+#include "options.h"
 
 MESSAGE *msg = NULL;
 
+#define OPT_NUM 10
+
 char *path = "/home/facetoe/.terminote.data";
 
-int main( void ) {
-
-    list_init( &msg );
-    FILE * fp = fopen( path, "rb" );
-    list_load( msg );
-    fclose( fp );
-
-    fp = fopen( "/home/facetoe/.terminote.data", "wb" );
-    if ( fp == NULL )
-        printf( "FUCK" );
-
-    list_appendMessage(msg, "hey there baby");
-
-    //MESSAGE *tmp = list_searchByNoteNum(msg, 1);
-    msg = msg->next;
 
 
-    list_printAll( stdout, msg );
 
-    list_save( msg );
-    fclose( fp );
-    list_destroy( &msg );
+
+
+OPTIONS *opts = NULL;
+
+int main( int argc, char **argv ) {
+
+    opts = options_new();
+    options_parse( opts, argc, argv );
+    options_print( opts );
 
     return EXIT_SUCCESS;
 }
