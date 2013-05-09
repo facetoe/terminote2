@@ -77,6 +77,12 @@ void list_init( MESSAGE **msg );
 /* Returns a new MESSAGE node */
 MESSAGE *list_getNode( MESSAGE *msg );
 
+/* Get and store path information */
+void list_setPath(MESSAGE *msg);
+
+/* Get and store time information */
+void list_setTime(MESSAGE *msg);
+
 /* Inserts a line into a LINE struct */
 void insertLine( LINE **l, char *s, int lineLen, int numLines );
 
