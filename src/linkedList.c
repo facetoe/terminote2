@@ -70,6 +70,31 @@ MESSAGE *list_getNode( MESSAGE *msg ) {
     return tmp;
 }
 
+/* Get and store path information */
+void list_setPath(MESSAGE *msg) {
+     char *path = getcwd( NULL, 0 );
+     if ( path == NULL ) {
+         fprintf( stderr, "Unable to retrieve path\n" );
+     } else {
+         size_t path_len = strlen( path );
+         strncpy( msg->path, path, path_len );
+         free( path );
+     }
+}
+
+/* Get and store time information */
+void list_setTime(MESSAGE *msg) {
+    char *time = current_time();
+    if ( time == NULL ) {
+        perror( "Unable to retrieve time\n" );
+    } else {
+        strip_newline( time );
+        size_t time_len = strlen( time );
+        strncpy( msg->time, time, time_len );
+    }
+
+}
+
 /* Inserts a line into a LINE struct */
 void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
 
@@ -287,28 +312,12 @@ void list_appendMessage( MESSAGE *msg, char *str ) {
     msg->next = list_getNode( msg );
     msg = msg->next;
 
-    /* Get and store path information */
-    char *path = getcwd( NULL, 0 );
-    if ( path == NULL ) {
-        fprintf( stderr, "Unable to retrieve path\n" );
-    } else {
-        size_t path_len = strlen( path );
-        strncpy( msg->path, path, path_len );
-        free( path );
-    }
+    /* Get and store path and time information */
+    list_setPath(msg);
+    list_setTime(msg);
 
     /* Insert the message */
     list_insertString( msg, str );
-
-    /* Get and store time information */
-    char *time = current_time();
-    if ( time == NULL ) {
-        perror( "Unable to retrieve time\n" );
-    } else {
-        strip_newline( time );
-        size_t time_len = strlen( time );
-        strncpy( msg->time, time, time_len );
-    }
 }
 
 /* Prints current note according to args. Args are:
@@ -612,7 +621,12 @@ bool list_save( MESSAGE *msg ) {
  * false if not. */
 bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
-    for ( ; line; line = line->next ) {
+
+    if ( !line ) {
+        printf("fuck");
+         exit(1);
+    }
+    for ( ; line && line->currLine ; line = line->next ) {
         if( strstr(line->currLine, subStr) != NULL )
             return true;
     }
