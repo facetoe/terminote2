@@ -1,122 +1,154 @@
 /*
  * linkedList.h
  *
- *  Created on: Mar 31, 2013
- *      Author: fragmachine
+ *  Created on: 09/05/2013
+ *      Author: facetoe
  */
 
 #ifndef LINKEDLIST_H_
 #define LINKEDLIST_H_
 
-#include "defines.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include "helperFunctions.h"
+
+#include <unistd.h> // getcwd
+
+#define DEBUG 1
+
+extern char * path;
 
 #define MAX_TIME_SIZE 30
 #define MAX_PATH_SIZE 200
 
+/* List to hold lines */
+struct line {
+    int lNum;
+    int lSize;
+    char *currLine;
+    struct line *next;
+    struct line *prev;
+};
 
-struct node {
-	char ch;
-	int index;
+typedef struct line LINE;
 
-	struct node *next;
-	struct node *prev;
-} node;
-
-typedef struct node noteNode;
-
+/* List to hold parsed messages */
 struct message {
-	int num;
-	int size;
 
-	char time[MAX_TIME_SIZE];
-	char path[MAX_PATH_SIZE];
+    int totalMessages;
 
-	struct message *next;
-	struct message *rootM;
+    int numLines;
+    int messageNum;
+    long numChars;
 
-	noteNode *rootN;
-	noteNode *message;
-} message;
+    char path[MAX_PATH_SIZE];
+    char time[MAX_TIME_SIZE];
 
-typedef struct message listNode;
+    /* Top line of the message */
+    LINE *first;
 
-/* Allocates memory for initial nodes and sets default values. */
-void list_init(listNode **root);
+    /* Bottom line of the message */
+    LINE *last;
 
-/* Allocates memory for a new node, sets values and returns initialized node */
-listNode *list_getNode(listNode *ln);
+    /* Top line of the current page */
+    LINE *pageTop;
+
+    /* Bottom line of the current page */
+    LINE *pageBot;
+
+    struct message *next;
+    struct message *prev;
+    struct message *root;
+
+};
+
+typedef struct message MESSAGE;
+
+
+/* Allocates memory for a new LINE node and sets default values */
+LINE *line_getLine();
+
+/* Allocates memory for a MESSAGE list and initializes default values */
+void list_init( MESSAGE **msg );
+
+/* Returns a new MESSAGE node */
+MESSAGE *list_getNode( MESSAGE *msg );
+
+/* Inserts a line into a LINE struct */
+void insertLine( LINE **l, char *s, int lineLen, int numLines );
+
+/* Inserts a string into a MESSAGE struct */
+void list_insertString( MESSAGE *msg, char *str );
+
+/* Reads the note data from a file and places in struct */
+void list_readBinary( FILE *fp, MESSAGE *msg );
+
+/* Writes the MESSAGE structs to a file */
+void list_writeBinary( FILE *fp, MESSAGE *msg );
+
+/* Free all memory in the LINEDATA list */
+void list_destroy( MESSAGE **message );
 
 /* Returns the length of the list */
-int list_length(listNode *ln);
-
-/* Returns the message length */
-int list_messageLength(noteNode *msg);
-
-/* Inserts a string into a msgList node */
-void list_insertString(listNode *ln, char *str);
+int list_length( MESSAGE *msg );
 
 /* Appends message to the end of the list */
-void list_appendMessage(listNode *ln, char *str);
+void list_appendMessage( MESSAGE *msg, char *str );
 
 /* Prints current note according to args. Args are:
  * n: Note number
  * p: Path
  * t: Time
  * m: Message */
-void list_printMessage(FILE *outStream, char *args, listNode *ln);
+void list_printMessage( FILE *outStream, char *args, MESSAGE *msg );
 
 /* Prints all messages with all information */
-void list_printAll(FILE *outStream, listNode *ln);
-
-/* Destroys the list freeing all memory */
-void list_destroy(listNode *ln);
+void list_printAll( FILE *outStream, MESSAGE *msg );
 
 /* Moves list pointer to last node in the list.
  * If it is already the last node then leaves the pointer unchanged. */
-void list_lastNode(listNode **ln);
+void list_lastNode( MESSAGE **msg );
 
 /* Moves list pointer to the first node in the list.
  * If the first node is the root node then leaves the pointer unchanged. */
-void list_firstNode(listNode **ln);
+void list_firstNode( MESSAGE **msg );
 
 /* Moves the list pointer to the next node in the list. If it is the last node,
  * moves the pointer to the first node: ie, head->next to skip root node.
  * If there is only one node in the list (not counting root) it returns currP unchanged. */
-void list_next(listNode **ln);
+void list_next( MESSAGE **msg );
 
 /* Moves the list pointer to the previous node in the list.
  * If there is only one node (not counting root) leaves the pointer unchanged.  */
-void list_previous(listNode **ln);
+void list_previous( MESSAGE **msg );
 
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */
-listNode *list_searchByNoteNum(listNode *ln, int noteNum);
+MESSAGE *list_searchByNoteNum( MESSAGE *msg, int noteNum );
 
 /* Reorders the noteNums */
-void list_orderList(listNode *ln);
+void list_orderList( MESSAGE *msg );
 
 /* Delete a node by noteNum */
-void list_deleteNode(listNode *ln, int noteNum);
+void list_deleteNode( MESSAGE *msg, int noteNum );
 
-/* Writes the note structs to a file */
-void list_writeBinary(FILE *fp, listNode *ln);
-
-/* Reads the note data from a file and places in struct */
-void list_readBinary(FILE *fp, listNode *ln);
-
-/* Deletes all notes freeing all the memory. */
-void list_deleteAll(listNode **ln);
+/* Deletes all nodes except for the root node */
+void list_deleteAll( MESSAGE **message );
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
 /* Returns true on success or false on failure. */
-bool list_load(listNode *ln);
+bool list_load( MESSAGE *msg );
 
 /* Attempts to save the list at path. */
 /* Returns true on success or false on failure. */
-bool list_save(listNode *ln);
+bool list_save( MESSAGE *msg );
 
 /* Searches the listNode's message for substring. Returns true if it does,
  * false if not. */
-bool list_messageHasSubstring(listNode *ln, char *subStr);
+bool list_messageHasSubstring( MESSAGE *msg, char *subStr );
+
 
 #endif /* LINKEDLIST_H_ */

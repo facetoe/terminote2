@@ -1,41 +1,47 @@
+/*
+ ============================================================================
+ Name        : listRewrite.c
+ Author      : facetoe
+ Version     :
+ Copyright   : Your copyright notice
+ Description : Hello World in C, Ansi-style
+ ============================================================================
+ */
 
-#include "defines.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "helperFunctions.h"
+
 #include "linkedList.h"
-#include "dynamicArray.h"
-#include "nonInteractive.h"
-#include "ui.h"
+
+MESSAGE *msg = NULL;
+
+char *path = "/home/facetoe/.terminote.data";
+
+int main( void ) {
+
+    list_init( &msg );
+    FILE * fp = fopen( path, "rb" );
+    list_load( msg );
+    fclose( fp );
+
+    fp = fopen( "/home/facetoe/.terminote.data", "wb" );
+    if ( fp == NULL )
+        printf( "FUCK" );
+
+    list_appendMessage(msg, "hey there baby");
+
+    //MESSAGE *tmp = list_searchByNoteNum(msg, 1);
+    msg = msg->next;
 
 
-listNode *list = NULL;
+    list_printAll( stdout, msg );
 
+    list_save( msg );
+    fclose( fp );
+    list_destroy( &msg );
 
-
-int main(int argc, char **argv) {
-
-	Options options;
-
-	if (getDataPath(pathBuffer, MAX_PATH_SIZE, DATA_FILE))
-		path = pathBuffer;
-	else {
-		/* If we can't load the save file then the program is crippled, just exit */
-		fprintf(stderr, "Failed to load data.\n");
-		exit(1);
-	}
-
-
-	if (isatty(STDIN_FILENO) && argc == 1) {
-		list_init(&list);
-		list_load(list);
-		initSigaction();
-		initNcurses();
-		initMainMenu();
-		guiLoop(list);
-
-		quit();
-
-	} else {
-		nonInteractive_run(&options, argc, argv);
-	}
-	return 0;
+    return EXIT_SUCCESS;
 }
