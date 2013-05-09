@@ -132,6 +132,7 @@ void list_insertString( MESSAGE *msg, char *str ) {
                 msg->first = line;
             }
 
+            numLines++;
             insertLine( &line, s, lineLen, numLines );
 
             /* Set and update the prev pointer */
@@ -496,8 +497,6 @@ void list_deleteNode( MESSAGE *msg, int noteNum ) {
 
             /* Loop through the message freeing each line */
             while ( line ) {
-                if ( DEBUG )
-                    printf( "Freeing line #%d\n", line->lNum );
                 tmpLine = line->next;
                 free( line->currLine );
                 free( line );
