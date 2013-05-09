@@ -623,10 +623,6 @@ bool list_save( MESSAGE *msg ) {
 bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
-    if ( !line ) {
-        printf("fuck");
-         exit(1);
-    }
     for ( ; line && line->currLine ; line = line->next ) {
         if( strstr(line->currLine, subStr) != NULL )
             return true;
