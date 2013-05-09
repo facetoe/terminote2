@@ -152,8 +152,20 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
 /* Run in non-interactive mode */
 void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
 
-    /* If we get here there are command line arguments, parse and execute them */
-    options_parse( opts, argc, argv );
-    options_execute( opts );
+    if ( argc == 1 ) {
+        MESSAGE *msg = NULL;
+        list_init( &msg );
+        list_load( msg );
+        nonInteractive_appendMessage(msg);
+        /* Clean up */
+        list_save( msg );
+        list_destroy( &msg );
+    } else {
+        /* If we get here there are command line arguments, parse and execute them */
+        options_parse( opts, argc, argv );
+        options_execute( opts );
+    }
+
+
 
 }
