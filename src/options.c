@@ -9,6 +9,7 @@
 /* Initialize options struct */
 
 #include "options.h"
+#include "nonInteractive.h"
 
 OPTIONS *options_new() {
 
@@ -173,6 +174,69 @@ void options_print(OPTIONS *opts) {
             "\nsearchTerm: %s\n", opts->pop, opts->popN, opts->delN, opts->delA,
             opts->printN, opts->printA, opts->searchNotes, opts->searchTerm);
 }
+
+/* Executes options then destroys the list */
+void options_execute( OPTIONS *opts ) {
+
+    if ( opts->usage ) {
+        printUsage( stdout );
+        exit( 0 );
+    }
+
+    FILE *outStream = NULL;
+    outStream = stdout;
+
+    if ( opts->outputToFile )
+        outStream = fopen( opts->outFile, "w" );
+
+    MESSAGE *msg = NULL;
+    list_init( &msg );
+    list_load( msg );
+
+    if ( opts->pop ) {
+        nonInteractive_pop( stdout, msg, "nptm", msg->root->totalMessages );
+    } else if ( opts->popN ) {
+        nonInteractive_pop( stdout, msg, "nptm", opts->popN );
+    } else if ( opts->delA ) {
+        list_deleteAll( &msg );
+    } else if ( opts->delN ) {
+        if ( list_length( msg ) >= opts->delN )
+            list_deleteNode( msg, opts->delN );
+        else
+            fprintf( stderr, "Nothing to delete at position: %d\n",
+                    opts->delN );
+
+    } else if ( opts->printN ) {
+        MESSAGE *tmp = NULL;
+        if ( ( tmp = list_searchByNoteNum( msg, opts->printN ) ) )
+            list_printMessage( outStream, "nptm", tmp );
+        else
+            fprintf( stderr, "Nothing to print at position: %d\n",
+                    opts->printN );
+
+    } else if ( opts->printA ) {
+        list_printAll( outStream, msg );
+    } else if ( opts->searchNotes ) {
+        nonInteractive_printAllWithSubString( outStream, msg,
+                opts->searchTerm );
+    } else if ( opts->append ) {
+        list_appendMessage( msg, opts->appendStr );
+    } else if ( opts->version ) {
+        printf( "%.1f\n", VERSION );
+    } else if ( opts->interactive ) {
+        printf( "** Run Interactive **\n" );
+    } else if ( opts->popA ) {
+        nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
+    }
+
+    if ( opts->outputToFile )
+        fclose( outStream );
+
+    /* Clean up */
+    list_save( msg );
+    list_destroy( &msg );
+}
+
 
 
 

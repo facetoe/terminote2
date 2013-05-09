@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "helperFunctions.h"
+#include "linkedList.h"
+#include "defines.h"
 
 typedef struct {
     /* Pop last note ( only the message )*/
@@ -68,6 +70,9 @@ void options_validate( OPTIONS *opts );
 
 /* Print options for debugging */
 void options_print(OPTIONS *opts);
+
+/* Executes options then destroys the list */
+void options_execute( OPTIONS *opts );
 
 
 
