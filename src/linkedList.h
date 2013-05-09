@@ -13,11 +13,11 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "defines.h"
 #include "helperFunctions.h"
 
 #include <unistd.h> // getcwd
 
-#define DEBUG 1
 
 extern char * path;
 

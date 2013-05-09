@@ -36,6 +36,7 @@ OPTIONS *options_new() {
     opts->outputToFile = 0;
     opts->append = 0;
     opts->usage = 0;
+    opts->interactive = 0;
     opts->popA = 0;
 
     return opts;
@@ -48,8 +49,12 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     char *nArg, *dArg, *pArg, *fArg, *oArg;
     nArg = dArg = pArg = fArg = oArg = NULL;
 
-    while ( ( opt = getopt( argc, argv, "vhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "ivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
         switch ( opt ) {
+
+        case 'i':
+            options->interactive = 1;
+            break;
 
         case 'v':
             options->version = 1;
@@ -168,4 +173,6 @@ void options_print(OPTIONS *opts) {
             "\nsearchTerm: %s\n", opts->pop, opts->popN, opts->delN, opts->delA,
             opts->printN, opts->printA, opts->searchNotes, opts->searchTerm);
 }
+
+
 

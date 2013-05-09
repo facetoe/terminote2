@@ -9,6 +9,7 @@
 #define DEFINES_H_
 
 #define VERSION 0.3
+#define DEBUG 1
 
 
 #endif /* DEFINES_H_ */

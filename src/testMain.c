@@ -42,7 +42,7 @@ void printUsage( FILE *outStream ) {
 void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args,
         int noteNum ) {
 
-    if ( list_length( msg ) == 0 || noteNum == 0 ) {
+    if ( msg->root->totalMessages == 0 || noteNum == 0 ) {
         fprintf( stderr, "Nothing to print\n" );
         return;
     }
@@ -74,7 +74,6 @@ void nonInteractive_printAllWithSubString( FILE *outStream, MESSAGE *msg,
 /* Reads from stdin until EOF growing the buffer as needed */
 void nonInteractive_appendMessage( MESSAGE *msg ) {
 
-
     /* Loop to the end of the message */
     msg = msg->root;
     for ( ; msg->next; msg = msg->next )
@@ -85,15 +84,16 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
     msg = msg->next;
 
     /* Get and set path and time information */
-    list_setPath(msg);
-    list_setTime(msg);
+    list_setPath( msg );
+    list_setTime( msg );
 
-    int ch, lineLen, totChars, numLines;
+    int ch, lineLen, totChars, numLines, buffSize;
     ch = lineLen = totChars = numLines = 0;
 
-    char *tmp = NULL;
-    char *buffer = NULL;
-    int buffSize = 1024;
+    char *tmp, *buffer;
+    tmp = buffer = NULL;
+
+    buffSize = 1024;
     buffer = malloc( buffSize * sizeof(char) );
 
     if ( !buffer ) {
@@ -132,49 +132,117 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
             buffer[lineLen] = 0;
 
             /* You pass buffer + lineLen because insertLine expects the pointer to be at the end of the string */
-            insertLine(&line, buffer+ lineLen, lineLen, numLines );
+            insertLine( &line, buffer + lineLen, lineLen, numLines );
 
-            if( numLines == 1 ) {
-                  msg->first = line;
-              }
+            if ( numLines == 1 ) {
+                msg->first = line;
+            }
 
             /* Set and update the prev pointer */
-             line->prev = prev;
-             prev = line;
+            line->prev = prev;
+            prev = line;
 
-             /* Get a new line and move to it */
-             line->next = line_getLine();
-             line = line->next;
-             totChars += lineLen + 1;
-             lineLen = 0;
+            /* Get a new line and move to it */
+            line->next = line_getLine();
+            line = line->next;
+            totChars += lineLen + 1;
+            lineLen = 0;
         }
     }
 
     /* Update MESSAGE statistics for this message */
-      msg->last = line->prev;
-      msg->numChars = totChars;
-      msg->numLines = numLines;
-      msg->messageNum = msg->root->totalMessages + 1;
-      msg->root->totalMessages++;
-      free( buffer );
+    msg->last = line->prev;
+    msg->numChars = totChars;
+    msg->numLines = numLines;
+    msg->messageNum = msg->root->totalMessages + 1;
+    msg->root->totalMessages++;
+    free( buffer );
+}
+
+/* Executes options then destroys the list */
+void options_execute( OPTIONS *opts ) {
+
+    if ( opts->usage ) {
+        printUsage(stdout);
+        exit(0);
+    }
+
+    FILE *outStream = NULL;
+    outStream = stdout;
+
+    if ( opts->outputToFile )
+        outStream = fopen( opts->outFile, "w" );
+
+    MESSAGE *msg = NULL;
+    list_init( &msg );
+    list_load( msg );
+
+    if ( opts->pop ) {
+        nonInteractive_pop( stdout, msg, "nptm", msg->root->totalMessages );
+    } else if ( opts->popN ) {
+        nonInteractive_pop( stdout, msg, "nptm", opts->popN );
+    } else if ( opts->delA ) {
+        list_deleteAll( &msg );
+    } else if ( opts->delN ) {
+        if ( list_length( msg ) >= opts->delN )
+            list_deleteNode( msg, opts->delN );
+        else
+            fprintf( stderr, "Nothing to delete at position: %d\n",
+                    opts->delN );
+
+    } else if ( opts->printN ) {
+        MESSAGE *tmp = NULL;
+        if ( ( tmp = list_searchByNoteNum( msg, opts->printN ) ) )
+            list_printMessage( outStream, "nptm", tmp );
+        else
+            fprintf( stderr, "Nothing to print at position: %d\n",
+                    opts->printN );
+
+    } else if ( opts->printA ) {
+        list_printAll( outStream, msg );
+    } else if ( opts->searchNotes ) {
+        nonInteractive_printAllWithSubString( outStream, msg,
+                opts->searchTerm );
+    } else if ( opts->append ) {
+        list_appendMessage( msg, opts->appendStr );
+    } else if ( opts->version ) {
+        printf( "%.1f\n", VERSION );
+    } else if ( opts->interactive ) {
+        printf("** Run Interactive **\n");
+    } else if ( opts->popA ) {
+        nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
+    }
+
+    if ( opts->outputToFile )
+        fclose( outStream );
+
+    /* Clean up */
+    list_save( msg );
+    list_destroy( &msg );
+}
+
+/* Run in non-interactive mode */
+void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
+
+    /* If there are no arguments we'll just print usage */
+    if ( argc <= 1 ) {
+        printUsage(stdout);
+        exit(0);
+    } else {
+        /* If we get here there are command line arguments, parse and execute them */
+        options_parse( opts, argc, argv );
+        options_execute( opts );
+    }
 }
 
 char *path = "/home/facetoe/.terminote.data";
 
 OPTIONS *opts = NULL;
-MESSAGE *msg = NULL;
 
 int main( int argc, char **argv ) {
 
-    list_init( &msg );
-    list_load( msg );
-
-    //nonInteractive_appendMessage( msg );
-    //list_appendMessage(msg, "FUCK you cunt");
-    //list_printAll(stdout, msg);
-    list_save( msg );
-    list_destroy( &msg );
-
+    opts = options_new();
+    nonInteractive_run( opts, argc, argv );
     free( opts );
     return EXIT_SUCCESS;
 }

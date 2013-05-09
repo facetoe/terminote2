@@ -305,6 +305,7 @@ void list_appendMessage( MESSAGE *msg, char *str ) {
 
     /* Loop to the end of the message */
     msg = msg->root;
+
     for ( ; msg->next; msg = msg->next )
         ;
 

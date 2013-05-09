@@ -45,6 +45,9 @@ typedef struct {
     /* Print Usage */
     int usage;
 
+    /* Run in interactive mode */
+    int interactive;
+
     /* Output to file instead of stdout */
     int outputToFile;
     char *outFile;
