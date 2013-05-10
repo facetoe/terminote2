@@ -40,28 +40,6 @@ int file_exists( char *filename ) {
     return ( stat( filename, &buffer ) == 0 );
 }
 
-/* Get input from stdin. Reads up to bufferLen or EOF.
- * If more chars are entered then bufferLen returns the number of characters read. */
-int getInputPipe( char buffer[], int bufferLen ) {
-    char ch;
-    int charsRead = 0;
-
-    while ( ( ch = getchar() ) != EOF ) {
-        /* If input overflows buffer */
-        if ( charsRead >= bufferLen ) {
-            /* Terminate */
-            buffer[charsRead - 1] = '\0';
-
-            /* And return error */
-            return charsRead;
-        }
-        buffer[charsRead] = ch;
-        charsRead++;
-    }
-    buffer[charsRead] = '\0';
-    return charsRead;
-}
-
 /* Searches string for substring.
  * Returns a true if found, false otherwise.
  */bool findSubstring( char *haystack, char *needle ) {
