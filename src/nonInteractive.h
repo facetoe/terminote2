@@ -9,6 +9,7 @@
 #define NONINTERACTIVE_H_
 
 #include "linkedList.h"
+#include "line.h"
 #include "options.h"
 
 /* Prints usage */
