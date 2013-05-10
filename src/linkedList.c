@@ -110,7 +110,7 @@ void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
     *l = line;
 }
 
-/* Inserts a string into a MESSAGE struct */
+/* Parses a string into individual lines and inserts into the MESSAGE's LINE struct */
 void list_insertString( MESSAGE *msg, char *str ) {
     char *s = NULL;
     int lineLen, totChars, numLines;
@@ -122,6 +122,7 @@ void list_insertString( MESSAGE *msg, char *str ) {
 
     for ( s = str; *s; s++ ) {
 
+        /* Increment lineLen until we hit a NULL or a newline */
         if ( *s != '\0' && *s != '\n' ) {
             lineLen++;
         } else {
@@ -131,6 +132,8 @@ void list_insertString( MESSAGE *msg, char *str ) {
             }
 
             numLines++;
+
+            /* Insert this line */
             insertLine( &line, s, lineLen, numLines );
 
             /* Set and update the prev pointer */
@@ -141,17 +144,18 @@ void list_insertString( MESSAGE *msg, char *str ) {
             line->next = line_getLine();
             line = line->next;
 
+            /* It's lineLen + 1 because when we write the line we append a newline. */
+            /* This could be done in the writeBinary function but I think it's easier this way */
             totChars += lineLen + 1;
             lineLen = 0;
         }
     }
 
-    /* If there is no newline at the end of a line it won't get caught above, so deal with it here */
+    /* If there is no newline at the end of the last line it won't get caught above, so deal with it here */
     if ( lineLen > 0 ) {
         if ( s - lineLen == str ) {
             msg->first = line;
         }
-        totChars += lineLen + 1;
         numLines++;
         insertLine( &line, s, lineLen, numLines );
 
@@ -162,6 +166,8 @@ void list_insertString( MESSAGE *msg, char *str ) {
         /* Get a new line and move to it */
         line->next = line_getLine();
         line = line->next;
+
+        totChars += lineLen + 1;
     }
 
     /* Update MESSAGE statistics for this message */
@@ -191,6 +197,45 @@ void list_appendMessage( MESSAGE *msg, char *str ) {
 
     /* Insert the message */
     list_insertString( msg, str );
+}
+
+/* Writes the MESSAGE structs to a file */
+void list_writeBinary( FILE *fp, MESSAGE *msg ) {
+    msg = msg->root;
+    /* Don't write root node */
+    if ( msg->messageNum == 0 )
+        msg = msg->next;
+
+    while ( msg ) {
+        if ( DEBUG )
+            printf( "Writing Note #%d\n", msg->messageNum );
+
+        long first = msg->numChars;
+        int len;
+
+        /* Write numChars first so we know how many to read later */
+        fwrite( &first, sizeof( first ), 1, fp );
+
+        /* Write each line */
+        for ( LINE *line = msg->first; line->next; line = line->next ) {
+            fwrite( line->currLine, sizeof(char), line->lSize, fp );
+
+            /* Write a newline so we can seperate the lines later */
+            fwrite( "\n", sizeof(char), 1, fp );
+        }
+
+        /* Write path */
+        len = strlen( msg->path ) + 1;
+        fwrite( &len, sizeof(int), 1, fp );
+        fwrite( msg->path, sizeof(char), len, fp );
+
+        /* Write time */
+        len = strlen( msg->time ) + 1;
+        fwrite( &len, sizeof(int), 1, fp );
+        fwrite( msg->time, sizeof(char), len, fp );
+
+        msg = msg->next;
+    }
 }
 
 /* Reads the note data from a file and places in struct */
@@ -242,43 +287,6 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
         msg->time[len] = 0;
 
         free( buffer );
-    }
-}
-
-/* Writes the MESSAGE structs to a file */
-void list_writeBinary( FILE *fp, MESSAGE *msg ) {
-    msg = msg->root;
-    /* Don't write root node */
-    if ( msg->messageNum == 0 )
-        msg = msg->next;
-
-    while ( msg ) {
-        if ( DEBUG )
-            printf( "Writing Note #%d\n", msg->messageNum );
-
-        long first = msg->numChars;
-        int len;
-
-        /* Write numChars first so we know how many to read later */
-        fwrite( &first, sizeof( first ), 1, fp );
-
-        /* Write each line */
-        for ( LINE *line = msg->first; line->next; line = line->next ) {
-            fwrite( line->currLine, sizeof(char), line->lSize, fp );
-            fwrite( "\n", sizeof(char), 1, fp );
-        }
-
-        /* Write path */
-        len = strlen( msg->path ) + 1;
-        fwrite( &len, sizeof(int), 1, fp );
-        fwrite( msg->path, sizeof(char), len, fp );
-
-        /* Write time */
-        len = strlen( msg->time ) + 1;
-        fwrite( &len, sizeof(int), 1, fp );
-        fwrite( msg->time, sizeof(char), len, fp );
-
-        msg = msg->next;
     }
 }
 
@@ -363,6 +371,7 @@ void list_printAll( FILE *outStream, MESSAGE *msg ) {
 
     if ( !msg ) {
         fprintf( stderr, "Nothing to print\n" );
+        return;
     }
 
     msg = msg->root;
@@ -527,6 +536,8 @@ void list_deleteAll( MESSAGE **message ) {
     msg = *message;
 
     root = msg->root;
+
+    /* Don't delete root node! */
     msg = msg->root->next;
 
     if ( !msg )
@@ -554,7 +565,8 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */bool list_load( MESSAGE *msg ) {
+/* Returns true on success or false on failure. */
+bool list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
 
@@ -614,7 +626,8 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Searches the listNode's message for substring. Returns true if it does,
- * false if not. */bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
+ * false if not. */
+bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
     for ( ; line && line->currLine; line = line->next ) {
