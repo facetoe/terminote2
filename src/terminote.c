@@ -94,7 +94,6 @@ void line_insertBefore( MESSAGE *msg, int nodeNum, char *str ) {
         newLine->prev = oldLine->prev;
         newLine->next = oldLine;
 
-
         /* if oldLine->prev we are inserting at the beginning */
         if ( !oldLine->prev ) {
             msg->first = newLine;
@@ -111,6 +110,36 @@ void line_insertBefore( MESSAGE *msg, int nodeNum, char *str ) {
     }
 }
 
+void line_deleteNode( MESSAGE *msg, int nodeNum ) {
+    LINE *nodeToBeDeleted = NULL;
+
+    if ( ( nodeToBeDeleted = line_getLineNode( msg, nodeNum ) ) == NULL ) {
+        fprintf(stderr, "Unable to delete nodeNum %d\n", nodeNum);
+        return;
+    } else {
+
+        if( !nodeToBeDeleted->prev ) {
+            msg->first = nodeToBeDeleted->next;
+        } else {
+            nodeToBeDeleted->prev->next = nodeToBeDeleted->next;
+        }
+
+        if( !nodeToBeDeleted->next ) {
+            msg->last = nodeToBeDeleted->prev;
+        } else {
+            nodeToBeDeleted->next->prev = nodeToBeDeleted->prev;
+        }
+    }
+
+    /* Update statistics */
+    msg->numLines--;
+    msg->numChars -= nodeToBeDeleted->lSize + 1;
+
+    /* Free the memory */
+    free(nodeToBeDeleted->currLine);
+    free(nodeToBeDeleted);
+}
+
 int main( int argc, char **argv ) {
 
     MESSAGE *msg = NULL;
@@ -119,8 +148,9 @@ int main( int argc, char **argv ) {
 
     msg = msg->next;
 
-    line_insertBefore( msg, 1, "I am inserted before 1" );
-    //line_insertAfter( msg, 2, "I am inserted after 2" );
+    //line_insertBefore( msg, 1, "I am inserted before 1" );
+    //line_insertAfter( msg, 0, "I am inserted after 2" );
+    line_deleteNode(msg, 1);
     list_printAll( stdout, msg );
 
     list_save( msg );
