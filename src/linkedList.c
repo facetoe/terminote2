@@ -5,7 +5,6 @@
  *      Author: facetoe
  */
 
-
 #include "linkedList.h"
 
 /* Allocates memory for a new LINE node and sets default values */
@@ -71,19 +70,19 @@ MESSAGE *list_getNode( MESSAGE *msg ) {
 }
 
 /* Get and store path information */
-void list_setPath(MESSAGE *msg) {
-     char *path = getcwd( NULL, 0 );
-     if ( path == NULL ) {
-         fprintf( stderr, "Unable to retrieve path\n" );
-     } else {
-         size_t path_len = strlen( path );
-         strncpy( msg->path, path, path_len );
-         free( path );
-     }
+void list_setPath( MESSAGE *msg ) {
+    char *path = getcwd( NULL, 0 );
+    if ( path == NULL ) {
+        fprintf( stderr, "Unable to retrieve path\n" );
+    } else {
+        size_t path_len = strlen( path );
+        strncpy( msg->path, path, path_len );
+        free( path );
+    }
 }
 
 /* Get and store time information */
-void list_setTime(MESSAGE *msg) {
+void list_setTime( MESSAGE *msg ) {
     char *time = current_time();
     if ( time == NULL ) {
         perror( "Unable to retrieve time\n" );
@@ -92,7 +91,6 @@ void list_setTime(MESSAGE *msg) {
         size_t time_len = strlen( time );
         strncpy( msg->time, time, time_len );
     }
-
 }
 
 /* Inserts a line into a LINE struct */
@@ -107,7 +105,7 @@ void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
     line->currLine[lineLen] = 0;
 
     /* Update statistics */
-    line->lNum = ++numLines;
+    line->lNum = numLines;
     line->lSize = lineLen;
     *l = line;
 }
@@ -154,6 +152,7 @@ void list_insertString( MESSAGE *msg, char *str ) {
             msg->first = line;
         }
         totChars += lineLen + 1;
+        numLines++;
         insertLine( &line, s, lineLen, numLines );
 
         /* Set and update the prev pointer */
@@ -171,6 +170,27 @@ void list_insertString( MESSAGE *msg, char *str ) {
     msg->numLines = numLines;
     msg->messageNum = msg->root->totalMessages + 1;
     msg->root->totalMessages++;
+}
+
+/* Appends message to the end of the list */
+void list_appendMessage( MESSAGE *msg, char *str ) {
+
+    /* Loop to the end of the message */
+    msg = msg->root;
+
+    for ( ; msg->next; msg = msg->next )
+        ;
+
+    /* Allocate and move to new node */
+    msg->next = list_getNode( msg );
+    msg = msg->next;
+
+    /* Get and store path and time information */
+    list_setPath( msg );
+    list_setTime( msg );
+
+    /* Insert the message */
+    list_insertString( msg, str );
 }
 
 /* Reads the note data from a file and places in struct */
@@ -236,12 +256,11 @@ void list_writeBinary( FILE *fp, MESSAGE *msg ) {
         if ( DEBUG )
             printf( "Writing Note #%d\n", msg->messageNum );
 
-
         long first = msg->numChars;
         int len;
 
         /* Write numChars first so we know how many to read later */
-        fwrite( &first, sizeof(first), 1, fp );
+        fwrite( &first, sizeof( first ), 1, fp );
 
         /* Write each line */
         for ( LINE *line = msg->first; line->next; line = line->next ) {
@@ -301,27 +320,6 @@ int list_length( MESSAGE *msg ) {
     return listSize;
 }
 
-/* Appends message to the end of the list */
-void list_appendMessage( MESSAGE *msg, char *str ) {
-
-    /* Loop to the end of the message */
-    msg = msg->root;
-
-    for ( ; msg->next; msg = msg->next )
-        ;
-
-    /* Allocate and move to new node */
-    msg->next = list_getNode( msg );
-    msg = msg->next;
-
-    /* Get and store path and time information */
-    list_setPath(msg);
-    list_setTime(msg);
-
-    /* Insert the message */
-    list_insertString( msg, str );
-}
-
 /* Prints current note according to args. Args are:
  * n: Note number
  * p: Path
@@ -363,8 +361,8 @@ void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
 /* Prints all messages with all information */
 void list_printAll( FILE *outStream, MESSAGE *msg ) {
 
-    if( !msg ) {
-        fprintf(stderr, "Nothing to print\n");
+    if ( !msg ) {
+        fprintf( stderr, "Nothing to print\n" );
     }
 
     msg = msg->root;
@@ -556,8 +554,7 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */
-bool list_load( MESSAGE *msg ) {
+/* Returns true on success or false on failure. */bool list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
 
@@ -586,8 +583,7 @@ bool list_load( MESSAGE *msg ) {
 }
 
 /* Attempts to save the list at path. */
-/* Returns true on success or false on failure. */
-bool list_save( MESSAGE *msg ) {
+/* Returns true on success or false on failure. */bool list_save( MESSAGE *msg ) {
 
     if ( DEBUG )
         printf( "Saving list at: %s\n", path );
@@ -618,12 +614,11 @@ bool list_save( MESSAGE *msg ) {
 }
 
 /* Searches the listNode's message for substring. Returns true if it does,
- * false if not. */
-bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
+ * false if not. */bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
-    for ( ; line && line->currLine ; line = line->next ) {
-        if( strstr(line->currLine, subStr) != NULL )
+    for ( ; line && line->currLine; line = line->next ) {
+        if ( strstr( line->currLine, subStr ) != NULL )
             return true;
     }
     return false;
