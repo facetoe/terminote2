@@ -5,7 +5,6 @@
  *      Author: facetoe
  */
 
-
 /* Initialize options struct */
 
 #include "options.h"
@@ -168,8 +167,8 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
 }
 
 /* Print options for debugging */
-void options_print(OPTIONS *opts) {
-    printf("\npopNote: %d"
+void options_print( OPTIONS *opts ) {
+    printf( "\npopNote: %d"
             "\npopN: %d"
             "\ndelN: %d"
             "\ndeleteAll: %d"
@@ -177,7 +176,7 @@ void options_print(OPTIONS *opts) {
             "\nprintAll: %d"
             "\nsearchNotes: %d"
             "\nsearchTerm: %s\n", opts->pop, opts->popN, opts->delN, opts->delA,
-            opts->printN, opts->printA, opts->searchNotes, opts->searchTerm);
+            opts->printN, opts->printA, opts->searchNotes, opts->searchTerm );
 }
 
 /* Executes options then destroys the list */
@@ -232,8 +231,8 @@ void options_execute( OPTIONS *opts ) {
         printf( "** Run Interactive **\n" );
     } else if ( opts->popA ) {
         nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
-    } else if (opts->size) {
-        fprintf(outStream, "%d\n", msg->root->totalMessages);
+    } else if ( opts->size ) {
+        fprintf( outStream, "%d stored notes\n", msg->root->totalMessages );
     }
 
     if ( opts->outputToFile )
@@ -243,7 +242,4 @@ void options_execute( OPTIONS *opts ) {
     list_save( msg );
     list_destroy( &msg );
 }
-
-
-
 
