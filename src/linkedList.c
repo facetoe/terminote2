@@ -170,8 +170,11 @@ void list_insertString( MESSAGE *msg, char *str ) {
         totChars += lineLen + 1;
     }
 
+
     /* Update MESSAGE statistics for this message */
     msg->last = line->prev;
+    msg->pageTop = msg->first;
+
     msg->numChars = totChars;
     msg->numLines = numLines;
     msg->messageNum = msg->root->totalMessages + 1;
