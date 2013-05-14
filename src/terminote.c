@@ -207,7 +207,7 @@ void ui_hideMainMenu() {
 /* Resize the terminal screen */
 void ui_resizeScreen() {
     getScrnSize();
-    resizeterm(NROWS, NCOLS);
+    resizeterm( NROWS, NCOLS );
 }
 
 /* Sets the RECIEVED_SIGWINCH flag to true so we can deal with resizing the screen */
@@ -282,7 +282,69 @@ void lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
     if ( msg->pageBot->lNum + nScroll <= msg->numLines )
         msg->pageBot = tmp;
 
-    wrefresh(win);
+    wrefresh( win );
+}
+
+/* Free all memory and quit */
+void ui_quit() {
+    int n = ARRAY_SIZE(mainMenuStrings);
+    for ( int i = 0; i < n; ++i )
+        free_item( mainMenuItems[i] );
+    free_menu( footerMenu );
+    endwin();
+    list_save( msg );
+    list_destroy( &msg );
+    exit( 0 );
+}
+
+/* Select and execute options from the menu */
+void ui_doMenu( MESSAGE *msg ) {
+    /* Show the menu along the bottom of the screen */
+    ui_showBotWin();
+    ui_showMainMenu();
+    wnoutrefresh( wins[BOT] );
+    doupdate();
+
+    int ch;
+    ITEM *currItem;
+    bool keepGoing = true;
+    while ( keepGoing ) {
+        ch = wgetch( wins[BOT] );
+        switch ( ch ) {
+        case KEY_LEFT:
+            menu_driver( footerMenu, REQ_PREV_ITEM );
+            break;
+
+        case KEY_RIGHT:
+            menu_driver( footerMenu, REQ_NEXT_ITEM );
+            break;
+
+        case 13: /* Enter */
+            currItem = current_item( footerMenu );
+            if ( !strcmp( item_name( currItem ), "Quit" ) ) {
+                ui_quit();
+            } else if ( !strcmp( item_name( currItem ), "Browse" ) ) {
+                ui_hideMainMenu();
+                list_firstNode( &msg );
+                ui_showWins( msg );
+                keepGoing = false;
+                break;
+            } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
+                keepGoing = false;
+                break;
+            }
+
+            keepGoing = false;
+            break;
+
+        default:
+            /* Hide the menu and break out of the loop */
+            ui_hideMainMenu();
+            keepGoing = false;
+            return;
+            break;
+        }
+    }
 }
 
 /* run main GUI loop */
@@ -296,14 +358,12 @@ void guiLoop( MESSAGE *msg ) {
 
         sigaction( SIGWINCH, &sa, NULL );
 
-
         if ( RECIEVED_SIGWINCH ) {
             ui_resizeScreen();
             ui_initWins();
             ui_showWins( msg );
             RECIEVED_SIGWINCH = false;
         }
-
 
         switch ( ch ) {
 
@@ -329,7 +389,7 @@ void guiLoop( MESSAGE *msg ) {
 
             /* Show the menu along the bottom of the screen */
         case 6:
-            //ui_doMenu();
+            ui_doMenu( msg );
             break;
 
             /* Scroll up in the message */
@@ -403,8 +463,7 @@ void guiLoop( MESSAGE *msg ) {
 
             /* Free all memory and exit */
         case 'q':
-            endwin(); //quit();
-            exit( 0 );
+            ui_quit();
             break;
 
         default:
@@ -423,18 +482,26 @@ void guiLoop( MESSAGE *msg ) {
 
 }
 
-int main( int argc, char **argv ) {
-
+/* Run interactive mode */
+void ui_run() {
     list_init( &msg );
     list_load( msg );
     ui_initNcurses();
+    ui_initMainMenu();
     initSigaction();
-    //guiLoop( msg );
-    //list_next(&msg);
-
     ui_initWins();
     guiLoop( msg );
-    wgetch( wins[MID] );
-    endwin();
+}
+
+int main( int argc, char **argv ) {
+
+    if ( isatty( STDIN_FILENO ) && argc == 1 ) {
+        ui_run();
+    } else {
+        opts = options_new();
+        nonInteractive_run( opts, argc, argv );
+        free( opts );
+    }
+
     return EXIT_SUCCESS;
 }
