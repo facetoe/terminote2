@@ -545,6 +545,7 @@ void list_deleteNode( MESSAGE *msg, int noteNum ) {
     free(line);
 
     msg->root->totalMessages--;
+
     list_orderList(msg);
 }
 

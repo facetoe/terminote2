@@ -95,7 +95,7 @@ void ui_showTopWin( MESSAGE *msg ) {
     wclear( wins[TOP] );
 
     /* If the we are not in the root node then update the top window with time, number and path info*/
-    if ( msg->messageNum > 0 ) {
+    if ( msg->root->totalMessages > 0 ) {
         char noteStr[100];
         snprintf( noteStr, 100, "Note #%d", msg->messageNum );
         mvwprintw( wins[TOP], 0, ( NCOLS / 2 ) - ( strlen( noteStr ) / 2 ),
@@ -127,16 +127,16 @@ void ui_printPage( MESSAGE *msg, int numRows ) {
 void ui_showMidWin( MESSAGE *msg ) {
     wclear( wins[MID] );
 
-    if ( msg->messageNum == 0 ) {
+    if ( msg->messageNum == 0 || msg->root->totalMessages < 1 ) {
         char str[30];
         sprintf( str, "You had %d stored notes.", msg->root->totalMessages );
         mvwprintw( wins[MID], 0, ( NCOLS / 2 ) - ( strlen( str ) / 2 ), str );
         wrefresh( wins[MID] );
         return;
-    }
-
-    /* Print the message to the screen */
-    ui_printPage( msg, NROWS - 2 );
+    } else if( msg->root->totalMessages > 0 ) {
+        /* Print the message to the screen */
+        ui_printPage( msg, NROWS - 2 );
+    } else
 
     /* Position the cursor at the start of the message */
     wmove( wins[MID], 0, 0 );
@@ -378,7 +378,11 @@ void guiLoop( MESSAGE *msg ) {
             cursorRow = 0;
             cursorCol = 0;
             nlines = 0;
-            list_next( &msg );
+            if( msg->root->totalMessages > 0 )
+                list_next( &msg );
+
+            endwin();
+            printf("%d\n", msg->root->totalMessages);
             inScrollMessage = false;
             needsRefresh = true;
             break;
@@ -389,7 +393,8 @@ void guiLoop( MESSAGE *msg ) {
             cursorCol = 0;
             nlines = 0;
             inScrollMessage = false;
-            list_previous( &msg );
+            if( msg->root->totalMessages > 0 )
+                list_previous( &msg );
             needsRefresh = true;
             break;
 
