@@ -9,6 +9,7 @@
 
 #include "options.h"
 #include "nonInteractive.h"
+#include <fcntl.h>
 
 OPTIONS *options_new() {
 
@@ -179,6 +180,7 @@ void options_print( OPTIONS *opts ) {
             opts->printN, opts->printA, opts->searchNotes, opts->searchTerm );
 }
 
+//TODO Clean this function up!
 /* Executes options then destroys the list */
 void options_execute( OPTIONS *opts ) {
 
@@ -194,16 +196,23 @@ void options_execute( OPTIONS *opts ) {
         outStream = fopen( opts->outFile, "w" );
 
     MESSAGE *msg = NULL;
-    list_init( &msg );
-    list_load( msg );
 
     if ( opts->pop ) {
+        list_init( &msg );
+        list_load( msg );
         nonInteractive_pop( stdout, msg, "nptm", msg->root->totalMessages );
     } else if ( opts->popN ) {
+        list_init( &msg );
+        list_load( msg );
         nonInteractive_pop( stdout, msg, "nptm", opts->popN );
     } else if ( opts->delA ) {
-        list_deleteAll( &msg );
+        int fd = open( path, O_TRUNC, O_WRONLY );
+        close( fd );
+        exit( 0 );
+
     } else if ( opts->delN ) {
+        list_init( &msg );
+        list_load( msg );
         if ( list_length( msg ) >= opts->delN )
             list_deleteNode( msg, opts->delN );
         else
@@ -211,6 +220,8 @@ void options_execute( OPTIONS *opts ) {
                     opts->delN );
 
     } else if ( opts->printN ) {
+        list_init( &msg );
+        list_load( msg );
         MESSAGE *tmp = NULL;
         if ( ( tmp = list_searchByNoteNum( msg, opts->printN ) ) )
             list_printMessage( outStream, "nptm", tmp );
@@ -219,19 +230,29 @@ void options_execute( OPTIONS *opts ) {
                     opts->printN );
 
     } else if ( opts->printA ) {
+        list_init( &msg );
+        list_load( msg );
         list_printAll( outStream, msg );
     } else if ( opts->searchNotes ) {
+        list_init( &msg );
+        list_load( msg );
         nonInteractive_printAllWithSubString( outStream, msg,
                 opts->searchTerm );
     } else if ( opts->append ) {
+        list_init( &msg );
+        list_load( msg );
         list_appendMessage( msg, opts->appendStr );
     } else if ( opts->version ) {
         printf( "%.1f\n", VERSION );
     } else if ( opts->interactive ) {
         printf( "** Run Interactive **\n" );
     } else if ( opts->popA ) {
+        list_init( &msg );
+        list_load( msg );
         nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
     } else if ( opts->size ) {
+        list_init( &msg );
+        list_load( msg );
         fprintf( outStream, "%d stored notes\n", msg->root->totalMessages );
     }
 
@@ -239,7 +260,9 @@ void options_execute( OPTIONS *opts ) {
         fclose( outStream );
 
     /* Clean up */
-    list_save( msg );
-    list_destroy( &msg );
+    if ( msg ) {
+        list_save( msg );
+        list_destroy( &msg );
+    }
 }
 
