@@ -11,5 +11,7 @@
 #define VERSION 0.3
 #define DEBUG 1
 
+extern char *path;
+
 
 #endif /* DEFINES_H_ */

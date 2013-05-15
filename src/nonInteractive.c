@@ -149,6 +149,103 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
     free( buffer );
 }
 
+/* Reads the output of command into a MESSAGE struct. */
+void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command) {
+
+    /* Loop to the end of the message */
+    msg = msg->root;
+    for ( ; msg->next; msg = msg->next )
+        ;
+
+    /* Allocate and move to new node */
+    msg->next = list_getNode( msg );
+    msg = msg->next;
+
+    /* Get and set path and time information */
+    list_setPath( msg );
+    list_setTime( msg );
+
+    int ch, lineLen, totChars, numLines, buffSize;
+    ch = lineLen = totChars = numLines = 0;
+
+    char *tmp, *buffer;
+    tmp = buffer = NULL;
+
+    buffSize = 1024;
+    buffer = malloc( buffSize * sizeof(char) );
+
+    if ( !buffer ) {
+        fprintf( stderr,
+                "Failed to allocate memory for message buffer in nonInteractive_appendMessage\n" );
+        exit( 1 );
+    }
+
+    LINE *line, *prev;
+    line = prev = NULL;
+    line = line_getLine();
+
+    FILE *fp;
+
+     /* Open the command for reading. */
+     fp = popen( command, "r" );
+     if ( fp == NULL ) {
+         printf( "Failed to run command\n" );
+         exit( 1 );
+     }
+
+    while ( ( ch = fgetc(fp) ) != EOF ) {
+
+        /* If we've outgrown the buffer then allocate some more memory */
+        if ( lineLen >= buffSize ) {
+            buffSize *= 2;
+            tmp = realloc( buffer, buffSize * sizeof(char *) );
+
+            if ( !tmp ) {
+                fprintf( stderr,
+                        "Failed to allocate %d bytes in nonInteractive_appendMessage\n",
+                        buffSize );
+                exit( 1 );
+            } else {
+                buffer = tmp;
+            }
+        }
+
+        if ( ch != '\n' && ch != '\0' ) {
+            buffer[lineLen] = ch;
+            lineLen++;
+        } else {
+
+            numLines++;
+            buffer[lineLen] = 0;
+
+            /* You pass buffer + lineLen because insertLine expects the pointer to be at the end of the string */
+            insertLine( &line, buffer + lineLen, lineLen, numLines );
+
+            if ( numLines == 1 ) {
+                msg->first = line;
+            }
+
+            /* Set and update the prev pointer */
+            line->prev = prev;
+            prev = line;
+
+            /* Get a new line and move to it */
+            line->next = line_getLine();
+            line = line->next;
+            totChars += lineLen + 1;
+            lineLen = 0;
+        }
+    }
+
+    /* Update MESSAGE statistics for this message */
+    msg->last = line->prev;
+    msg->numChars = totChars;
+    msg->numLines = numLines;
+    msg->messageNum = msg->root->totalMessages + 1;
+    msg->root->totalMessages++;
+    free( buffer );
+}
+
 /* Run in non-interactive mode */
 void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
 

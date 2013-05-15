@@ -21,6 +21,9 @@ void nonInteractive_printAllWithSubString( FILE *outStream, MESSAGE *msg, char *
 /* Reads from stdin until EOF growing the buffer as needed */
 void nonInteractive_appendMessage( MESSAGE *msg );
 
+/* Reads the output of command into a MESSAGE struct. */
+void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command);
+
 /* Pops noteNum note and prints with args sections then deletes note */
 void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args, int noteNum );
 

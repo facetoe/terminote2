@@ -51,6 +51,9 @@ typedef struct {
     /* Run in interactive mode */
     int interactive;
 
+    /* Copy data from clipboard */
+    int copyFromClip;
+
     /* Number of messages */
     int size;
 

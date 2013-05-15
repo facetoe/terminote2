@@ -16,6 +16,7 @@
 #include "defines.h"
 #include "nonInteractive.h"
 
+
 #include "ncurses.h"
 #include "menu.h"
 
@@ -44,8 +45,8 @@ bool inScrollMessage = false;
 bool needsRefresh = false;
 
 /* Variables for ncurses */
-char *mainMenuStrings[] = { "New", "Browse", "Edit", "Delete", "Search", "Quit", "Help",
-        ( char * ) NULL, };
+char *mainMenuStrings[] = { "New", "Browse", "Edit", "Delete", "Search", "Quit",
+        "Help", ( char * ) NULL, };
 
 static ITEM **mainMenuItems;
 static MENU *footerMenu;
@@ -55,8 +56,6 @@ static WINDOW *wins[3];
 enum {
     TOP, MID, BOT
 };
-
-
 
 /* Get the size of the terminal screen */
 void getScrnSize() {
@@ -287,7 +286,7 @@ void lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
 }
 
 /* Free all memory and quit */
-void ui_quit(MESSAGE *msg) {
+void ui_quit( MESSAGE *msg ) {
     int n = ARRAY_SIZE(mainMenuStrings);
     for ( int i = 0; i < n; ++i )
         free_item( mainMenuItems[i] );
@@ -323,7 +322,7 @@ void ui_doMenu( MESSAGE *msg ) {
         case 13: /* Enter */
             currItem = current_item( footerMenu );
             if ( !strcmp( item_name( currItem ), "Quit" ) ) {
-                ui_quit(msg);
+                ui_quit( msg );
             } else if ( !strcmp( item_name( currItem ), "Browse" ) ) {
                 ui_hideMainMenu();
                 list_firstNode( &msg );
@@ -333,9 +332,9 @@ void ui_doMenu( MESSAGE *msg ) {
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
                 keepGoing = false;
                 break;
-            } else if  ( !strcmp( item_name( currItem ), "Delete" ) ) {
-                list_deleteNode(msg, msg->messageNum);
-                list_firstNode(&msg);
+            } else if ( !strcmp( item_name( currItem ), "Delete" ) ) {
+                list_deleteNode( msg, msg->messageNum );
+                list_firstNode( &msg );
                 ui_hideMainMenu();
                 ui_showWins( msg );
                 keepGoing = false;
@@ -470,7 +469,7 @@ void guiLoop( MESSAGE *msg ) {
 
             /* Free all memory and exit */
         case 'q':
-            ui_quit(msg);
+            ui_quit( msg );
             break;
 
         default:
@@ -490,7 +489,7 @@ void guiLoop( MESSAGE *msg ) {
 }
 
 /* Run interactive mode */
-void ui_run(MESSAGE *msg) {
+void ui_run( MESSAGE *msg ) {
     list_init( &msg );
     list_load( msg );
     ui_initNcurses();
@@ -500,12 +499,15 @@ void ui_run(MESSAGE *msg) {
     guiLoop( msg );
 }
 
+
+
 MESSAGE *msg;
+
 
 int main( int argc, char **argv ) {
 
     if ( isatty( STDIN_FILENO ) && argc == 1 ) {
-        ui_run(msg);
+        ui_run( msg );
     } else {
         opts = options_new();
         nonInteractive_run( opts, argc, argv );

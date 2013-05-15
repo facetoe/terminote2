@@ -34,6 +34,8 @@ OPTIONS *options_new() {
     opts->searchNotes = 0;
     opts->searchTerm = NULL;
 
+    opts->copyFromClip = 0;
+
     opts->outputToFile = 0;
     opts->append = 0;
     opts->usage = 0;
@@ -51,8 +53,12 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     char *nArg, *dArg, *pArg, *fArg, *oArg;
     nArg = dArg = pArg = fArg = oArg = NULL;
 
-    while ( ( opt = getopt( argc, argv, "sivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "csivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
         switch ( opt ) {
+
+        case 'c':
+            options->copyFromClip = 1;
+            break;
 
         case 's':
             options->size = 1;
@@ -254,6 +260,10 @@ void options_execute( OPTIONS *opts ) {
         list_init( &msg );
         list_load( msg );
         fprintf( outStream, "%d stored notes\n", msg->root->totalMessages );
+    } else if ( opts->copyFromClip ) {
+        list_init( &msg );
+        list_load( msg );
+        nonInteractive_appendClipboardContents(msg, "xclip -o");
     }
 
     if ( opts->outputToFile )
