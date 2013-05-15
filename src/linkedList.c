@@ -186,14 +186,21 @@ void list_insertString( MESSAGE *msg, char *str ) {
 /* Appends message to the end of the list */
 void list_appendMessage( MESSAGE *msg, char *str ) {
 
+    assert(msg != NULL);
+
+    MESSAGE *prev = NULL;
+
     /* Loop to the end of the message */
     msg = msg->root;
 
     for ( ; msg->next; msg = msg->next )
         ;
 
+    prev = msg;
+
     /* Allocate and move to new node */
     msg->next = list_getNode( msg );
+    msg->prev = prev;
     msg = msg->next;
 
     /* Get and store path and time information */
@@ -423,7 +430,7 @@ void list_firstNode( MESSAGE **msg ) {
 void list_next( MESSAGE **msg ) {
     assert( *msg != NULL );
     MESSAGE *tmp = *msg;
-    if ( tmp->next != NULL ) {
+    if ( tmp->next ) {
         tmp = tmp->next;
     } else if ( tmp->root->next ) {
         tmp = tmp->root->next;
@@ -536,7 +543,6 @@ void list_deleteNode( MESSAGE *msg, int noteNum ) {
         line = tmpLine;
     }
     free(line);
-    free(nodeToBeDeleted);
 
     msg->root->totalMessages--;
     list_orderList(msg);
