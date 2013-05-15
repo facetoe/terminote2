@@ -6,6 +6,7 @@
  */
 
 #include "linkedList.h"
+#include <assert.h>
 
 /* Allocates memory for a new LINE node and sets default values */
 LINE *line_getLine() {
@@ -38,6 +39,7 @@ void list_init( MESSAGE **msg ) {
     tmp->numLines = 0;
     tmp->numChars = 0;
     tmp->messageNum = 0;
+    tmp->totalMessages = 0;
     tmp->first = NULL;
     tmp->last = NULL;
     tmp->next = NULL;
@@ -60,6 +62,7 @@ MESSAGE *list_getNode( MESSAGE *msg ) {
     tmp->numLines = 0;
     tmp->numChars = 0;
     tmp->messageNum = 0;
+    tmp->totalMessages = 0;
     tmp->first = NULL;
     tmp->last = NULL;
     tmp->next = NULL;
@@ -170,7 +173,6 @@ void list_insertString( MESSAGE *msg, char *str ) {
         totChars += lineLen + 1;
     }
 
-
     /* Update MESSAGE statistics for this message */
     msg->last = line->prev;
     msg->pageTop = msg->first;
@@ -204,6 +206,7 @@ void list_appendMessage( MESSAGE *msg, char *str ) {
 
 /* Writes the MESSAGE structs to a file */
 void list_writeBinary( FILE *fp, MESSAGE *msg ) {
+    assert( msg != NULL && fp != NULL );
     msg = msg->root;
     /* Don't write root node */
     if ( msg->messageNum == 0 )
@@ -243,15 +246,11 @@ void list_writeBinary( FILE *fp, MESSAGE *msg ) {
 
 /* Reads the note data from a file and places in struct */
 void list_readBinary( FILE *fp, MESSAGE *msg ) {
-
-    if ( !fp || !msg ) {
-        fprintf( stderr,
-                "list_readBinary received a NULL file pointer or message pointer\n" );
-        return;
-    }
+    assert( msg != NULL && fp != NULL );
 
     long first;
     int len, note_num;
+    MESSAGE *previous = NULL;
     note_num = 0;
 
     char path[MAX_PATH_SIZE];
@@ -265,9 +264,11 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
 
         /* Allocate memory for new MESSAGE node */
         msg->next = list_getNode( msg );
+        previous = msg;
 
         /* Move to new node */
         msg = msg->next;
+        msg->prev = previous;
 
         /* We got the first length in the loop condition.... */
         char *buffer = malloc( first * sizeof(char) + 1 );
@@ -295,6 +296,7 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
 
 /* Free all memory in the LINEDATA list */
 void list_destroy( MESSAGE **message ) {
+    assert( message != NULL );
     LINE *line, *tmpLine;
     MESSAGE *msg, *tmpMsg;
     msg = *message;
@@ -318,6 +320,7 @@ void list_destroy( MESSAGE **message ) {
 
 /* Returns the length of the list */
 int list_length( MESSAGE *msg ) {
+    assert( msg != NULL );
     int listSize = 0;
     msg = msg->root;
     if ( !msg )
@@ -337,6 +340,7 @@ int list_length( MESSAGE *msg ) {
  * t: Time
  * m: Message */
 void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
+    assert( msg != NULL );
 
     if ( !msg ) {
         fprintf( stdout, "Nothing to print\n" );
@@ -393,6 +397,7 @@ void list_printAll( FILE *outStream, MESSAGE *msg ) {
 /* Moves list pointer to last node in the list.
  * If it is already the last node then leaves the pointer unchanged. */
 void list_lastNode( MESSAGE **msg ) {
+    assert( *msg != NULL );
     MESSAGE *tmp = *msg;
     if ( tmp->next == NULL )
         return;
@@ -404,6 +409,7 @@ void list_lastNode( MESSAGE **msg ) {
 /* Moves list pointer to the first node in the list.
  * If the first node is the root node then leaves the pointer unchanged. */
 void list_firstNode( MESSAGE **msg ) {
+    assert( *msg != NULL );
     MESSAGE *tmp = *msg;
     tmp = tmp->root;
     if ( tmp->next )
@@ -415,6 +421,7 @@ void list_firstNode( MESSAGE **msg ) {
  * moves the pointer to the first node: ie, head->next to skip root node.
  * If there is only one node in the list (not counting root) it returns currP unchanged. */
 void list_next( MESSAGE **msg ) {
+    assert( *msg != NULL );
     MESSAGE *tmp = *msg;
     if ( tmp->next != NULL ) {
         tmp = tmp->next;
@@ -427,6 +434,7 @@ void list_next( MESSAGE **msg ) {
 /* Moves the list pointer to the previous node in the list.
  * If there is only one node (not counting root) leaves the pointer unchanged.  */
 void list_previous( MESSAGE **msg ) {
+    assert( *msg != NULL );
     MESSAGE *tmp = *msg;
     int noteNum = tmp->messageNum;
     if ( noteNum == 1 ) {
@@ -447,6 +455,8 @@ void list_previous( MESSAGE **msg ) {
 /* Searches for node with noteNum.
  * Returns node if found, otherwise returns NULL. */
 MESSAGE *list_searchByNoteNum( MESSAGE *msg, int noteNum ) {
+    assert( msg != NULL );
+
     /* Reset to first node */
     msg = msg->root;
 
@@ -468,6 +478,8 @@ MESSAGE *list_searchByNoteNum( MESSAGE *msg, int noteNum ) {
 
 /* Reorders the noteNums */
 void list_orderList( MESSAGE *msg ) {
+    assert( msg != NULL );
+
     int nNum = 1;
     /* Don't count root node */
     msg = msg->root;
@@ -484,56 +496,58 @@ void list_orderList( MESSAGE *msg ) {
 
 /* Delete a node by noteNum */
 void list_deleteNode( MESSAGE *msg, int noteNum ) {
-    msg = msg->root;
+
+    assert( msg != NULL );
+
     /* Don't delete root node */
     if ( noteNum == 0 )
         return;
 
-    MESSAGE *tmpNode;
+    msg = msg->root;
+
+    MESSAGE *nodeToBeDeleted;
     LINE *tmpLine, *line;
 
-    while ( msg ) {
-        /* Go to the node before the one to be deleted */
-        if ( msg->messageNum == noteNum - 1 ) {
+    if ( ( nodeToBeDeleted = list_searchByNoteNum( msg, noteNum ) ) == NULL ) {
+        fprintf( stderr, "Unable to delete node\n" );
+        return;
+    } else {
 
-            /* tmpNode points to node to be deleted */
-            tmpNode = msg->next;
-
-            /* line points to the message to be deleted */
-            line = msg->next->first;
-
-            if ( DEBUG )
-                printf( "Deleting note #%d\n", tmpNode->messageNum );
-
-            /* Loop through the message freeing each line */
-            while ( line ) {
-                tmpLine = line->next;
-                free( line->currLine );
-                free( line );
-                line = tmpLine;
-            }
-
-            /* Link msg to node after tmpNode, leaving a hole */
-            msg->next = tmpNode->next;
-
-            /* Free tmpNode */
-            if ( tmpNode != NULL )
-                free( tmpNode );
-
-            /* Reorder the list */
-            list_orderList( msg );
-            return;
+        if ( !nodeToBeDeleted->prev ) {
+            msg->root = nodeToBeDeleted->next;
         } else {
-            tmpNode = msg;
-            msg = msg->next;
+            nodeToBeDeleted->prev->next = nodeToBeDeleted->next;
+        }
+
+        if ( !nodeToBeDeleted->next ) {
+            for (; msg->next ; msg = msg->next)
+                ;
+            msg = nodeToBeDeleted->prev;
+        } else {
+            nodeToBeDeleted->next->prev = nodeToBeDeleted->prev;
         }
     }
+
+    line = nodeToBeDeleted->first;
+    while (line) {
+        tmpLine = line->next;
+        free(line->currLine);
+        free(line);
+        line = tmpLine;
+    }
+    free(line);
+    free(nodeToBeDeleted);
+
+    msg->root->totalMessages--;
+    list_orderList(msg);
 }
 
 /* Deletes all nodes except for the root node */
 void list_deleteAll( MESSAGE **message ) {
     if ( DEBUG )
         printf( "Deleting all messages\n" );
+
+    assert( message != NULL );
 
     MESSAGE *tmpMsg, *msg, *root;
     msg = *message;
@@ -568,10 +582,11 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */
-bool list_load( MESSAGE *msg ) {
+/* Returns true on success or false on failure. */bool list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
+
+    assert( msg != NULL );
 
     FILE *fp;
 
@@ -599,6 +614,7 @@ bool list_load( MESSAGE *msg ) {
 
 /* Attempts to save the list at path. */
 /* Returns true on success or false on failure. */bool list_save( MESSAGE *msg ) {
+    assert( msg != NULL );
 
     if ( DEBUG )
         printf( "Saving list at: %s\n", path );
@@ -629,8 +645,7 @@ bool list_load( MESSAGE *msg ) {
 }
 
 /* Searches the listNode's message for substring. Returns true if it does,
- * false if not. */
-bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
+ * false if not. */bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
     for ( ; line && line->currLine; line = line->next ) {
