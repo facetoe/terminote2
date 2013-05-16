@@ -18,7 +18,6 @@
 
 #include "helperFunctions.h"
 
-
 /* Returns a pointer to a string containing the current time */
 char *current_time() {
     time_t t;
@@ -42,7 +41,8 @@ int file_exists( char *filename ) {
 
 /* Searches string for substring.
  * Returns a true if found, false otherwise.
- */bool findSubstring( char *haystack, char *needle ) {
+ */
+bool findSubstring( char *haystack, char *needle ) {
     char *pntr;
 
     if ( ( pntr = strstr( haystack, needle ) ) == NULL ) {
@@ -63,12 +63,10 @@ void stringToLower( char str[], char newString[], int len ) {
 /* Determines if str is an integer *.
  * Returns true if is false if it's not. */
 bool isInteger( char *str ) {
-    int i;
-    for ( char *sPntr = str; *sPntr; sPntr++ )
-        i = ( int ) ( sPntr - str );
-    if ( str[i] == '.' || !isdigit(str[i]) )
-        return false;
-
+    for ( char *sPntr = str; *sPntr; sPntr++ ) {
+        if ( !isdigit(*sPntr) )
+            return false;
+    }
     return true;
 }
 
