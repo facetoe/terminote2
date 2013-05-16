@@ -67,32 +67,37 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     while ( ( opt = getopt( argc, argv, "n:csivhPFN:D:Rplf:a:o:" ) ) != -1 ) {
         switch ( opt ) {
 
+        /* Copy from clipboard */
         case 'c':
             options->copyFromClip = 1;
             numFlags++;
             break;
 
+            /* Size of list */
         case 's':
             options->size = 1;
             numFlags++;
             break;
 
+            /* Interactive */
         case 'i':
             options->interactive = 1;
             numFlags++;
             break;
 
+            /* Version */
         case 'v':
             options->version = 1;
             numFlags++;
             break;
 
+            /* Help */
         case 'h':
             options->usage = 1;
             numFlags++;
             break;
 
-            /* Pop Note ( note only )*/
+            /* Pop Note */
         case 'P':
             options->pop = validateInt( "-P", optarg );
             numFlags++;
@@ -148,6 +153,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             numFlags++;
             break;
 
+            /* Output to file */
         case 'o':
             options->outputToFile = 1;
             options->outFile = optarg;
@@ -168,9 +174,9 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     }
 
     /* Only one option at a time makes sense, so if there are more then one print usage and exit */
-    if( numFlags > 1 ) {
-        printf("Too many arguments.\nUsage: terminote [FLAG] [ARGUMENT]\n");
-        exit(1);
+    if ( numFlags > 1 ) {
+        printf( "Too many arguments.\nUsage: terminote [FLAG] [ARGUMENT]\n" );
+        exit( 1 );
     }
 }
 
