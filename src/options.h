@@ -16,10 +16,8 @@
 #include "defines.h"
 
 typedef struct {
-    /* Pop last note ( only the message )*/
+    /* Pop last note */
     int pop;
-    /* Pop the last note ( with time and path info ) */
-    int popA;
     /* Pop n note */
     int popN;
 
@@ -30,9 +28,10 @@ typedef struct {
 
     /* Print n note */
     int printN;
-
     /* Print all notes */
     int printA;
+    /* Print last note */
+    int printL;
 
     /* Search notes for search term */
     int searchNotes;

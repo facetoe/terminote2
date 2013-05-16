@@ -11,6 +11,8 @@
 #include "nonInteractive.h"
 #include <fcntl.h>
 
+#define OPT_NUM 15
+
 OPTIONS *options_new() {
 
     OPTIONS *opts = NULL;
@@ -28,6 +30,7 @@ OPTIONS *options_new() {
 
     opts->printN = 0;
     opts->printA = 0;
+    opts->printL = 0;
 
     opts->version = 0;
 
@@ -41,95 +44,118 @@ OPTIONS *options_new() {
     opts->usage = 0;
     opts->size = 0;
     opts->interactive = 0;
-    opts->popA = 0;
 
     return opts;
+}
+
+int validateInt( char *flag, char *arg ) {
+    int result;
+    if ( !isInteger( arg ) ) {
+        fprintf( stderr, "Error: %s requires an integer\n", flag );
+        exit( 1 );
+    } else {
+        sscanf( optarg, "%d", &result );
+    }
+    return result;
 }
 
 /* Parse command line options */
 void options_parse( OPTIONS *options, int argc, char **argv ) {
     char opt;
+    int numFlags = 0;
 
-    char *nArg, *dArg, *pArg, *fArg, *oArg;
-    nArg = dArg = pArg = fArg = oArg = NULL;
-
-    while ( ( opt = getopt( argc, argv, "csivhPFN:D:Rp:lf:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "n:csivhPFN:D:Rplf:a:o:" ) ) != -1 ) {
         switch ( opt ) {
 
         case 'c':
             options->copyFromClip = 1;
+            numFlags++;
             break;
 
         case 's':
             options->size = 1;
+            numFlags++;
             break;
 
         case 'i':
             options->interactive = 1;
+            numFlags++;
             break;
 
         case 'v':
             options->version = 1;
+            numFlags++;
             break;
 
         case 'h':
             options->usage = 1;
+            numFlags++;
             break;
 
             /* Pop Note ( note only )*/
         case 'P':
-            options->pop = 1;
-            break;
-
-            /* Pop note ( with time/path info ) */
-        case 'F':
-            options->popA = 1;
+            options->pop = validateInt( "-P", optarg );
+            numFlags++;
             break;
 
             /* Pop n */
         case 'N':
-            nArg = optarg;
+            options->popN = validateInt( "-N", optarg );
+            numFlags++;
             break;
 
             /* Delete n */
         case 'D':
-            dArg = optarg;
+            options->delN = validateInt( "-D", optarg );
+            numFlags++;
             break;
 
             /* Delete all notes */
         case 'R':
             options->delA = 1;
+            numFlags++;
+            break;
+
+            /* Print last */
+        case 'p':
+            options->printL = 1;
+            numFlags++;
             break;
 
             /* Print n */
-        case 'p':
-            pArg = optarg;
+        case 'n':
+            options->printN = validateInt( "-n", optarg );
+            numFlags++;
             break;
 
             /* Print all notes */
         case 'l':
             options->printA = 1;
+            numFlags++;
             break;
 
             /* Search for notes containing sub string */
         case 'f':
             options->searchNotes = 1;
             options->searchTerm = optarg;
+            numFlags++;
             break;
 
             /* Append note to list */
         case 'a':
             options->append = 1;
             options->appendStr = optarg;
+            numFlags++;
             break;
 
         case 'o':
             options->outputToFile = 1;
             options->outFile = optarg;
+            numFlags++;
             break;
 
         case '?':
-            printf( "?\n" );
+            printf( "Strange argument\n" );
             exit( 1 );
             break;
 
@@ -141,36 +167,11 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
         }
     }
 
-    /* Ensures -N option is an integer */
-    if ( nArg ) {
-        if ( !isInteger( nArg ) ) {
-            fprintf( stderr, "Error: -N requires an integer\n" );
-            exit( 1 );
-        } else {
-            sscanf( nArg, "%d", &options->popN );
-        }
+    /* Only one option at a time makes sense, so if there are more then one print usage and exit */
+    if( numFlags > 1 ) {
+        printf("Too many arguments.\nUsage: terminote [FLAG] [ARGUMENT]\n");
+        exit(1);
     }
-
-    /* Ensures -D option is an integer */
-    if ( dArg ) {
-        if ( !isInteger( dArg ) ) {
-            fprintf( stderr, "Error: -D requires an integer\n" );
-            exit( 1 );
-        } else {
-            sscanf( dArg, "%d", &options->delN );
-        }
-    }
-    /* Ensures -p option is an integer */
-    if ( pArg ) {
-        if ( !isInteger( pArg ) ) {
-            fprintf( stderr, "Error: -p requires an integer\n" );
-            exit( 1 );
-        } else {
-            sscanf( pArg, "%d", &options->printN );
-        }
-    }
-
-    //validateOptions(options);
 }
 
 /* Print options for debugging */
@@ -198,8 +199,9 @@ void options_execute( OPTIONS *opts ) {
     FILE *outStream = NULL;
     outStream = stdout;
 
-    if ( opts->outputToFile )
-        outStream = fopen( opts->outFile, "w" );
+    if ( opts->outputToFile ) {
+        printf( "Not implemented\n" ); //outStream = fopen( opts->outFile, "w" );
+    }
 
     MESSAGE *msg = NULL;
 
@@ -252,10 +254,6 @@ void options_execute( OPTIONS *opts ) {
         printf( "%.1f\n", VERSION );
     } else if ( opts->interactive ) {
         printf( "** Run Interactive **\n" );
-    } else if ( opts->popA ) {
-        list_init( &msg );
-        list_load( msg );
-        nonInteractive_pop( stdout, msg, "nptm", list_length( msg ) );
     } else if ( opts->size ) {
         list_init( &msg );
         list_load( msg );
@@ -263,7 +261,14 @@ void options_execute( OPTIONS *opts ) {
     } else if ( opts->copyFromClip ) {
         list_init( &msg );
         list_load( msg );
-        nonInteractive_appendClipboardContents(msg, "xclip -o  2>&1");
+        nonInteractive_appendClipboardContents( msg, "xclip -o  2>&1" );
+    } else if ( opts->printL ) {
+        list_init( &msg );
+        list_load( msg );
+        MESSAGE *tmp = list_searchByNoteNum( msg, msg->root->totalMessages );
+        if ( tmp ) {
+            list_printMessage( outStream, "nptm", tmp );
+        }
     }
 
     if ( opts->outputToFile )
