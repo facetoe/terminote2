@@ -31,7 +31,8 @@ void printUsage( FILE *outStream ) {
 }
 
 /* Pops noteNum note and prints with args sections then deletes note */
-void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args, int noteNum ) {
+void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args,
+        int noteNum ) {
 
     if ( msg->root->totalMessages == 0 || noteNum == 0 ) {
         fprintf( stderr, "Nothing to print\n" );
@@ -48,7 +49,8 @@ void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args, int noteNum 
 }
 
 /* Searches through messages printing them if they contain searchTerm */
-void nonInteractive_printAllWithSubString( FILE *outStream, MESSAGE *msg, char *searchTerm ) {
+void nonInteractive_printAllWithSubString( FILE *outStream, MESSAGE *msg,
+        char *searchTerm ) {
 
     msg = msg->root->next;
     if ( !msg ) {
@@ -149,8 +151,8 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
     free( buffer );
 }
 
-/* Reads the output of command into a MESSAGE struct. */
-void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command) {
+/* Reads the output of command into buffer then inserts into a MESSAGE struct. */
+void nonInteractive_appendClipboardContents( MESSAGE *msg, char *command ) {
 
     /* Loop to the end of the message */
     msg = msg->root;
@@ -165,38 +167,34 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command) {
     list_setPath( msg );
     list_setTime( msg );
 
-    int ch, lineLen, totChars, numLines, buffSize;
-    ch = lineLen = totChars = numLines = 0;
-
     char *tmp, *buffer;
     tmp = buffer = NULL;
 
+    int buffSize, ch, charsRead;
     buffSize = 1024;
+    charsRead = 0;
+
     buffer = malloc( buffSize * sizeof(char) );
 
     if ( !buffer ) {
         fprintf( stderr,
-                "Failed to allocate memory for message buffer in nonInteractive_appendMessage\n" );
+                "Failed to allocate memory for message buffer in nonInteractive_appendClipboardContents\n" );
         exit( 1 );
     }
 
-    LINE *line, *prev;
-    line = prev = NULL;
-    line = line_getLine();
-
     FILE *fp;
 
-     /* Open the command for reading. */
-     fp = popen( command, "r" );
-     if ( fp == NULL ) {
-         printf( "Failed to run command\n" );
-         exit( 1 );
-     }
+    /* Open the command for reading. */
+    fp = popen( command, "r" );
+    if ( fp == NULL ) {
+        printf( "Failed to run command\n" );
+        exit( 1 );
+    }
 
-    while ( ( ch = fgetc(fp) ) != EOF ) {
+    while ( ( ch = fgetc( fp ) ) != EOF ) {
 
         /* If we've outgrown the buffer then allocate some more memory */
-        if ( lineLen >= buffSize ) {
+        if ( charsRead >= buffSize ) {
             buffSize *= 2;
             tmp = realloc( buffer, buffSize * sizeof(char *) );
 
@@ -208,41 +206,15 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command) {
             } else {
                 buffer = tmp;
             }
-        }
-
-        if ( ch != '\n' && ch != '\0' ) {
-            buffer[lineLen] = ch;
-            lineLen++;
         } else {
-
-            numLines++;
-            buffer[lineLen] = 0;
-
-            /* You pass buffer + lineLen because insertLine expects the pointer to be at the end of the string */
-            insertLine( &line, buffer + lineLen, lineLen, numLines );
-
-            if ( numLines == 1 ) {
-                msg->first = line;
-            }
-
-            /* Set and update the prev pointer */
-            line->prev = prev;
-            prev = line;
-
-            /* Get a new line and move to it */
-            line->next = line_getLine();
-            line = line->next;
-            totChars += lineLen + 1;
-            lineLen = 0;
+            /* Otherwise add the character to the buffer and increment charsRead */
+            buffer[charsRead] = ch;
+            charsRead++;
         }
     }
 
-    /* Update MESSAGE statistics for this message */
-    msg->last = line->prev;
-    msg->numChars = totChars;
-    msg->numLines = numLines;
-    msg->messageNum = msg->root->totalMessages + 1;
-    msg->root->totalMessages++;
+    /* Insert the buffer contents into a MESSAGE struct */
+    list_insertString(msg, buffer);
     free( buffer );
 }
 
@@ -253,7 +225,7 @@ void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
         MESSAGE *msg = NULL;
         list_init( &msg );
         list_load( msg );
-        nonInteractive_appendMessage(msg);
+        nonInteractive_appendMessage( msg );
         /* Clean up */
         list_save( msg );
         list_destroy( &msg );
@@ -262,7 +234,5 @@ void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
         options_parse( opts, argc, argv );
         options_execute( opts );
     }
-
-
 
 }
