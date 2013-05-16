@@ -263,7 +263,7 @@ void options_execute( OPTIONS *opts ) {
     } else if ( opts->copyFromClip ) {
         list_init( &msg );
         list_load( msg );
-        nonInteractive_appendClipboardContents(msg, "xclip -o");
+        nonInteractive_appendClipboardContents(msg, "xclip -o  2>&1");
     }
 
     if ( opts->outputToFile )
