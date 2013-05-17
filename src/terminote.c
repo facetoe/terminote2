@@ -16,9 +16,9 @@
 #include "defines.h"
 #include "nonInteractive.h"
 
-
 #include "ncurses.h"
 #include "menu.h"
+#include "assert.h"
 
 #include <sys/ioctl.h> // For terminal size
 #include <signal.h> // For sigaction
@@ -34,14 +34,33 @@ struct sigaction sa;
 struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't seem to always work.
 
 /* Terminal coordinates and scrollable message variables */
-int NCOLS, NROWS;
-static int nlines = 0;
-static int cursorRow = 0;
-static int cursorCol = 0;
+typedef struct {
+    int NCOLS;
+    int NROWS;
+    int nLines;
+    int cursorRow;
+    int cursorCol;
+    LINE *currLine;
+}POSITION;
+
+/* Allocate and initialize a POSITION struct */
+void ui_initPosition( POSITION **pos ) {
+    POSITION *tmp = malloc(sizeof(POSITION));
+    if( !tmp ) {
+        fprintf(stderr, "Error allocating memory in ui_initPosition\n");
+        exit(1);
+    }
+    tmp->NCOLS = 0;
+    tmp->NROWS = 0;
+    tmp->nLines = 0;
+    tmp->cursorRow = 0;
+    tmp->cursorCol = 0;
+    tmp->currLine = NULL;
+    *pos = tmp;
+}
+
 
 bool RECIEVED_SIGWINCH = false;
-
-bool inScrollMessage = false;
 bool needsRefresh = false;
 
 /* Variables for ncurses */
@@ -58,10 +77,11 @@ enum {
 };
 
 /* Get the size of the terminal screen */
-void getScrnSize() {
+void getScrnSize(POSITION *pos) {
+    assert(pos != NULL);
     ioctl( 0, TIOCGWINSZ, &wSize );
-    NCOLS = wSize.ws_col;
-    NROWS = wSize.ws_row;
+    pos->NCOLS = wSize.ws_col;
+    pos->NROWS = wSize.ws_row;
 }
 
 /* Setup ncurses */
@@ -76,11 +96,11 @@ void ui_initNcurses() {
     init_pair( 1, COLOR_BLACK, COLOR_WHITE );
 }
 
-void ui_initWins() {
-    getScrnSize();
-    wins[TOP] = newwin( 1, NCOLS, 0, 0 );
-    wins[MID] = newwin( NROWS - 2, NCOLS, 1, 0 );
-    wins[BOT] = newwin( 1, NCOLS, NROWS - 1, 0 );
+void ui_initWins(POSITION *pos) {
+    getScrnSize(pos);
+    wins[TOP] = newwin( 1, pos->NCOLS, 0, 0 );
+    wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
+    wins[BOT] = newwin( 1, pos->NCOLS, pos->NROWS - 1, 0 );
 
     /* Turn colors on */
     wattron( wins[TOP], COLOR_PAIR(1) );
@@ -90,7 +110,7 @@ void ui_initWins() {
 }
 
 /* Setup and print the top window to screen */
-void ui_showTopWin( MESSAGE *msg ) {
+void ui_showTopWin( POSITION *pos, MESSAGE *msg ) {
 
     wclear( wins[TOP] );
 
@@ -98,22 +118,22 @@ void ui_showTopWin( MESSAGE *msg ) {
     if ( msg->root->totalMessages > 0 ) {
         char noteStr[100];
         snprintf( noteStr, 100, "Note #%d", msg->messageNum );
-        mvwprintw( wins[TOP], 0, ( NCOLS / 2 ) - ( strlen( noteStr ) / 2 ),
+        mvwprintw( wins[TOP], 0, ( pos->NCOLS / 2 ) - ( strlen( noteStr ) / 2 ),
                 noteStr );
         mvwprintw( wins[TOP], 0, 0, msg->path );
-        mvwprintw( wins[TOP], 0, ( NCOLS - strlen( msg->time ) ) - 2,
+        mvwprintw( wins[TOP], 0, ( pos->NCOLS - strlen( msg->time ) ) - 2,
                 msg->time );
     } else {
         /* Otherwise just print the title and version */
         char title[50];
         sprintf( title, "Terminote %.1f", VERSION );
-        mvwprintw( wins[TOP], 0, ( NCOLS / 2 ) - ( strlen( title ) / 2 ),
+        mvwprintw( wins[TOP], 0, ( pos->NCOLS / 2 ) - ( strlen( title ) / 2 ),
                 title );
     }
     wrefresh( wins[TOP] );
 }
 
-void ui_printPage( MESSAGE *msg, int numRows ) {
+LINE *ui_printPage( MESSAGE *msg, int numRows ) {
     LINE *tmp = msg->pageTop;
 
     for ( int i = 0; i < numRows && tmp->next; tmp = tmp->next, i++ ) {
@@ -121,115 +141,15 @@ void ui_printPage( MESSAGE *msg, int numRows ) {
     }
     msg->pageBot = tmp;
     wrefresh( wins[MID] );
-}
-
-/* Setup and print the middle window to screen */
-void ui_showMidWin( MESSAGE *msg ) {
-    wclear( wins[MID] );
-
-    if ( msg->messageNum == 0 || msg->root->totalMessages < 1 ) {
-        char str[30];
-        sprintf( str, "You had %d stored notes.", msg->root->totalMessages );
-        mvwprintw( wins[MID], 0, ( NCOLS / 2 ) - ( strlen( str ) / 2 ), str );
-        wrefresh( wins[MID] );
-        return;
-    } else if( msg->root->totalMessages > 0 ) {
-        /* Print the message to the screen */
-        ui_printPage( msg, NROWS - 2 );
-    } else
-
-    /* Position the cursor at the start of the message */
-    wmove( wins[MID], 0, 0 );
-}
-
-/* Setup and print the bottom window to screen */
-void ui_showBotWin() {
-    wclear( wins[BOT] );
-    wattron( wins[BOT], COLOR_PAIR(2) );
-    wbkgd( wins[BOT], COLOR_PAIR(2) );
-    wrefresh( wins[BOT] );
-}
-
-/* Show the windows */
-void ui_showWins( MESSAGE *msg ) {
-    getScrnSize( NCOLS, NROWS );
-    ui_showTopWin( msg );
-    ui_showBotWin();
-    ui_showMidWin( msg );
-}
-
-/* Initialize the menu but don't show it */
-void ui_initMainMenu() {
-    /* Create items */
-    int nItems;
-    nItems = ARRAY_SIZE( mainMenuStrings );
-    mainMenuItems = ( ITEM ** ) calloc( nItems, sizeof(ITEM *) );
-    for ( int i = 0; i < nItems; ++i )
-        mainMenuItems[i] = new_item( mainMenuStrings[i], mainMenuStrings[i] );
-
-    /* Create menu */
-    footerMenu = new_menu( ( ITEM ** ) mainMenuItems );
-}
-
-/* Setup and show the menu */
-void ui_setMainMenu() {
-    /* Set menu option not to show the description */
-    menu_opts_off( footerMenu, O_SHOWDESC );
-
-    int nItems = ARRAY_SIZE(mainMenuStrings);
-
-    /* Set main window and sub window */
-    set_menu_win( footerMenu, wins[BOT] );
-    set_menu_sub( footerMenu, derwin( wins[BOT], 1, NCOLS, 1, 1 ) );
-    set_menu_format( footerMenu, 0, nItems );
-
-    /* Get key events from the bottom window */
-    keypad( wins[BOT], TRUE );
-
-    /* Post the menu */
-    post_menu( footerMenu );
-    wrefresh( wins[BOT] );
-}
-
-/* Show the menu along the bottom of the screen */
-void ui_showMainMenu() {
-    getScrnSize( NCOLS, NROWS );
-    ui_showBotWin();
-    ui_setMainMenu();
-}
-
-/* Hide the menu at the bottom of the screen */
-void ui_hideMainMenu() {
-    unpost_menu( footerMenu );
-    wrefresh( wins[BOT] );
-}
-
-/* Resize the terminal screen */
-void ui_resizeScreen() {
-    getScrnSize();
-    resizeterm( NROWS, NCOLS );
-}
-
-/* Sets the RECIEVED_SIGWINCH flag to true so we can deal with resizing the screen */
-void hndSIGWINCH( int sig ) {
-    if ( sig == SIGWINCH ) {
-        RECIEVED_SIGWINCH = true;
-    }
-}
-
-/* Set up the SIGWINCH handler */
-void initSigaction() {
-    memset( &sa, '\0', sizeof( sa ) );
-    sa.sa_handler = hndSIGWINCH;
+    return msg->pageTop;
 }
 
 /* Scrolls the page up nScroll lines */
-void lineData_scrollUpPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
+LINE *lineData_scrollUpPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
 
     /* If we are already at the top then print the page and return */
     if ( msg->first->lNum >= msg->pageTop->lNum ) {
-        ui_printPage( msg, nScroll );
-        return;
+        return ui_printPage( msg, nScroll );
     }
 
     /* Start at the top of the page */
@@ -252,15 +172,15 @@ void lineData_scrollUpPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
 
     msg->pageTop = tmp;
     wrefresh( win );
+    return msg->pageTop;
 }
 
 /* Scrolls the page down nScroll lines */
-void lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
+LINE *lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
 
     /* If the entire message will fit on the screen without scrolling, print it */
     if ( msg->numLines <= nScroll ) {
-        ui_printPage( msg, nScroll );
-        return;
+        return ui_printPage( msg, nScroll );
     }
 
     if ( !msg->pageBot ) {
@@ -283,6 +203,107 @@ void lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
         msg->pageBot = tmp;
 
     wrefresh( win );
+    return msg->pageBot;
+}
+
+/* Setup and print the middle window to screen */
+LINE *ui_showMidWin( POSITION *pos, MESSAGE *msg ) {
+    wclear( wins[MID] );
+
+    if ( msg->messageNum == 0 || msg->root->totalMessages < 1 ) {
+        char str[30];
+        sprintf( str, "You had %d stored notes.", msg->root->totalMessages );
+        mvwprintw( wins[MID], 0, ( pos->NCOLS / 2 ) - ( strlen( str ) / 2 ), str );
+        wrefresh( wins[MID] );
+        return NULL;
+    }
+
+    /* Position the cursor at the start of the message */
+    wmove( wins[MID], 0, 0 );
+
+    /* Print the message to the screen */
+    return ui_printPage( msg, pos->NROWS - 2 );
+}
+
+/* Setup and print the bottom window to screen */
+void ui_showBotWin() {
+    wclear( wins[BOT] );
+    wattron( wins[BOT], COLOR_PAIR(2) );
+    wbkgd( wins[BOT], COLOR_PAIR(2) );
+    wrefresh( wins[BOT] );
+}
+
+/* Show the windows */
+void ui_showWins( POSITION *pos, MESSAGE *msg ) {
+    getScrnSize( pos );
+    ui_showTopWin(pos, msg );
+    ui_showBotWin();
+    ui_showMidWin(pos, msg );
+}
+
+/* Initialize the menu but don't show it */
+void ui_initMainMenu() {
+    /* Create items */
+    int nItems;
+    nItems = ARRAY_SIZE( mainMenuStrings );
+    mainMenuItems = ( ITEM ** ) calloc( nItems, sizeof(ITEM *) );
+    for ( int i = 0; i < nItems; ++i )
+        mainMenuItems[i] = new_item( mainMenuStrings[i], mainMenuStrings[i] );
+
+    /* Create menu */
+    footerMenu = new_menu( ( ITEM ** ) mainMenuItems );
+}
+
+/* Setup and show the menu */
+void ui_setMainMenu(POSITION *pos) {
+    /* Set menu option not to show the description */
+    menu_opts_off( footerMenu, O_SHOWDESC );
+
+    int nItems = ARRAY_SIZE(mainMenuStrings);
+
+    /* Set main window and sub window */
+    set_menu_win( footerMenu, wins[BOT] );
+    set_menu_sub( footerMenu, derwin( wins[BOT], 1, pos->NCOLS, 1, 1 ) );
+    set_menu_format( footerMenu, 0, nItems );
+
+    /* Get key events from the bottom window */
+    keypad( wins[BOT], TRUE );
+
+    /* Post the menu */
+    post_menu( footerMenu );
+    wrefresh( wins[BOT] );
+}
+
+/* Show the menu along the bottom of the screen */
+void ui_showMainMenu(POSITION *pos) {
+    getScrnSize( pos );
+    ui_showBotWin();
+    ui_setMainMenu(pos);
+}
+
+/* Hide the menu at the bottom of the screen */
+void ui_hideMainMenu() {
+    unpost_menu( footerMenu );
+    wrefresh( wins[BOT] );
+}
+
+/* Resize the terminal screen */
+void ui_resizeScreen(POSITION *pos) {
+    getScrnSize(pos);
+    resizeterm( pos->NROWS, pos->NCOLS );
+}
+
+/* Sets the RECIEVED_SIGWINCH flag to true so we can deal with resizing the screen */
+void hndSIGWINCH( int sig ) {
+    if ( sig == SIGWINCH ) {
+        RECIEVED_SIGWINCH = true;
+    }
+}
+
+/* Set up the SIGWINCH handler */
+void initSigaction() {
+    memset( &sa, '\0', sizeof( sa ) );
+    sa.sa_handler = hndSIGWINCH;
 }
 
 /* Free all memory and quit */
@@ -298,10 +319,10 @@ void ui_quit( MESSAGE *msg ) {
 }
 
 /* Select and execute options from the menu */
-void ui_doMenu( MESSAGE *msg ) {
+void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
     /* Show the menu along the bottom of the screen */
     ui_showBotWin();
-    ui_showMainMenu();
+    ui_showMainMenu(pos);
     wnoutrefresh( wins[BOT] );
     doupdate();
 
@@ -326,7 +347,7 @@ void ui_doMenu( MESSAGE *msg ) {
             } else if ( !strcmp( item_name( currItem ), "Browse" ) ) {
                 ui_hideMainMenu();
                 list_firstNode( &msg );
-                ui_showWins( msg );
+                ui_showWins(pos, msg );
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
@@ -336,7 +357,7 @@ void ui_doMenu( MESSAGE *msg ) {
                 list_deleteNode( msg, msg->messageNum );
                 list_firstNode( &msg );
                 ui_hideMainMenu();
-                ui_showWins( msg );
+                ui_showWins(pos, msg );
                 keepGoing = false;
             }
 
@@ -354,20 +375,30 @@ void ui_doMenu( MESSAGE *msg ) {
 }
 
 /* run main GUI loop */
-void guiLoop( MESSAGE *msg ) {
-    unpost_menu( footerMenu );
-    LINE *currLine;
-    ui_showWins( msg );
+void ui_run() {
+    POSITION *pos = NULL;
+    MESSAGE *msg = NULL;
+
+    list_init( &msg );
+    list_load( msg );
+    ui_initPosition(&pos);
+
+    ui_initNcurses();
+    ui_initMainMenu();
+    initSigaction();
+    ui_initWins(pos);
+
+    ui_showWins(pos, msg );
     int ch;
-    keypad( wins[MID], true );
+
     while ( ( ch = wgetch( wins[MID] ) ) ) {
 
         sigaction( SIGWINCH, &sa, NULL );
 
         if ( RECIEVED_SIGWINCH ) {
-            ui_resizeScreen();
-            ui_initWins();
-            ui_showWins( msg );
+            ui_resizeScreen(pos);
+            ui_initWins(pos);
+            ui_showWins(pos, msg );
             RECIEVED_SIGWINCH = false;
         }
 
@@ -375,9 +406,9 @@ void guiLoop( MESSAGE *msg ) {
 
         /* Change to next note in list struct */
         case 'd':
-            cursorRow = 0;
-            cursorCol = 0;
-            nlines = 0;
+            pos->cursorRow = 0;
+            pos->cursorCol = 0;
+            pos->nLines = 0;
 
             list_next( &msg );
 
@@ -386,9 +417,9 @@ void guiLoop( MESSAGE *msg ) {
 
             /* Change to previous note in list struct */
         case 'a':
-            cursorRow = 0;
-            cursorCol = 0;
-            nlines = 0;
+            pos->cursorRow = 0;
+            pos->cursorCol = 0;
+            pos->nLines = 0;
 
             list_previous( &msg );
 
@@ -397,7 +428,7 @@ void guiLoop( MESSAGE *msg ) {
 
             /* Show the menu along the bottom of the screen */
         case 6:
-            ui_doMenu( msg );
+            ui_doMenu(pos, msg );
             break;
 
             /* Scroll up in the message */
@@ -407,18 +438,18 @@ void guiLoop( MESSAGE *msg ) {
             if ( msg->messageNum == 0 )
                 break;
 
-            if ( cursorRow > 0 ) {
-                cursorRow--;
-                wmove( wins[MID], cursorRow, cursorCol );
+            if ( pos->cursorRow > 0 ) {
+                pos->cursorRow--;
+                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
             }
 
-            wins[MID] = newwin( NROWS - 2, NCOLS, 1, 0 );
+            wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
             keypad( wins[MID], true );
-            lineData_scrollUpPage( msg, wins[MID], NROWS - 2 );
-            cursorRow = ( NROWS / 2 ) - 1;
-            wmove( wins[MID], cursorRow, cursorCol );
+            lineData_scrollUpPage( msg, wins[MID], pos->NROWS - 2 );
+            pos->cursorRow = ( pos->NROWS / 2 ) - 1;
+            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
             break;
 
@@ -429,42 +460,42 @@ void guiLoop( MESSAGE *msg ) {
             if ( msg->messageNum == 0 )
                 break;
 
-            if ( cursorRow <= NROWS - 3 ) {
-                cursorRow++;
-                wmove( wins[MID], cursorRow, cursorCol );
+            if ( pos->cursorRow <= pos->NROWS - 3 ) {
+                pos->cursorRow++;
+                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
             } else {
-                cursorRow = ( NROWS / 2 ) - 1;
+                pos->cursorRow = ( pos->NROWS / 2 ) - 1;
                 keypad( wins[MID], true );
                 werase( wins[MID] );
-                lineData_scrollDownPage( msg, wins[MID], NROWS - 2 );
-                wmove( wins[MID], cursorRow, cursorCol );
+                lineData_scrollDownPage( msg, wins[MID], pos->NROWS - 2 );
+                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
             }
             break;
 
         case KEY_LEFT:
-            if ( cursorCol <= 0 ) {
-                cursorRow--;
-                cursorCol = NCOLS;
+            if ( pos->cursorCol <= 0 ) {
+                pos->cursorRow--;
+                pos->cursorCol = pos->NCOLS;
             } else {
-                cursorCol--;
+                pos->cursorCol--;
             }
-            wmove( wins[MID], cursorRow, cursorCol );
+            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );
             break;
 
         case KEY_RIGHT:
-            if ( cursorCol >= NCOLS ) {
-                cursorRow++;
-                cursorCol = 0;
+            if ( pos->cursorCol >= pos->NCOLS ) {
+                pos->cursorRow++;
+                pos->cursorCol = 0;
             } else {
-                cursorCol++;
+                pos->cursorCol++;
             }
-            wmove( wins[MID], cursorRow, cursorCol );
+            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );
             break;
@@ -479,8 +510,8 @@ void guiLoop( MESSAGE *msg ) {
         }
 
         if ( needsRefresh ) {
-            ui_showWins( msg );
-            wmove( wins[MID], cursorRow, cursorCol );
+            ui_showWins(pos, msg );
+            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );
             needsRefresh = false;
@@ -490,26 +521,10 @@ void guiLoop( MESSAGE *msg ) {
 
 }
 
-/* Run interactive mode */
-void ui_run( MESSAGE *msg ) {
-    list_init( &msg );
-    list_load( msg );
-    ui_initNcurses();
-    ui_initMainMenu();
-    initSigaction();
-    ui_initWins();
-    guiLoop( msg );
-}
-
-
-
-MESSAGE *msg;
-
-
 int main( int argc, char **argv ) {
 
     if ( isatty( STDIN_FILENO ) && argc == 1 ) {
-        ui_run( msg );
+        ui_run();
     } else {
         opts = options_new();
         nonInteractive_run( opts, argc, argv );
