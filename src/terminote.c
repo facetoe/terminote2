@@ -11,7 +11,7 @@
 #define _POSIX_SOURCE // You need this here to get rid of the waring with sigaction
 #include <getopt.h>
 #include "helperFunctions.h"
-#include "linkedList.h"
+#include "message.h"
 #include "options.h"
 #include "defines.h"
 #include "nonInteractive.h"
@@ -378,12 +378,9 @@ void guiLoop( MESSAGE *msg ) {
             cursorRow = 0;
             cursorCol = 0;
             nlines = 0;
-            if( msg->root->totalMessages > 0 )
-                list_next( &msg );
 
-            endwin();
-            printf("%d\n", msg->root->totalMessages);
-            inScrollMessage = false;
+            list_next( &msg );
+
             needsRefresh = true;
             break;
 
@@ -392,9 +389,9 @@ void guiLoop( MESSAGE *msg ) {
             cursorRow = 0;
             cursorCol = 0;
             nlines = 0;
-            inScrollMessage = false;
-            if( msg->root->totalMessages > 0 )
-                list_previous( &msg );
+
+            list_previous( &msg );
+
             needsRefresh = true;
             break;
 

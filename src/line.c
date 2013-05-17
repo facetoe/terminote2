@@ -11,6 +11,24 @@
 #define LINE_FIRST(msg) msg->first
 #define LINE_LAST(msg) msg->last
 
+/* Allocates memory for a new LINE node and sets default values */
+LINE *line_getLine() {
+    LINE *tmp = NULL;
+    tmp = malloc( sizeof(LINE) );
+    if ( !tmp ) {
+        fprintf( stderr, "Failed to allocate memory in line_getline\n" );
+        abort();
+    }
+
+    tmp->lNum = 0;
+    tmp->lSize = 0;
+    tmp->currLine = NULL;
+    tmp->next = NULL;
+    tmp->prev = NULL;
+
+    return tmp;
+}
+
 /* Returns the requested lineNode or NULL if it doesn't exist (needs to be cleaned up) */
 LINE *line_getLineNode( MESSAGE *msg, int nodeNum ) {
 

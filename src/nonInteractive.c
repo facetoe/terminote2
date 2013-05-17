@@ -6,6 +6,7 @@
  */
 
 #include "nonInteractive.h"
+#include <stdio.h>
 
 /* Prints usage */
 void printUsage( FILE *outStream ) {
@@ -213,9 +214,12 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg, char *command ) {
         }
     }
 
+
     /* Insert the buffer contents into a MESSAGE struct */
     list_insertString(msg, buffer);
+
     free( buffer );
+    pclose(fp);
 }
 
 /* Run in non-interactive mode */

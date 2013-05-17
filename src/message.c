@@ -5,26 +5,10 @@
  *      Author: facetoe
  */
 
-#include "linkedList.h"
+#include "message.h"
 #include <assert.h>
 
-/* Allocates memory for a new LINE node and sets default values */
-LINE *line_getLine() {
-    LINE *tmp = NULL;
-    tmp = malloc( sizeof(LINE) );
-    if ( !tmp ) {
-        fprintf( stderr, "Failed to allocate memory in line_getline\n" );
-        abort();
-    }
 
-    tmp->lNum = 0;
-    tmp->lSize = 0;
-    tmp->currLine = NULL;
-    tmp->next = NULL;
-    tmp->prev = NULL;
-
-    return tmp;
-}
 
 /* Allocates memory for a MESSAGE list and initializes default values */
 void list_init( MESSAGE **msg ) {
