@@ -94,7 +94,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
 
             /* Pop Note ( note only )*/
         case 'P':
-            options->pop = validateInt( "-P", optarg );
+            options->pop = 1;
             numFlags++;
             break;
 
