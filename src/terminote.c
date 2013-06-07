@@ -41,14 +41,14 @@ typedef struct {
     int cursorRow;
     int cursorCol;
     LINE *currLine;
-}POSITION;
+} POSITION;
 
 /* Allocate and initialize a POSITION struct */
 void ui_initPosition( POSITION **pos ) {
-    POSITION *tmp = malloc(sizeof(POSITION));
-    if( !tmp ) {
-        fprintf(stderr, "Error allocating memory in ui_initPosition\n");
-        exit(1);
+    POSITION *tmp = malloc( sizeof(POSITION) );
+    if ( !tmp ) {
+        fprintf( stderr, "Error allocating memory in ui_initPosition\n" );
+        exit( 1 );
     }
     tmp->NCOLS = 0;
     tmp->NROWS = 0;
@@ -58,7 +58,6 @@ void ui_initPosition( POSITION **pos ) {
     tmp->currLine = NULL;
     *pos = tmp;
 }
-
 
 bool RECIEVED_SIGWINCH = false;
 bool needsRefresh = false;
@@ -77,8 +76,8 @@ enum {
 };
 
 /* Get the size of the terminal screen */
-void getScrnSize(POSITION *pos) {
-    assert(pos != NULL);
+void getScrnSize( POSITION *pos ) {
+    assert( pos != NULL );
     ioctl( 0, TIOCGWINSZ, &wSize );
     pos->NCOLS = wSize.ws_col;
     pos->NROWS = wSize.ws_row;
@@ -96,8 +95,8 @@ void ui_initNcurses() {
     init_pair( 1, COLOR_BLACK, COLOR_WHITE );
 }
 
-void ui_initWins(POSITION *pos) {
-    getScrnSize(pos);
+void ui_initWins( POSITION *pos ) {
+    getScrnSize( pos );
     wins[TOP] = newwin( 1, pos->NCOLS, 0, 0 );
     wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
     wins[BOT] = newwin( 1, pos->NCOLS, pos->NROWS - 1, 0 );
@@ -213,7 +212,8 @@ LINE *ui_showMidWin( POSITION *pos, MESSAGE *msg ) {
     if ( msg->messageNum == 0 || msg->root->totalMessages < 1 ) {
         char str[30];
         sprintf( str, "You had %d stored notes.", msg->root->totalMessages );
-        mvwprintw( wins[MID], 0, ( pos->NCOLS / 2 ) - ( strlen( str ) / 2 ), str );
+        mvwprintw( wins[MID], 0, ( pos->NCOLS / 2 ) - ( strlen( str ) / 2 ),
+                str );
         wrefresh( wins[MID] );
         return NULL;
     }
@@ -236,9 +236,9 @@ void ui_showBotWin() {
 /* Show the windows */
 void ui_showWins( POSITION *pos, MESSAGE *msg ) {
     getScrnSize( pos );
-    ui_showTopWin(pos, msg );
+    ui_showTopWin( pos, msg );
     ui_showBotWin();
-    ui_showMidWin(pos, msg );
+    ui_showMidWin( pos, msg );
 }
 
 /* Initialize the menu but don't show it */
@@ -255,7 +255,7 @@ void ui_initMainMenu() {
 }
 
 /* Setup and show the menu */
-void ui_setMainMenu(POSITION *pos) {
+void ui_setMainMenu( POSITION *pos ) {
     /* Set menu option not to show the description */
     menu_opts_off( footerMenu, O_SHOWDESC );
 
@@ -275,10 +275,10 @@ void ui_setMainMenu(POSITION *pos) {
 }
 
 /* Show the menu along the bottom of the screen */
-void ui_showMainMenu(POSITION *pos) {
+void ui_showMainMenu( POSITION *pos ) {
     getScrnSize( pos );
     ui_showBotWin();
-    ui_setMainMenu(pos);
+    ui_setMainMenu( pos );
 }
 
 /* Hide the menu at the bottom of the screen */
@@ -288,8 +288,8 @@ void ui_hideMainMenu() {
 }
 
 /* Resize the terminal screen */
-void ui_resizeScreen(POSITION *pos) {
-    getScrnSize(pos);
+void ui_resizeScreen( POSITION *pos ) {
+    getScrnSize( pos );
     resizeterm( pos->NROWS, pos->NCOLS );
 }
 
@@ -322,7 +322,7 @@ void ui_quit( MESSAGE *msg ) {
 void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
     /* Show the menu along the bottom of the screen */
     ui_showBotWin();
-    ui_showMainMenu(pos);
+    ui_showMainMenu( pos );
     wnoutrefresh( wins[BOT] );
     doupdate();
 
@@ -347,7 +347,7 @@ void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
             } else if ( !strcmp( item_name( currItem ), "Browse" ) ) {
                 ui_hideMainMenu();
                 list_firstNode( &msg );
-                ui_showWins(pos, msg );
+                ui_showWins( pos, msg );
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
@@ -357,7 +357,7 @@ void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
                 list_deleteNode( msg, msg->messageNum );
                 list_firstNode( &msg );
                 ui_hideMainMenu();
-                ui_showWins(pos, msg );
+                ui_showWins( pos, msg );
                 keepGoing = false;
             }
 
@@ -374,31 +374,47 @@ void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
     }
 }
 
+void clearPosition( POSITION *pos ) {
+    pos->NCOLS = 0;
+    pos->NROWS = 0;
+    pos->nLines = 0;
+    pos->cursorRow = 0;
+    pos->cursorCol = 0;
+    pos->currLine = NULL;
+}
+
 /* run main GUI loop */
 void ui_run() {
-    POSITION *pos = NULL;
-    MESSAGE *msg = NULL;
 
+    /* Load the list */
+    MESSAGE *msg = NULL;
     list_init( &msg );
     list_load( msg );
-    ui_initPosition(&pos);
 
+    /* Set up the POSITION struct */
+    POSITION *pos = NULL;
+    ui_initPosition( &pos );
+
+    /* Set up Ncurses */
     ui_initNcurses();
     ui_initMainMenu();
     initSigaction();
-    ui_initWins(pos);
+    ui_initWins( pos );
 
-    ui_showWins(pos, msg );
+    /* Print everything to the screen */
+    ui_showWins( pos, msg );
+
+    pos->currLine = msg->first;
+
     int ch;
-
     while ( ( ch = wgetch( wins[MID] ) ) ) {
 
         sigaction( SIGWINCH, &sa, NULL );
 
         if ( RECIEVED_SIGWINCH ) {
-            ui_resizeScreen(pos);
-            ui_initWins(pos);
-            ui_showWins(pos, msg );
+            ui_resizeScreen( pos );
+            ui_initWins( pos );
+            ui_showWins( pos, msg );
             RECIEVED_SIGWINCH = false;
         }
 
@@ -406,29 +422,21 @@ void ui_run() {
 
         /* Change to next note in list struct */
         case 'd':
-            pos->cursorRow = 0;
-            pos->cursorCol = 0;
-            pos->nLines = 0;
-
+            clearPosition( pos );
             list_next( &msg );
-
             needsRefresh = true;
             break;
 
             /* Change to previous note in list struct */
         case 'a':
-            pos->cursorRow = 0;
-            pos->cursorCol = 0;
-            pos->nLines = 0;
-
+            clearPosition( pos );
             list_previous( &msg );
-
             needsRefresh = true;
             break;
 
             /* Show the menu along the bottom of the screen */
         case 6:
-            ui_doMenu(pos, msg );
+            ui_doMenu( pos, msg );
             break;
 
             /* Scroll up in the message */
@@ -447,7 +455,8 @@ void ui_run() {
 
             wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
             keypad( wins[MID], true );
-            lineData_scrollUpPage( msg, wins[MID], pos->NROWS - 2 );
+            pos->currLine = lineData_scrollUpPage( msg, wins[MID],
+                    pos->NROWS - 2 );
             pos->cursorRow = ( pos->NROWS / 2 ) - 1;
             wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
@@ -469,7 +478,8 @@ void ui_run() {
                 pos->cursorRow = ( pos->NROWS / 2 ) - 1;
                 keypad( wins[MID], true );
                 werase( wins[MID] );
-                lineData_scrollDownPage( msg, wins[MID], pos->NROWS - 2 );
+                pos->currLine = lineData_scrollDownPage( msg, wins[MID],
+                        pos->NROWS - 2 );
                 wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
@@ -510,7 +520,7 @@ void ui_run() {
         }
 
         if ( needsRefresh ) {
-            ui_showWins(pos, msg );
+            ui_showWins( pos, msg );
             wmove( wins[MID], pos->cursorRow, pos->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );

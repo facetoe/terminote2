@@ -9,7 +9,7 @@
 #define DEFINES_H_
 
 #define VERSION 0.3
-#define DEBUG 1
+#define DEBUG 0
 
 extern char *path;
 
