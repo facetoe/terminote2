@@ -11,7 +11,7 @@
 #define _POSIX_SOURCE // You need this here to get rid of the waring with sigaction
 #include <getopt.h>
 #include "helperFunctions.h"
-#include "message.h"
+#include "linkedList.h"
 #include "options.h"
 #include "defines.h"
 #include "nonInteractive.h"

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "helperFunctions.h"
-#include "message.h"
+#include "linkedList.h"
 #include "defines.h"
 
 typedef struct {

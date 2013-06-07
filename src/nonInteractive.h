@@ -8,7 +8,7 @@
 #ifndef NONINTERACTIVE_H_
 #define NONINTERACTIVE_H_
 
-#include "message.h"
+#include "linkedList.h"
 #include "line.h"
 #include "options.h"
 
