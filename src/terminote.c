@@ -22,7 +22,8 @@
 
 #include <sys/ioctl.h> // For terminal size
 #include <signal.h> // For sigaction
-char *path = "/home/facetoe/.terminote.data";
+char *path;
+const char *dataFile = "/.terminote.data";
 
 OPTIONS *opts = NULL;
 
@@ -234,11 +235,11 @@ void ui_showBotWin() {
 }
 
 /* Show the windows */
-void ui_showWins( POSITION *pos, MESSAGE *msg ) {
+LINE * ui_showWins( POSITION *pos, MESSAGE *msg ) {
     getScrnSize( pos );
     ui_showTopWin( pos, msg );
     ui_showBotWin();
-    ui_showMidWin( pos, msg );
+    return ui_showMidWin( pos, msg );
 }
 
 /* Initialize the menu but don't show it */
@@ -383,6 +384,19 @@ void clearPosition( POSITION *pos ) {
     pos->currLine = NULL;
 }
 
+void nextLine( POSITION *pos ) {
+    if ( pos->currLine->next ) {
+        pos->cursorRow++;
+        pos->currLine = pos->currLine->next;
+    }
+}
+
+void prevLine( POSITION *pos ) {
+    if ( pos->currLine->prev )
+        pos->cursorRow--;
+    pos->currLine = pos->currLine->prev;
+}
+
 /* run main GUI loop */
 void ui_run() {
 
@@ -402,9 +416,7 @@ void ui_run() {
     ui_initWins( pos );
 
     /* Print everything to the screen */
-    ui_showWins( pos, msg );
-
-    pos->currLine = msg->first;
+    pos->currLine = ui_showWins( pos, msg );
 
     int ch;
     while ( ( ch = wgetch( wins[MID] ) ) ) {
@@ -446,20 +458,19 @@ void ui_run() {
             if ( msg->messageNum == 0 )
                 break;
 
-            if ( pos->cursorRow > 0 ) {
-                pos->cursorRow--;
+            if ( pos->cursorRow >= 0 ) {
+                if ( pos->currLine ) {
+                    if ( pos->currLine->prev ) {
+                        pos->currLine = pos->currLine->prev;
+                        pos->cursorRow--;
+                    }
+
+                }
                 wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
             }
 
-            wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
-            keypad( wins[MID], true );
-            pos->currLine = lineData_scrollUpPage( msg, wins[MID],
-                    pos->NROWS - 2 );
-            pos->cursorRow = ( pos->NROWS / 2 ) - 1;
-            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
-            wrefresh( wins[MID] );
             break;
 
             /* Scroll down in the message */
@@ -469,11 +480,18 @@ void ui_run() {
             if ( msg->messageNum == 0 )
                 break;
 
+            wprintw( wins[MID], "%p", ( LINE* ) pos->currLine );
+            wrefresh( wins[MID] );
+            wgetch( wins[MID] );
+
             if ( pos->cursorRow <= pos->NROWS - 3 ) {
                 pos->cursorRow++;
+                pos->currLine = pos->currLine->next;
+
                 wmove( wins[MID], pos->cursorRow, pos->cursorCol );
                 wrefresh( wins[MID] );
                 break;
+
             } else {
                 pos->cursorRow = ( pos->NROWS / 2 ) - 1;
                 keypad( wins[MID], true );
@@ -531,7 +549,11 @@ void ui_run() {
 
 }
 
+
+
 int main( int argc, char **argv ) {
+   getDataPath();
+   printf("%s", path);
 
     if ( isatty( STDIN_FILENO ) && argc == 1 ) {
         ui_run();

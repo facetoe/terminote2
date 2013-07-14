@@ -12,6 +12,6 @@
 #define DEBUG 0
 
 extern char *path;
-
+const char *dataFile;
 
 #endif /* DEFINES_H_ */
