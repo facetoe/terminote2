@@ -15,7 +15,7 @@
 struct line {
     int lNum;
     int lSize;
-    char *currLine;
+    char *text;
     struct line *next;
     struct line *prev;
 };
@@ -33,6 +33,9 @@ struct message {
 
     char path[MAX_PATH_SIZE];
     char time[MAX_TIME_SIZE];
+
+    /* Current line of the message */
+    LINE *currentLine;
 
     /* Top line of the message */
     LINE *first;

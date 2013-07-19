@@ -38,34 +38,32 @@ struct winsize wSize; // I'm using this instead of getmaxyx() because it didn't 
 typedef struct {
     int NCOLS;
     int NROWS;
-    int nLines;
     int cursorRow;
     int cursorCol;
-    LINE *currLine;
-} POSITION;
+    MESSAGE *currMsg;
+} DISPLAY_DATA;
 
 /* Allocate and initialize a POSITION struct */
-void ui_initPosition( POSITION **pos ) {
-    POSITION *tmp = malloc( sizeof(POSITION) );
+void ui_initPosition( DISPLAY_DATA **disp ) {
+    DISPLAY_DATA *tmp = malloc( sizeof(DISPLAY_DATA) );
     if ( !tmp ) {
         fprintf( stderr, "Error allocating memory in ui_initPosition\n" );
         exit( 1 );
     }
     tmp->NCOLS = 0;
     tmp->NROWS = 0;
-    tmp->nLines = 0;
     tmp->cursorRow = 0;
     tmp->cursorCol = 0;
-    tmp->currLine = NULL;
-    *pos = tmp;
+    tmp->currMsg = NULL;
+    *disp = tmp;
 }
 
 bool RECIEVED_SIGWINCH = false;
 bool needsRefresh = false;
 
 /* Variables for ncurses */
-char *mainMenuStrings[] = { "New", "Browse", "Edit", "Delete", "Search", "Quit",
-        "Help", ( char * ) NULL, };
+char *mainMenuStrings[] =
+        { "Delete", "Search", "Quit", "Help", ( char * ) NULL, };
 
 static ITEM **mainMenuItems;
 static MENU *footerMenu;
@@ -77,11 +75,11 @@ enum {
 };
 
 /* Get the size of the terminal screen */
-void getScrnSize( POSITION *pos ) {
-    assert( pos != NULL );
+void getScrnSize( DISPLAY_DATA *disp ) {
+    assert( disp != NULL );
     ioctl( 0, TIOCGWINSZ, &wSize );
-    pos->NCOLS = wSize.ws_col;
-    pos->NROWS = wSize.ws_row;
+    disp->NCOLS = wSize.ws_col;
+    disp->NROWS = wSize.ws_row;
 }
 
 /* Setup ncurses */
@@ -96,11 +94,11 @@ void ui_initNcurses() {
     init_pair( 1, COLOR_BLACK, COLOR_WHITE );
 }
 
-void ui_initWins( POSITION *pos ) {
-    getScrnSize( pos );
-    wins[TOP] = newwin( 1, pos->NCOLS, 0, 0 );
-    wins[MID] = newwin( pos->NROWS - 2, pos->NCOLS, 1, 0 );
-    wins[BOT] = newwin( 1, pos->NCOLS, pos->NROWS - 1, 0 );
+void ui_initWins( DISPLAY_DATA *disp ) {
+    getScrnSize( disp );
+    wins[TOP] = newwin( 1, disp->NCOLS, 0, 0 );
+    wins[MID] = newwin( disp->NROWS - 2, disp->NCOLS, 1, 0 );
+    wins[BOT] = newwin( 1, disp->NCOLS, disp->NROWS - 1, 0 );
 
     /* Turn colors on */
     wattron( wins[TOP], COLOR_PAIR(1) );
@@ -110,120 +108,156 @@ void ui_initWins( POSITION *pos ) {
 }
 
 /* Setup and print the top window to screen */
-void ui_showTopWin( POSITION *pos, MESSAGE *msg ) {
+void ui_showTopWin( DISPLAY_DATA *disp ) {
 
     wclear( wins[TOP] );
 
     /* If the we are not in the root node then update the top window with time, number and path info*/
-    if ( msg->root->totalMessages > 0 ) {
+    if ( disp->currMsg->root->totalMessages > 0 ) {
         char noteStr[100];
-        snprintf( noteStr, 100, "Note #%d", msg->messageNum );
-        mvwprintw( wins[TOP], 0, ( pos->NCOLS / 2 ) - ( strlen( noteStr ) / 2 ),
-                noteStr );
-        mvwprintw( wins[TOP], 0, 0, msg->path );
-        mvwprintw( wins[TOP], 0, ( pos->NCOLS - strlen( msg->time ) ) - 2,
-                msg->time );
+        snprintf( noteStr, 100, "Note #%d", disp->currMsg->messageNum );
+        mvwprintw( wins[TOP], 0,
+                ( disp->NCOLS / 2 ) - ( strlen( noteStr ) / 2 ), noteStr );
+        mvwprintw( wins[TOP], 0, 0, disp->currMsg->path );
+        mvwprintw( wins[TOP], 0,
+                ( disp->NCOLS - strlen( disp->currMsg->time ) ) - 2,
+                disp->currMsg->time );
     } else {
         /* Otherwise just print the title and version */
         char title[50];
         sprintf( title, "Terminote %.1f", VERSION );
-        mvwprintw( wins[TOP], 0, ( pos->NCOLS / 2 ) - ( strlen( title ) / 2 ),
+        mvwprintw( wins[TOP], 0, ( disp->NCOLS / 2 ) - ( strlen( title ) / 2 ),
                 title );
     }
     wrefresh( wins[TOP] );
 }
 
-LINE *ui_printPage( MESSAGE *msg, int numRows ) {
-    LINE *tmp = msg->pageTop;
+void ui_printPage( DISPLAY_DATA *disp, int numRows ) {
+    LINE *tmp = disp->currMsg->currentLine;
+    assert( tmp != NULL );
 
     for ( int i = 0; i < numRows && tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->currLine );
+        mvwprintw( wins[MID], i, 0, tmp->text );
     }
-    msg->pageBot = tmp;
+    disp->currMsg->pageBot = tmp;
     wrefresh( wins[MID] );
-    return msg->pageTop;
+}
+
+void ui_printTop( DISPLAY_DATA *disp, int numRows ) {
+    LINE *tmp = disp->currMsg->first;
+    wclear( wins[MID] );
+
+    disp->currMsg->pageTop = tmp;
+
+    for ( int i = 0; i < numRows && tmp->next; tmp = tmp->next, i++ ) {
+        mvwprintw( wins[MID], i, 0, tmp->text );
+    }
+    disp->currMsg->pageBot = tmp;
+    disp->currMsg->currentLine = tmp;
+    wrefresh( wins[MID] );
+}
+
+void ui_printBot( DISPLAY_DATA *disp, int numRows ) {
+    LINE *tmp = disp->currMsg->last;
+    wclear( wins[MID] );
+
+    for ( int i = 0; i < disp->NROWS - 3 && tmp->prev; tmp = tmp->prev, ++i ) {
+
+    }
+
+    disp->currMsg->pageTop = tmp;
+
+    for ( int i = 0; tmp->next; tmp = tmp->next, i++ ) {
+        mvwprintw( wins[MID], i, 0, tmp->text );
+    }
+
+    disp->currMsg->pageBot = disp->currMsg->last;
+    disp->currMsg->currentLine = disp->currMsg->last;
+    wrefresh( wins[MID] );
 }
 
 /* Scrolls the page up nScroll lines */
-LINE *lineData_scrollUpPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
+void lineData_scrollUpPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
 
     /* If we are already at the top then print the page and return */
-    if ( msg->first->lNum >= msg->pageTop->lNum ) {
-        return ui_printPage( msg, nScroll );
+    if ( disp->currMsg->currentLine == disp->currMsg->pageTop ) {
+        ui_printPage( disp, nScroll );
+        return;
     }
 
     /* Start at the top of the page */
-    LINE *tmp = msg->pageTop;
+    LINE *tmp = disp->currMsg->pageTop;
 
     /* Rewind nScroll lines */
     for ( int i = 1; i < nScroll && tmp->prev; tmp = tmp->prev, i++ )
         ;
 
+    wclear( wins[MID] );
+    disp->currMsg->pageTop = tmp;
+
     /* Print the lines to the screen */
     for ( int i = 0; i < nScroll && tmp->next; tmp = tmp->next, i++ )
-        mvwprintw( wins[MID], i, 0, tmp->currLine );
+        mvwprintw( wins[MID], i, 0, tmp->text );
 
     /* Update the pageBot pointer */
-    msg->pageBot = tmp;
-
-    /* Rewind again so we can set the pageTop pointer to the right place */
-    for ( int i = 1; i < nScroll && tmp->prev; tmp = tmp->prev, i++ )
-        ;
-
-    msg->pageTop = tmp;
+    disp->currMsg->pageBot = tmp;
+    disp->currMsg->currentLine = tmp;
     wrefresh( win );
-    return msg->pageTop;
 }
 
 /* Scrolls the page down nScroll lines */
-LINE *lineData_scrollDownPage( MESSAGE *msg, WINDOW *win, int nScroll ) {
+void lineData_scrollDownPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
 
-    /* If the entire message will fit on the screen without scrolling, print it */
-    if ( msg->numLines <= nScroll ) {
-        return ui_printPage( msg, nScroll );
+    /* If the entire message will fit on the screen without scrolling, return */
+    if ( disp->currMsg->numLines <= nScroll ) {
+        return;
     }
 
-    if ( !msg->pageBot ) {
-        msg->pageBot = msg->pageTop + nScroll;
+    /* If we are already at the bottom just return */
+    if ( disp->currMsg->currentLine == disp->currMsg->last ) {
+        return;
     }
 
     /* Start at the bottom of the page */
-    LINE *tmp = msg->pageBot;
+    LINE *tmp = disp->currMsg->pageBot;
 
     /* Update the pageTop pointer */
-    msg->pageTop = tmp;
+    disp->currMsg->pageTop = tmp;
+
+    wclear( wins[MID] );
 
     /* Print nScroll lines to the screen */
     for ( int i = 0; i < nScroll && tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->currLine );
+        mvwprintw( wins[MID], i, 0, tmp->text );
+
+        /* Update the pointers */
+        disp->currMsg->pageBot = tmp;
+        disp->currMsg->currentLine = tmp;
     }
 
-    /* If we are not going to scroll off the page on the next call, update the pageBot pointer */
-    if ( msg->pageBot->lNum + nScroll <= msg->numLines )
-        msg->pageBot = tmp;
-
     wrefresh( win );
-    return msg->pageBot;
 }
 
 /* Setup and print the middle window to screen */
-LINE *ui_showMidWin( POSITION *pos, MESSAGE *msg ) {
+void ui_showMidWin( DISPLAY_DATA *disp ) {
     wclear( wins[MID] );
 
-    if ( msg->messageNum == 0 || msg->root->totalMessages < 1 ) {
+    if ( disp->currMsg->messageNum == 0
+            || disp->currMsg->root->totalMessages < 1 ) {
         char str[30];
-        sprintf( str, "You had %d stored notes.", msg->root->totalMessages );
-        mvwprintw( wins[MID], 0, ( pos->NCOLS / 2 ) - ( strlen( str ) / 2 ),
+        sprintf( str, "You had %d stored notes.",
+                disp->currMsg->root->totalMessages );
+        mvwprintw( wins[MID], 0, ( disp->NCOLS / 2 ) - ( strlen( str ) / 2 ),
                 str );
         wrefresh( wins[MID] );
-        return NULL;
+        return;
     }
 
     /* Position the cursor at the start of the message */
     wmove( wins[MID], 0, 0 );
 
     /* Print the message to the screen */
-    return ui_printPage( msg, pos->NROWS - 2 );
+    ui_printPage( disp, disp->NROWS - 2 );
 }
 
 /* Setup and print the bottom window to screen */
@@ -235,11 +269,11 @@ void ui_showBotWin() {
 }
 
 /* Show the windows */
-LINE * ui_showWins( POSITION *pos, MESSAGE *msg ) {
-    getScrnSize( pos );
-    ui_showTopWin( pos, msg );
+void ui_showWins( DISPLAY_DATA *disp ) {
+    getScrnSize( disp );
+    ui_showTopWin( disp );
     ui_showBotWin();
-    return ui_showMidWin( pos, msg );
+    ui_showMidWin( disp );
 }
 
 /* Initialize the menu but don't show it */
@@ -256,7 +290,7 @@ void ui_initMainMenu() {
 }
 
 /* Setup and show the menu */
-void ui_setMainMenu( POSITION *pos ) {
+void ui_setMainMenu( DISPLAY_DATA *disp ) {
     /* Set menu option not to show the description */
     menu_opts_off( footerMenu, O_SHOWDESC );
 
@@ -264,7 +298,7 @@ void ui_setMainMenu( POSITION *pos ) {
 
     /* Set main window and sub window */
     set_menu_win( footerMenu, wins[BOT] );
-    set_menu_sub( footerMenu, derwin( wins[BOT], 1, pos->NCOLS, 1, 1 ) );
+    set_menu_sub( footerMenu, derwin( wins[BOT], 1, disp->NCOLS, 1, 1 ) );
     set_menu_format( footerMenu, 0, nItems );
 
     /* Get key events from the bottom window */
@@ -276,10 +310,10 @@ void ui_setMainMenu( POSITION *pos ) {
 }
 
 /* Show the menu along the bottom of the screen */
-void ui_showMainMenu( POSITION *pos ) {
-    getScrnSize( pos );
+void ui_showMainMenu( DISPLAY_DATA *disp ) {
+    getScrnSize( disp );
     ui_showBotWin();
-    ui_setMainMenu( pos );
+    ui_setMainMenu( disp );
 }
 
 /* Hide the menu at the bottom of the screen */
@@ -289,9 +323,9 @@ void ui_hideMainMenu() {
 }
 
 /* Resize the terminal screen */
-void ui_resizeScreen( POSITION *pos ) {
-    getScrnSize( pos );
-    resizeterm( pos->NROWS, pos->NCOLS );
+void ui_resizeScreen( DISPLAY_DATA *disp ) {
+    getScrnSize( disp );
+    resizeterm( disp->NROWS, disp->NCOLS );
 }
 
 /* Sets the RECIEVED_SIGWINCH flag to true so we can deal with resizing the screen */
@@ -320,10 +354,10 @@ void ui_quit( MESSAGE *msg ) {
 }
 
 /* Select and execute options from the menu */
-void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
+void ui_doMenu( DISPLAY_DATA *disp ) {
     /* Show the menu along the bottom of the screen */
     ui_showBotWin();
-    ui_showMainMenu( pos );
+    ui_showMainMenu( disp );
     wnoutrefresh( wins[BOT] );
     doupdate();
 
@@ -344,21 +378,21 @@ void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
         case 13: /* Enter */
             currItem = current_item( footerMenu );
             if ( !strcmp( item_name( currItem ), "Quit" ) ) {
-                ui_quit( msg );
+                ui_quit( disp->currMsg );
             } else if ( !strcmp( item_name( currItem ), "Browse" ) ) {
                 ui_hideMainMenu();
-                list_firstNode( &msg );
-                ui_showWins( pos, msg );
+                list_firstNode( &disp->currMsg );
+                ui_showWins( disp );
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Delete" ) ) {
-                list_deleteNode( msg, msg->messageNum );
-                list_firstNode( &msg );
+                list_deleteNode( disp->currMsg, disp->currMsg->messageNum );
+                list_firstNode( &disp->currMsg );
                 ui_hideMainMenu();
-                ui_showWins( pos, msg );
+                ui_showWins( disp );
                 keepGoing = false;
             }
 
@@ -375,26 +409,11 @@ void ui_doMenu( POSITION *pos, MESSAGE *msg ) {
     }
 }
 
-void clearPosition( POSITION *pos ) {
-    pos->NCOLS = 0;
-    pos->NROWS = 0;
-    pos->nLines = 0;
-    pos->cursorRow = 0;
-    pos->cursorCol = 0;
-    pos->currLine = NULL;
-}
-
-void nextLine( POSITION *pos ) {
-    if ( pos->currLine->next ) {
-        pos->cursorRow++;
-        pos->currLine = pos->currLine->next;
-    }
-}
-
-void prevLine( POSITION *pos ) {
-    if ( pos->currLine->prev )
-        pos->cursorRow--;
-    pos->currLine = pos->currLine->prev;
+void clearPosition( DISPLAY_DATA *disp ) {
+    disp->NCOLS = 0;
+    disp->NROWS = 0;
+    disp->cursorRow = 0;
+    disp->cursorCol = 0;
 }
 
 /* run main GUI loop */
@@ -406,17 +425,20 @@ void ui_run() {
     list_load( msg );
 
     /* Set up the POSITION struct */
-    POSITION *pos = NULL;
-    ui_initPosition( &pos );
+    DISPLAY_DATA *disp = NULL;
+    ui_initPosition( &disp );
+    disp->currMsg = msg;
 
     /* Set up Ncurses */
     ui_initNcurses();
     ui_initMainMenu();
     initSigaction();
-    ui_initWins( pos );
+    ui_initWins( disp );
 
     /* Print everything to the screen */
-    pos->currLine = ui_showWins( pos, msg );
+    ui_showWins( disp );
+
+    disp->currMsg->currentLine = msg->first;
 
     int ch;
     while ( ( ch = wgetch( wins[MID] ) ) ) {
@@ -424,9 +446,9 @@ void ui_run() {
         sigaction( SIGWINCH, &sa, NULL );
 
         if ( RECIEVED_SIGWINCH ) {
-            ui_resizeScreen( pos );
-            ui_initWins( pos );
-            ui_showWins( pos, msg );
+            ui_resizeScreen( disp );
+            ui_initWins( disp );
+            ui_showWins( disp );
             RECIEVED_SIGWINCH = false;
         }
 
@@ -434,98 +456,111 @@ void ui_run() {
 
         /* Change to next note in list struct */
         case 'd':
-            clearPosition( pos );
-            list_next( &msg );
+            clearPosition( disp );
+            list_next( &disp->currMsg );
+            disp->currMsg->currentLine = disp->currMsg->first;
             needsRefresh = true;
             break;
 
             /* Change to previous note in list struct */
         case 'a':
-            clearPosition( pos );
-            list_previous( &msg );
+            clearPosition( disp );
+            list_previous( &disp->currMsg );
+            disp->currMsg->currentLine = disp->currMsg->first;
             needsRefresh = true;
             break;
 
             /* Show the menu along the bottom of the screen */
         case 6:
-            ui_doMenu( pos, msg );
+            ui_doMenu( disp );
             break;
 
             /* Scroll up in the message */
         case KEY_UP:
 
             /* If we are in the root node, break to avoid a segfault */
-            if ( msg->messageNum == 0 )
+            if ( disp->currMsg->messageNum == 0 )
                 break;
 
-            if ( pos->cursorRow >= 0 ) {
-                if ( pos->currLine ) {
-                    if ( pos->currLine->prev ) {
-                        pos->currLine = pos->currLine->prev;
-                        pos->cursorRow--;
-                    }
-
-                }
-                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
+            if ( disp->cursorRow > 0 ) {
+                disp->cursorRow--;
+                wmove( wins[MID], disp->cursorRow, disp->cursorCol );
                 wrefresh( wins[MID] );
                 break;
             }
 
+            wins[MID] = newwin( disp->NROWS - 2, disp->NCOLS, 1, 0 );
+            keypad( wins[MID], true );
+            lineData_scrollUpPage( disp, wins[MID], disp->NROWS - 2 );
+            disp->cursorRow = ( disp->NROWS / 2 ) - 1;
+            wmove( wins[MID], disp->cursorRow, disp->cursorCol );
+            wrefresh( wins[MID] );
             break;
 
             /* Scroll down in the message */
         case KEY_DOWN:
 
             /* If we are in the root node, break to avoid a segfault */
-            if ( msg->messageNum == 0 )
+            if ( disp->currMsg->messageNum == 0 )
                 break;
 
-            wprintw( wins[MID], "%p", ( LINE* ) pos->currLine );
-            wrefresh( wins[MID] );
-            wgetch( wins[MID] );
-
-            if ( pos->cursorRow <= pos->NROWS - 3 ) {
-                pos->cursorRow++;
-                pos->currLine = pos->currLine->next;
-
-                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
+            if ( disp->cursorRow <= disp->NROWS - 3 ) {
+                disp->cursorRow++;
+                wmove( wins[MID], disp->cursorRow, disp->cursorCol );
                 wrefresh( wins[MID] );
                 break;
-
             } else {
-                pos->cursorRow = ( pos->NROWS / 2 ) - 1;
-                keypad( wins[MID], true );
-                werase( wins[MID] );
-                pos->currLine = lineData_scrollDownPage( msg, wins[MID],
-                        pos->NROWS - 2 );
-                wmove( wins[MID], pos->cursorRow, pos->cursorCol );
-                wrefresh( wins[MID] );
+                disp->cursorRow = ( disp->NROWS / 2 ) - 1;
+                lineData_scrollDownPage( disp, wins[MID], disp->NROWS - 2 );
+                wmove( wins[MID], disp->cursorRow, disp->cursorCol );
                 break;
             }
             break;
 
         case KEY_LEFT:
-            if ( pos->cursorCol <= 0 ) {
-                pos->cursorRow--;
-                pos->cursorCol = pos->NCOLS;
+            if ( disp->cursorCol <= 0 ) {
+                disp->cursorRow--;
+                disp->cursorCol = disp->NCOLS;
             } else {
-                pos->cursorCol--;
+                disp->cursorCol--;
             }
-            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
+            wmove( wins[MID], disp->cursorRow, disp->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );
             break;
 
         case KEY_RIGHT:
-            if ( pos->cursorCol >= pos->NCOLS ) {
-                pos->cursorRow++;
-                pos->cursorCol = 0;
+            if ( disp->cursorCol >= disp->NCOLS ) {
+                disp->cursorRow++;
+                disp->cursorCol = 0;
             } else {
-                pos->cursorCol++;
+                disp->cursorCol++;
             }
-            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
+            wmove( wins[MID], disp->cursorRow, disp->cursorCol );
             wrefresh( wins[MID] );
             keypad( wins[MID], true );
+            break;
+
+        case 'w':
+            /* If we are in the root node, break to avoid a segfault */
+            if ( disp->currMsg->messageNum == 0 )
+                break;
+
+            disp->cursorCol = 0;
+            disp->cursorRow = 0;
+            ui_printTop( disp, disp->NROWS - 2 );
+            wmove( wins[MID], disp->cursorRow, disp->cursorCol );
+            wrefresh( wins[MID] );
+            break;
+
+        case 'e':
+            /* If we are in the root node, break to avoid a segfault */
+            if ( disp->currMsg->messageNum == 0 )
+                break;
+
+            disp->cursorRow = disp->NROWS - 3;
+            ui_printBot( disp, disp->NROWS - 2 );
+            wrefresh( wins[MID] );
             break;
 
             /* Free all memory and exit */
@@ -538,10 +573,9 @@ void ui_run() {
         }
 
         if ( needsRefresh ) {
-            ui_showWins( pos, msg );
-            wmove( wins[MID], pos->cursorRow, pos->cursorCol );
+            ui_showWins( disp );
+            wmove( wins[MID], disp->cursorRow, disp->cursorCol );
             wrefresh( wins[MID] );
-            keypad( wins[MID], true );
             needsRefresh = false;
         }
 
@@ -549,11 +583,8 @@ void ui_run() {
 
 }
 
-
-
 int main( int argc, char **argv ) {
-   getDataPath();
-   printf("%s", path);
+    getDataPath();
 
     if ( isatty( STDIN_FILENO ) && argc == 1 ) {
         ui_run();

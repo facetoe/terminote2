@@ -22,7 +22,7 @@ LINE *line_getLine() {
 
     tmp->lNum = 0;
     tmp->lSize = 0;
-    tmp->currLine = NULL;
+    tmp->text = NULL;
     tmp->next = NULL;
     tmp->prev = NULL;
 
@@ -65,9 +65,9 @@ void line_insertAfter( MESSAGE *msg, int nodeNum, char *str ) {
 
         /* Add the new line */
         int strLen = strlen( str );
-        newLine->currLine = malloc( strLen );
-        memmove( newLine->currLine, str, strLen );
-        newLine->currLine[strLen] = '\0';
+        newLine->text = malloc( strLen );
+        memmove( newLine->text, str, strLen );
+        newLine->text[strLen] = '\0';
 
         /* Update pointers */
         newLine->next = oldLine->next;
@@ -94,9 +94,9 @@ void line_insertBefore( MESSAGE *msg, int nodeNum, char *str ) {
 
         /* Add the new line */
         int strLen = strlen( str );
-        newLine->currLine = malloc( strLen );
-        memmove( newLine->currLine, str, strLen );
-        newLine->currLine[strLen] = '\0';
+        newLine->text = malloc( strLen );
+        memmove( newLine->text, str, strLen );
+        newLine->text[strLen] = '\0';
 
         /* Update pointers */
         newLine->prev = oldLine->prev;
@@ -145,7 +145,7 @@ void line_deleteNode( MESSAGE *msg, int nodeNum ) {
     msg->numChars -= nodeToBeDeleted->lSize + 1;
 
     /* Free the memory */
-    free( nodeToBeDeleted->currLine );
+    free( nodeToBeDeleted->text );
     free( nodeToBeDeleted );
 }
 
