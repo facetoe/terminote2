@@ -35,6 +35,7 @@ typedef struct {
 
     /* Search notes for search term */
     int searchNotes;
+    int grep;
     char *searchTerm;
 
     /* Append note */

@@ -638,7 +638,8 @@ bool list_load( MESSAGE *msg ) {
 }
 
 /* Searches the listNode's message for substring. Returns true if it does,
- * false if not. */bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
+ * false if not. */
+bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
     for ( ; line && line->text; line = line->next ) {
@@ -647,4 +648,5 @@ bool list_load( MESSAGE *msg ) {
     }
     return false;
 }
+
 
