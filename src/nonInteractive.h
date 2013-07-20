@@ -27,6 +27,8 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg , char *command);
 /* Pops noteNum note and prints with args sections then deletes note */
 void nonInteractive_pop( FILE *outStream, MESSAGE *msg, char *args, int noteNum );
 
+void nonInteractive_grepMessages(FILE *outStream, MESSAGE *msg, char *subString);
+
 /* Run in non-interactive mode */
 void nonInteractive_run( OPTIONS *opts, int argc, char **argv );
 

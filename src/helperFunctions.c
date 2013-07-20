@@ -70,3 +70,14 @@ bool isInteger( char *str ) {
     return true;
 }
 
+/* Gets the path of users home directory and concatenates it with the data filename*/
+void getDataPath() {
+    char *homeDir;
+    if( (homeDir = getenv("HOME"))) {
+        int buffSize = strlen(homeDir) + strlen(dataFile) + 1;
+        char *pathBuffer = malloc(buffSize * sizeof(char));
+        snprintf(pathBuffer, buffSize, "%s%s", homeDir, dataFile);
+        path = pathBuffer;
+    }
+}
+

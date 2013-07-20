@@ -6,6 +6,7 @@
  */
 
 #include "nonInteractive.h"
+#include <stdio.h>
 
 /* Prints usage */
 void printUsage( FILE *outStream ) {
@@ -214,8 +215,26 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg, char *command ) {
     }
 
     /* Insert the buffer contents into a MESSAGE struct */
-    list_insertString(msg, buffer);
+    list_insertString( msg, buffer );
+
     free( buffer );
+    pclose( fp );
+}
+
+void nonInteractive_grepMessages( FILE *outStream, MESSAGE *msg, char *subString ) {
+    msg = msg->root->next;
+    if ( !msg )
+        return;
+
+    LINE *line = NULL;
+    for ( ; msg; msg = msg->next ) {
+        for ( line = msg->first; line->next; line = line->next ) {
+            if ( strstr( line->text, subString ) != NULL )
+                fprintf( outStream, "Msg: %d: Line %d: %s\n", msg->messageNum,
+                        line->lNum, line->text );
+
+        }
+    }
 }
 
 /* Run in non-interactive mode */

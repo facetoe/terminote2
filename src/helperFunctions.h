@@ -28,6 +28,8 @@
 #include <string.h> //strstr
 #include <ctype.h> // tolower
 
+#include "defines.h"
+
 /* Returns a pointer to a string containing the current time */
 char *current_time();
 
@@ -39,10 +41,8 @@ void strip_newline( char *string );
  */
 int file_exists( char *filename );
 
-/* Gets the path of users home directory and concatenates it with filename into the buffer 	*/
-/* Returns true on success or false if the buffer wasn't big enough, or other error */
-bool getDataPath(
-        char buffer[], int buffLen, char *fileName );
+/* Gets the path of users home directory and concatenates it with the data filename*/
+void getDataPath();
 
 /* Get input from stdin. Reads until newline or bufferLen.
  * Returns 0 if input overflows buffer, otherwise

@@ -35,6 +35,7 @@ OPTIONS *options_new() {
     opts->version = 0;
 
     opts->searchNotes = 0;
+    opts->grep = 0;
     opts->searchTerm = NULL;
 
     opts->copyFromClip = 0;
@@ -44,6 +45,8 @@ OPTIONS *options_new() {
     opts->usage = 0;
     opts->size = 0;
     opts->interactive = 0;
+
+
 
     return opts;
 }
@@ -64,7 +67,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     char opt;
     int numFlags = 0;
 
-    while ( ( opt = getopt( argc, argv, "n:csivhPFN:D:Rplf:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "n:csivhPFN:D:Rplf:g:a:o:" ) ) != -1 ) {
         switch ( opt ) {
 
         /* Copy from clipboard */
@@ -99,7 +102,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
 
             /* Pop Note */
         case 'P':
-            options->pop = validateInt( "-P", optarg );
+            options->pop = 1;
             numFlags++;
             break;
 
@@ -146,6 +149,11 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             numFlags++;
             break;
 
+        case 'g':
+            options->grep = 1;
+            options->searchTerm = optarg;
+            break;
+
             /* Append note to list */
         case 'a':
             options->append = 1;
@@ -161,8 +169,6 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             break;
 
         case '?':
-            printf( "Strange argument\n" );
-            exit( 1 );
             break;
 
         default:
@@ -252,6 +258,10 @@ void options_execute( OPTIONS *opts ) {
         list_load( msg );
         nonInteractive_printAllWithSubString( outStream, msg,
                 opts->searchTerm );
+    } else if(opts->grep){
+        list_init( &msg );
+        list_load( msg );
+        nonInteractive_grepMessages(outStream, msg, opts->searchTerm);
     } else if ( opts->append ) {
         list_init( &msg );
         list_load( msg );

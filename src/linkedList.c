@@ -8,23 +8,7 @@
 #include "linkedList.h"
 #include <assert.h>
 
-/* Allocates memory for a new LINE node and sets default values */
-LINE *line_getLine() {
-    LINE *tmp = NULL;
-    tmp = malloc( sizeof(LINE) );
-    if ( !tmp ) {
-        fprintf( stderr, "Failed to allocate memory in line_getline\n" );
-        abort();
-    }
 
-    tmp->lNum = 0;
-    tmp->lSize = 0;
-    tmp->currLine = NULL;
-    tmp->next = NULL;
-    tmp->prev = NULL;
-
-    return tmp;
-}
 
 /* Allocates memory for a MESSAGE list and initializes default values */
 void list_init( MESSAGE **msg ) {
@@ -100,12 +84,12 @@ void list_setTime( MESSAGE *msg ) {
 void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
 
     LINE *line = *l;
-    line->currLine = malloc( lineLen + 1 );
+    line->text = malloc( lineLen + 1 );
 
     /* s - lineLen is the start of the line. Copy lineLen characters into the waiting string,
      * ie, from the start to the end of the line */
-    memcpy( line->currLine, s - lineLen, lineLen );
-    line->currLine[lineLen] = 0;
+    memcpy( line->text, s - lineLen, lineLen );
+    line->text[lineLen] = 0;
 
     /* Update statistics */
     line->lNum = numLines;
@@ -174,8 +158,9 @@ void list_insertString( MESSAGE *msg, char *str ) {
     }
 
     /* Update MESSAGE statistics for this message */
-    msg->last = line->prev;
+    msg->last = prev;
     msg->pageTop = msg->first;
+    msg->currentLine = msg->first;
 
     msg->numChars = totChars;
     msg->numLines = numLines;
@@ -231,7 +216,7 @@ void list_writeBinary( FILE *fp, MESSAGE *msg ) {
 
         /* Write each line */
         for ( LINE *line = msg->first; line->next; line = line->next ) {
-            fwrite( line->currLine, sizeof(char), line->lSize, fp );
+            fwrite( line->text, sizeof(char), line->lSize, fp );
 
             /* Write a newline so we can seperate the lines later */
             fwrite( "\n", sizeof(char), 1, fp );
@@ -312,7 +297,7 @@ void list_destroy( MESSAGE **message ) {
         line = msg->first;
         while ( line ) {
             tmpLine = line->next;
-            free( line->currLine );
+            free( line->text );
             free( line );
             line = tmpLine;
         }
@@ -370,7 +355,7 @@ void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
                 fprintf( outStream, "Message:\n" );
                 LINE *lines = msg->first;
                 for ( ; lines->next; lines = lines->next )
-                    fprintf( outStream, "%s\n", lines->currLine );
+                    fprintf( outStream, "%s\n", lines->text );
                 fprintf( outStream, "\n\n" );
                 break;
             default:
@@ -538,7 +523,7 @@ void list_deleteNode( MESSAGE *msg, int noteNum ) {
     line = nodeToBeDeleted->first;
     while (line) {
         tmpLine = line->next;
-        free(line->currLine);
+        free(line->text);
         free(line);
         line = tmpLine;
     }
@@ -575,7 +560,7 @@ void list_deleteAll( MESSAGE **message ) {
             printf( "Freeing Message #%d\n", msg->messageNum );
         while ( line ) {
             tmpLine = line->next;
-            free( line->currLine );
+            free( line->text );
             free( line );
             line = tmpLine;
         }
@@ -589,7 +574,8 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */bool list_load( MESSAGE *msg ) {
+/* Returns true on success or false on failure. */
+bool list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
 
@@ -652,13 +638,15 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Searches the listNode's message for substring. Returns true if it does,
- * false if not. */bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
+ * false if not. */
+bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     LINE *line = msg->first;
 
-    for ( ; line && line->currLine; line = line->next ) {
-        if ( strstr( line->currLine, subStr ) != NULL )
+    for ( ; line && line->text; line = line->next ) {
+        if ( strstr( line->text, subStr ) != NULL )
             return true;
     }
     return false;
 }
+
 
