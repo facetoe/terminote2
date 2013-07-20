@@ -113,7 +113,7 @@ void ui_showTopWin( DISPLAY_DATA *disp ) {
     wclear( wins[TOP] );
 
     /* If the we are not in the root node then update the top window with time, number and path info*/
-    if ( disp->currMsg->root->totalMessages > 0 ) {
+    if ( disp->currMsg->messageNum != 0) {
         char noteStr[100];
         snprintf( noteStr, 100, "Note #%d", disp->currMsg->messageNum );
         mvwprintw( wins[TOP], 0,
@@ -132,43 +132,45 @@ void ui_showTopWin( DISPLAY_DATA *disp ) {
     wrefresh( wins[TOP] );
 }
 
+/* Print the current page */
 void ui_printPage( DISPLAY_DATA *disp, int numRows ) {
-    LINE *tmp = disp->currMsg->currentLine;
+    LINE *tmp = disp->currMsg->pageTop;
     assert( tmp != NULL );
 
     for ( int i = 0; i < numRows && tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->text );
+        mvwprintw( wins[MID], i, 0,"%s", tmp->text );
     }
     disp->currMsg->pageBot = tmp;
     wrefresh( wins[MID] );
 }
 
-void ui_printTop( DISPLAY_DATA *disp, int numRows ) {
+/* Print the start of the message */
+void ui_printTop( DISPLAY_DATA *disp ) {
     LINE *tmp = disp->currMsg->first;
     wclear( wins[MID] );
 
     disp->currMsg->pageTop = tmp;
 
-    for ( int i = 0; i < numRows && tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->text );
+    for ( int i = 0; i < disp->NROWS - 2 && tmp->next; tmp = tmp->next, i++ ) {
+        mvwprintw( wins[MID], i, 0,"%s", tmp->text );
     }
     disp->currMsg->pageBot = tmp;
     disp->currMsg->currentLine = tmp;
     wrefresh( wins[MID] );
 }
 
-void ui_printBot( DISPLAY_DATA *disp, int numRows ) {
+/* Print the bottom of the message */
+void ui_printBot( DISPLAY_DATA *disp ) {
     LINE *tmp = disp->currMsg->last;
     wclear( wins[MID] );
 
-    for ( int i = 0; i < disp->NROWS - 3 && tmp->prev; tmp = tmp->prev, ++i ) {
-
-    }
+    for ( int i = 0; i < disp->NROWS - 3 && tmp->prev; tmp = tmp->prev, ++i )
+        ;
 
     disp->currMsg->pageTop = tmp;
 
     for ( int i = 0; tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->text );
+        mvwprintw( wins[MID], i, 0,"%s", tmp->text );
     }
 
     disp->currMsg->pageBot = disp->currMsg->last;
@@ -176,12 +178,12 @@ void ui_printBot( DISPLAY_DATA *disp, int numRows ) {
     wrefresh( wins[MID] );
 }
 
-/* Scrolls the page up nScroll lines */
-void lineData_scrollUpPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
+/* Scrolls the page up  */
+void lineData_scrollUpPage( DISPLAY_DATA *disp, WINDOW *win ) {
 
     /* If we are already at the top then print the page and return */
     if ( disp->currMsg->currentLine == disp->currMsg->pageTop ) {
-        ui_printPage( disp, nScroll );
+        ui_printPage( disp, disp->NROWS - 2 );
         return;
     }
 
@@ -189,15 +191,15 @@ void lineData_scrollUpPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
     LINE *tmp = disp->currMsg->pageTop;
 
     /* Rewind nScroll lines */
-    for ( int i = 1; i < nScroll && tmp->prev; tmp = tmp->prev, i++ )
+    for ( int i = 1; i < disp->NROWS - 2 && tmp->prev; tmp = tmp->prev, i++ )
         ;
 
     wclear( wins[MID] );
     disp->currMsg->pageTop = tmp;
 
     /* Print the lines to the screen */
-    for ( int i = 0; i < nScroll && tmp->next; tmp = tmp->next, i++ )
-        mvwprintw( wins[MID], i, 0, tmp->text );
+    for ( int i = 0; i < disp->NROWS - 2 && tmp->next; tmp = tmp->next, i++ )
+        mvwprintw( wins[MID], i, 0,"%s", tmp->text );
 
     /* Update the pageBot pointer */
     disp->currMsg->pageBot = tmp;
@@ -205,11 +207,11 @@ void lineData_scrollUpPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
     wrefresh( win );
 }
 
-/* Scrolls the page down nScroll lines */
-void lineData_scrollDownPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
+/* Scrolls the page down */
+void lineData_scrollDownPage( DISPLAY_DATA *disp, WINDOW *win ) {
 
     /* If the entire message will fit on the screen without scrolling, return */
-    if ( disp->currMsg->numLines <= nScroll ) {
+    if ( disp->currMsg->numLines <= disp->NROWS - 2 ) {
         return;
     }
 
@@ -227,8 +229,8 @@ void lineData_scrollDownPage( DISPLAY_DATA *disp, WINDOW *win, int nScroll ) {
     wclear( wins[MID] );
 
     /* Print nScroll lines to the screen */
-    for ( int i = 0; i < nScroll && tmp->next; tmp = tmp->next, i++ ) {
-        mvwprintw( wins[MID], i, 0, tmp->text );
+    for ( int i = 0; i < (disp->NROWS - 2) && tmp->next; tmp = tmp->next, i++ ) {
+        mvwprintw( wins[MID], i, 0, "%s", tmp->text );
 
         /* Update the pointers */
         disp->currMsg->pageBot = tmp;
@@ -491,7 +493,7 @@ void ui_run() {
 
             wins[MID] = newwin( disp->NROWS - 2, disp->NCOLS, 1, 0 );
             keypad( wins[MID], true );
-            lineData_scrollUpPage( disp, wins[MID], disp->NROWS - 2 );
+            lineData_scrollUpPage( disp, wins[MID] );
             disp->cursorRow = ( disp->NROWS / 2 ) - 1;
             wmove( wins[MID], disp->cursorRow, disp->cursorCol );
             wrefresh( wins[MID] );
@@ -511,7 +513,7 @@ void ui_run() {
                 break;
             } else {
                 disp->cursorRow = ( disp->NROWS / 2 ) - 1;
-                lineData_scrollDownPage( disp, wins[MID], disp->NROWS - 2 );
+                lineData_scrollDownPage( disp, wins[MID] );
                 wmove( wins[MID], disp->cursorRow, disp->cursorCol );
                 break;
             }
@@ -548,7 +550,7 @@ void ui_run() {
 
             disp->cursorCol = 0;
             disp->cursorRow = 0;
-            ui_printTop( disp, disp->NROWS - 2 );
+            ui_printTop( disp );
             wmove( wins[MID], disp->cursorRow, disp->cursorCol );
             wrefresh( wins[MID] );
             break;
@@ -559,7 +561,7 @@ void ui_run() {
                 break;
 
             disp->cursorRow = disp->NROWS - 3;
-            ui_printBot( disp, disp->NROWS - 2 );
+            ui_printBot( disp );
             wrefresh( wins[MID] );
             break;
 
