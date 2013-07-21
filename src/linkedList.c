@@ -24,6 +24,7 @@ void list_init( MESSAGE **msg ) {
     tmp->numChars = 0;
     tmp->messageNum = 0;
     tmp->totalMessages = 0;
+    tmp->hasChanged = false;
     tmp->first = NULL;
     tmp->last = NULL;
     tmp->next = NULL;
@@ -578,8 +579,7 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */
-bool list_load( MESSAGE *msg ) {
+void list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
 
@@ -590,7 +590,7 @@ bool list_load( MESSAGE *msg ) {
     if ( file_exists( path ) && ( fp = fopen( path, "rb" ) ) != NULL ) {
         list_readBinary( fp, msg );
         fclose( fp );
-        return true;
+        return;
     } else {
         fprintf( stderr,
                 "Error loading data file at: %s\nAttempting to create one...\n",
@@ -600,18 +600,21 @@ bool list_load( MESSAGE *msg ) {
         if ( fp != NULL ) {
             fprintf( stderr, "Successfully created file\n" );
             fclose( fp );
-            return true;
+            return;
 
         } else {
             fprintf( stderr, "Failed to create file\n" );
-            return false;
+            return;
         }
     }
 }
 
 /* Attempts to save the list at path. */
-/* Returns true on success or false on failure. */bool list_save( MESSAGE *msg ) {
+void list_save( MESSAGE *msg ) {
     assert( msg != NULL );
+
+    if(!msg->root->hasChanged)
+        return;
 
     if ( DEBUG )
         printf( "Saving list at: %s\n", path );
@@ -620,7 +623,7 @@ bool list_load( MESSAGE *msg ) {
     if ( file_exists( path ) && ( fp = fopen( path, "wb" ) ) != NULL ) {
         list_writeBinary( fp, msg );
         fclose( fp );
-        return true;
+        return;
 
     } else {
         fprintf( stderr,
@@ -632,11 +635,11 @@ bool list_load( MESSAGE *msg ) {
             fprintf( stderr, "Successfully created file\n" );
             list_writeBinary( fp, msg );
             fclose( fp );
-            return true;
+            return;
 
         } else {
             fprintf( stderr, "Failed to create file\n" );
-            return false;
+            return;
         }
     }
 }

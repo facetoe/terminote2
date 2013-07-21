@@ -254,6 +254,8 @@ void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
         list_init( &msg );
         list_load( msg );
         nonInteractive_appendMessage( msg );
+        msg->root->hasChanged = true;
+
         /* Clean up */
         list_save( msg );
         list_destroy( &msg );

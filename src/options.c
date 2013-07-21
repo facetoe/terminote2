@@ -162,6 +162,8 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             break;
 
         case '?':
+            printf("Unknown argument. Aborting.\n");
+            exit(0);
             break;
 
         default:
@@ -219,12 +221,15 @@ void options_execute( OPTIONS *opts ) {
 
     if ( opts->pop ) {
         nonInteractive_pop( stdout, msg, "nptm", msg->root->totalMessages );
+        msg->root->hasChanged = true;
 
     } else if ( opts->popN ) {
         nonInteractive_pop( stdout, msg, "nptm", opts->popN );
+        msg->root->hasChanged = true;
 
     } else if ( opts->delN ) {
         list_deleteNode( msg, opts->delN );
+        msg->root->hasChanged = true;
 
     } else if ( opts->printN ) {
         MESSAGE *tmp = NULL;
@@ -246,12 +251,14 @@ void options_execute( OPTIONS *opts ) {
 
     } else if ( opts->append ) {
         list_appendMessage( msg, opts->appendStr );
+        msg->root->hasChanged = true;
 
     } else if ( opts->stats ) {
         nonInteractive_printStats( outStream, msg );
 
     } else if ( opts->copyFromClip ) {
         nonInteractive_appendClipboardContents( msg, "xclip -o  2>&1" );
+        msg->root->hasChanged = true;
 
     } else if ( opts->printL ) {
         MESSAGE *tmp = list_searchByNoteNum( msg, msg->root->totalMessages );

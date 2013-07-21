@@ -101,12 +101,10 @@ void list_deleteNode( MESSAGE *msg, int noteNum );
 void list_deleteAll( MESSAGE **message );
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */
-bool list_load( MESSAGE *msg );
+void list_load( MESSAGE *msg );
 
 /* Attempts to save the list at path. */
-/* Returns true on success or false on failure. */
-bool list_save( MESSAGE *msg );
+void list_save( MESSAGE *msg );
 
 /* Searches the listNode's message for substring. Returns true if it does,
  * false if not. */

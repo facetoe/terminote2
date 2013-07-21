@@ -9,7 +9,7 @@
 #define DEFINES_H_
 
 #define VERSION 0.3
-#define DEBUG 0
+#define DEBUG 1
 
 extern char *path;
 const char *dataFile;
