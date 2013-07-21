@@ -55,7 +55,7 @@ typedef struct {
     int copyFromClip;
 
     /* Number of messages */
-    int size;
+    int stats;
 
     /* Output to file instead of stdout */
     int outputToFile;

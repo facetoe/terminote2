@@ -11,7 +11,7 @@
 #include "nonInteractive.h"
 #include <fcntl.h>
 
-#define OPT_NUM 15
+#define OPT_NUM 17
 
 OPTIONS *options_new() {
 
@@ -43,10 +43,8 @@ OPTIONS *options_new() {
     opts->outputToFile = 0;
     opts->append = 0;
     opts->usage = 0;
-    opts->size = 0;
+    opts->stats = 0;
     opts->interactive = 0;
-
-
 
     return opts;
 }
@@ -72,11 +70,10 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
 
         case 'c':
             options->copyFromClip = 1;
-            numFlags++;
             break;
 
         case 's':
-            options->size = 1;
+            options->stats = 1;
             numFlags++;
             break;
 
@@ -95,7 +92,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             numFlags++;
             break;
 
-            /* Pop Note ( note only )*/
+            /* Pop Note */
         case 'P':
             options->pop = 1;
             numFlags++;
@@ -137,16 +134,18 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             numFlags++;
             break;
 
-            /* Search for notes containing sub string */
+            /* Print all notes containing sub string */
         case 'f':
             options->searchNotes = 1;
             options->searchTerm = optarg;
             numFlags++;
             break;
 
+            /* "grep" notes */
         case 'g':
             options->grep = 1;
             options->searchTerm = optarg;
+            numFlags++;
             break;
 
             /* Append note to list */
@@ -174,9 +173,9 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     }
 
     /* Only one option at a time makes sense, so if there are more then one print usage and exit */
-    if( numFlags > 1 ) {
-        printf("Too many arguments.\nUsage: terminote [FLAG] [ARGUMENT]\n");
-        exit(1);
+    if ( numFlags > 1 ) {
+        printf( "Too many arguments.\nUsage: terminote [FLAG] [ARGUMENT]\n" );
+        exit( 1 );
     }
 }
 
@@ -193,49 +192,41 @@ void options_print( OPTIONS *opts ) {
             opts->printN, opts->printA, opts->searchNotes, opts->searchTerm );
 }
 
-//TODO Clean this function up!
 /* Executes options then destroys the list */
 void options_execute( OPTIONS *opts ) {
 
+    /* No need to load the list for these options */
     if ( opts->usage ) {
         printUsage( stdout );
         exit( 0 );
+    } else if ( opts->version ) {
+        printf( "%.1f\n", VERSION );
+        exit( 0 );
+    } else if ( opts->delA ) {
+        int fd = open( path, O_TRUNC, O_WRONLY );
+        close( fd );
+        exit( 0 );
+    } else if ( opts->outputToFile ) {
+        printf( "Not implemented\n" ); //outStream = fopen( opts->outFile, "w" );
     }
 
     FILE *outStream = NULL;
     outStream = stdout;
 
-    if ( opts->outputToFile ) {
-        printf( "Not implemented\n" ); //outStream = fopen( opts->outFile, "w" );
-    }
-
     MESSAGE *msg = NULL;
+    list_init( &msg );
+    list_load( msg );
 
     if ( opts->pop ) {
-        list_init( &msg );
-        list_load( msg );
         nonInteractive_pop( stdout, msg, "nptm", msg->root->totalMessages );
+
     } else if ( opts->popN ) {
-        list_init( &msg );
-        list_load( msg );
         nonInteractive_pop( stdout, msg, "nptm", opts->popN );
-    } else if ( opts->delA ) {
-        int fd = open( path, O_TRUNC, O_WRONLY );
-        close( fd );
-        exit( 0 );
 
     } else if ( opts->delN ) {
-        list_init( &msg );
-        list_load( msg );
-        if ( list_length( msg ) >= opts->delN )
-            list_deleteNode( msg, opts->delN );
-        else
-            fprintf( stderr, "Nothing to delete at position: %d\n",
-                    opts->delN );
+        list_deleteNode( msg, opts->delN );
 
     } else if ( opts->printN ) {
-        list_init( &msg );
-        list_load( msg );
         MESSAGE *tmp = NULL;
         if ( ( tmp = list_searchByNoteNum( msg, opts->printN ) ) )
             list_printMessage( outStream, "nptm", tmp );
@@ -244,37 +235,25 @@ void options_execute( OPTIONS *opts ) {
                     opts->printN );
 
     } else if ( opts->printA ) {
-        list_init( &msg );
-        list_load( msg );
         list_printAll( outStream, msg );
+
     } else if ( opts->searchNotes ) {
-        list_init( &msg );
-        list_load( msg );
         nonInteractive_printAllWithSubString( outStream, msg,
                 opts->searchTerm );
-    } else if(opts->grep){
-        list_init( &msg );
-        list_load( msg );
-        nonInteractive_grepMessages(outStream, msg, opts->searchTerm);
+
+    } else if ( opts->grep ) {
+        nonInteractive_grepMessages( outStream, msg, opts->searchTerm );
+
     } else if ( opts->append ) {
-        list_init( &msg );
-        list_load( msg );
         list_appendMessage( msg, opts->appendStr );
-    } else if ( opts->version ) {
-        printf( "%.1f\n", VERSION );
-    } else if ( opts->interactive ) {
-        printf( "** Run Interactive **\n" );
-    } else if ( opts->size ) {
-        list_init( &msg );
-        list_load( msg );
-        nonInteractive_printStats(outStream, msg);
+
+    } else if ( opts->stats ) {
+        nonInteractive_printStats( outStream, msg );
+
     } else if ( opts->copyFromClip ) {
-        list_init( &msg );
-        list_load( msg );
         nonInteractive_appendClipboardContents( msg, "xclip -o  2>&1" );
+
     } else if ( opts->printL ) {
-        list_init( &msg );
-        list_load( msg );
         MESSAGE *tmp = list_searchByNoteNum( msg, msg->root->totalMessages );
         if ( tmp ) {
             list_printMessage( outStream, "nptm", tmp );
