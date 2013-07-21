@@ -267,7 +267,7 @@ void options_execute( OPTIONS *opts ) {
     } else if ( opts->size ) {
         list_init( &msg );
         list_load( msg );
-        fprintf( outStream, "%d stored notes\n", msg->root->totalMessages );
+        nonInteractive_printStats(outStream, msg);
     } else if ( opts->copyFromClip ) {
         list_init( &msg );
         list_load( msg );

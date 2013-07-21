@@ -166,6 +166,7 @@ void list_insertString( MESSAGE *msg, char *str ) {
     msg->numLines = numLines;
     msg->messageNum = msg->root->totalMessages + 1;
     msg->root->totalMessages++;
+    msg->root->numLines += numLines;
 }
 
 /* Appends message to the end of the list */
@@ -266,6 +267,9 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
         char *buffer = malloc( first * sizeof(char) + 1 );
         fread( buffer, sizeof(char), first, fp );
         buffer[first] = '\0';
+
+        /* Update char stats. It's -1 as we don't count the terminator. */
+        msg->root->numChars += first-1;
 
         /* Insert the message */
         list_insertString( msg, buffer );
