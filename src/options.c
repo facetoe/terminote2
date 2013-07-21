@@ -65,7 +65,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
     char opt;
     int numFlags = 0;
 
-    while ( ( opt = getopt( argc, argv, "n:csivhPFN:D:Rplf:g:a:o:" ) ) != -1 ) {
+    while ( ( opt = getopt( argc, argv, "n:csivhPN:D:Rplf:g:a:o:" ) ) != -1 ) {
         switch ( opt ) {
 
         /* Copy from clipboard */
@@ -73,7 +73,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
             options->copyFromClip = 1;
             break;
 
-            /* Size of list */
+            /* Prints statistics */
         case 's':
             options->stats = 1;
             numFlags++;
@@ -208,7 +208,7 @@ void options_execute( OPTIONS *opts ) {
         printUsage( stdout );
         exit( 0 );
     } else if ( opts->version ) {
-        printf( "%.1f\n", VERSION );
+        printf( "terminote %.1f\n", VERSION );
         exit( 0 );
     } else if ( opts->delA ) {
         int fd = open( path, O_TRUNC, O_WRONLY );

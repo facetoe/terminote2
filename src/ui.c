@@ -34,7 +34,7 @@ bool needsRefresh = false;
 
 /* Variables for ncurses */
 char *mainMenuStrings[] =
-        { "Delete", "Search", "Quit", "Help", ( char * ) NULL, };
+        { "Delete", "Quit", "Help", ( char * ) NULL, };
 
 static ITEM **mainMenuItems;
 static MENU *footerMenu;
@@ -315,6 +315,19 @@ void initSigaction() {
     sa.sa_handler = hndSIGWINCH;
 }
 
+void printHelp(DISPLAY_DATA *disp) {
+    wclear(wins[MID]);
+    wprintw( wins[MID], "\nTerminote Help:\n\n"
+            " Movement:\n"
+            " <a> selects previous note\n"
+            " <d> selects the next note\n"
+            " <w> jumps to the top of the page\n"
+            " <e> jumps to the bottom of the page\n"
+            " Arrows keys scroll and move the cursor\n\n"
+            " Cntrl-F opens the menu");
+    wrefresh(wins[MID]);
+}
+
 /* Free all memory and quit */
 void quit( MESSAGE *msg ) {
     int n = ARRAY_SIZE(mainMenuStrings);
@@ -360,6 +373,8 @@ void doMenu( DISPLAY_DATA *disp ) {
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
+                hideMainMenu();
+                printHelp(disp);
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Delete" ) ) {
