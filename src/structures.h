@@ -11,6 +11,8 @@
 #define MAX_TIME_SIZE 30
 #define MAX_PATH_SIZE 200
 
+#include <stdbool.h>
+
 /* List to hold lines */
 struct line {
     int lNum;
@@ -26,10 +28,12 @@ typedef struct line LINE;
 struct message {
 
     int totalMessages;
-
     int numLines;
     int messageNum;
     long numChars;
+
+    /* Whether we need to save any changes */
+    bool hasChanged;
 
     char path[MAX_PATH_SIZE];
     char time[MAX_TIME_SIZE];
@@ -56,5 +60,15 @@ struct message {
 };
 
 typedef struct message MESSAGE;
+
+/* Terminal coordinates and scrollable message variables */
+typedef struct {
+    int NCOLS;
+    int NROWS;
+    int cursorRow;
+    int cursorCol;
+    MESSAGE *currMsg;
+} DISPLAY_DATA;
+
 
 #endif /* STRUCTURES_H_ */

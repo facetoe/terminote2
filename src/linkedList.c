@@ -24,6 +24,7 @@ void list_init( MESSAGE **msg ) {
     tmp->numChars = 0;
     tmp->messageNum = 0;
     tmp->totalMessages = 0;
+    tmp->hasChanged = false;
     tmp->first = NULL;
     tmp->last = NULL;
     tmp->next = NULL;
@@ -166,6 +167,7 @@ void list_insertString( MESSAGE *msg, char *str ) {
     msg->numLines = numLines;
     msg->messageNum = msg->root->totalMessages + 1;
     msg->root->totalMessages++;
+    msg->root->numLines += numLines;
 }
 
 /* Appends message to the end of the list */
@@ -248,6 +250,8 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
     char path[MAX_PATH_SIZE];
     char time[MAX_TIME_SIZE];
 
+    char *errorMsg = "Error reading file, it may be corrupted. Run with the -R flag to delete the corrupted file. Sorry.\n";
+
     while ( fread( &first, sizeof( first ), 1, fp ) ) {
         note_num++;
 
@@ -264,21 +268,48 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
 
         /* We got the first length in the loop condition.... */
         char *buffer = malloc( first * sizeof(char) + 1 );
-        fread( buffer, sizeof(char), first, fp );
+        long charDataRead = fread( buffer, sizeof(char), first, fp );
+
+        if(charDataRead < first) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         buffer[first] = '\0';
+
+        /* Update char stats. It's -1 as we don't count the terminator. */
+        msg->root->numChars += first-1;
 
         /* Insert the message */
         list_insertString( msg, buffer );
 
+        int dataRead = 0;
+
         /* Add path */
-        fread( &len, sizeof( len ), 1, fp );
-        fread( path, sizeof(char), len, fp );
+        dataRead = fread( &len, sizeof( len ), 1, fp );
+        if(dataRead != 1) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
+        dataRead = fread( path, sizeof(char), len, fp );
+        if(dataRead != len) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         memcpy( msg->path, path, len );
         msg->path[len] = 0;
 
+
         /* Add time */
-        fread( &len, sizeof( len ), 1, fp );
-        fread( time, sizeof(char), len, fp );
+        dataRead = fread( &len, sizeof( len ), 1, fp );
+        if(dataRead != 1) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
+        dataRead = fread( time, sizeof(char), len, fp );
+        if(dataRead != len) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         memcpy( msg->time, time, len );
         msg->time[len] = 0;
 
@@ -574,8 +605,7 @@ void list_deleteAll( MESSAGE **message ) {
 }
 
 /* Attempts to read a saved list from path. If no file is found, attempts to create one.*/
-/* Returns true on success or false on failure. */
-bool list_load( MESSAGE *msg ) {
+void list_load( MESSAGE *msg ) {
     if ( DEBUG )
         printf( "Loading list from: %s\n", path );
 
@@ -586,7 +616,7 @@ bool list_load( MESSAGE *msg ) {
     if ( file_exists( path ) && ( fp = fopen( path, "rb" ) ) != NULL ) {
         list_readBinary( fp, msg );
         fclose( fp );
-        return true;
+        return;
     } else {
         fprintf( stderr,
                 "Error loading data file at: %s\nAttempting to create one...\n",
@@ -596,18 +626,21 @@ bool list_load( MESSAGE *msg ) {
         if ( fp != NULL ) {
             fprintf( stderr, "Successfully created file\n" );
             fclose( fp );
-            return true;
+            return;
 
         } else {
             fprintf( stderr, "Failed to create file\n" );
-            return false;
+            return;
         }
     }
 }
 
 /* Attempts to save the list at path. */
-/* Returns true on success or false on failure. */bool list_save( MESSAGE *msg ) {
+void list_save( MESSAGE *msg ) {
     assert( msg != NULL );
+
+    if(!msg->root->hasChanged)
+        return;
 
     if ( DEBUG )
         printf( "Saving list at: %s\n", path );
@@ -616,7 +649,7 @@ bool list_load( MESSAGE *msg ) {
     if ( file_exists( path ) && ( fp = fopen( path, "wb" ) ) != NULL ) {
         list_writeBinary( fp, msg );
         fclose( fp );
-        return true;
+        return;
 
     } else {
         fprintf( stderr,
@@ -628,11 +661,11 @@ bool list_load( MESSAGE *msg ) {
             fprintf( stderr, "Successfully created file\n" );
             list_writeBinary( fp, msg );
             fclose( fp );
-            return true;
+            return;
 
         } else {
             fprintf( stderr, "Failed to create file\n" );
-            return false;
+            return;
         }
     }
 }

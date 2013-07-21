@@ -221,20 +221,29 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg, char *command ) {
     pclose( fp );
 }
 
+/* Searches all messages and prints lines that contain substring. Also trims leading whitespace when printing. */
 void nonInteractive_grepMessages( FILE *outStream, MESSAGE *msg, char *subString ) {
     msg = msg->root->next;
     if ( !msg )
         return;
-
+    char *pntr = NULL;
     LINE *line = NULL;
     for ( ; msg; msg = msg->next ) {
         for ( line = msg->first; line->next; line = line->next ) {
-            if ( strstr( line->text, subString ) != NULL )
+            if ( strstr( line->text, subString ) != NULL ) {
+                pntr = line->text;
+                while(*pntr == ' ') {pntr++;} // Loop past leading whitespace.
                 fprintf( outStream, "Msg: %d: Line %d: %s\n", msg->messageNum,
-                        line->lNum, line->text );
+                        line->lNum, pntr );
+            }
 
         }
     }
+}
+
+void nonInteractive_printStats(FILE *outStream, MESSAGE *msg) {
+    fprintf(outStream, "Messages: %d\nLines: %d\nCharacters: %ld\n",
+            msg->root->totalMessages, msg->root->numLines, msg->root->numChars);
 }
 
 /* Run in non-interactive mode */
@@ -245,6 +254,8 @@ void nonInteractive_run( OPTIONS *opts, int argc, char **argv ) {
         list_init( &msg );
         list_load( msg );
         nonInteractive_appendMessage( msg );
+        msg->root->hasChanged = true;
+
         /* Clean up */
         list_save( msg );
         list_destroy( &msg );
