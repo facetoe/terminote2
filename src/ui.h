@@ -81,6 +81,9 @@ void hndSIGWINCH( int sig );
 /* Set up the SIGWINCH handler */
 void initSigaction();
 
+/* Prints the help message */
+void printHelp(DISPLAY_DATA *disp);
+
 /* Free all memory and quit */
 void quit( MESSAGE *msg );
 

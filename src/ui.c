@@ -315,6 +315,7 @@ void initSigaction() {
     sa.sa_handler = hndSIGWINCH;
 }
 
+/* Prints the help message */
 void printHelp(DISPLAY_DATA *disp) {
     wclear(wins[MID]);
     wprintw( wins[MID], "\nTerminote Help:\n\n"
