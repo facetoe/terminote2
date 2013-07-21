@@ -14,6 +14,7 @@
 #include "options.h"
 #include "defines.h"
 #include "nonInteractive.h"
+#include "ui.h"
 
 #include "ncurses.h"
 #include "menu.h"
