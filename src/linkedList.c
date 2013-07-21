@@ -250,6 +250,8 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
     char path[MAX_PATH_SIZE];
     char time[MAX_TIME_SIZE];
 
+    char *errorMsg = "Error reading file, it may be corrupted. Run with the -R flag to delete the corrupted file. Sorry.\n";
+
     while ( fread( &first, sizeof( first ), 1, fp ) ) {
         note_num++;
 
@@ -266,7 +268,12 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
 
         /* We got the first length in the loop condition.... */
         char *buffer = malloc( first * sizeof(char) + 1 );
-        fread( buffer, sizeof(char), first, fp );
+        long charDataRead = fread( buffer, sizeof(char), first, fp );
+
+        if(charDataRead < first) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         buffer[first] = '\0';
 
         /* Update char stats. It's -1 as we don't count the terminator. */
@@ -275,15 +282,34 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
         /* Insert the message */
         list_insertString( msg, buffer );
 
+        int dataRead = 0;
+
         /* Add path */
-        fread( &len, sizeof( len ), 1, fp );
-        fread( path, sizeof(char), len, fp );
+        dataRead = fread( &len, sizeof( len ), 1, fp );
+        if(dataRead != 1) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
+        dataRead = fread( path, sizeof(char), len, fp );
+        if(dataRead != len) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         memcpy( msg->path, path, len );
         msg->path[len] = 0;
 
+
         /* Add time */
-        fread( &len, sizeof( len ), 1, fp );
-        fread( time, sizeof(char), len, fp );
+        dataRead = fread( &len, sizeof( len ), 1, fp );
+        if(dataRead != 1) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
+        dataRead = fread( time, sizeof(char), len, fp );
+        if(dataRead != len) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
         memcpy( msg->time, time, len );
         msg->time[len] = 0;
 
