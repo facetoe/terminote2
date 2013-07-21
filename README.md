@@ -2,7 +2,62 @@
 
 
 ##What is it?
-Terminote is a simple note program for the terminal written in C. You can pipe data to it, insert a note and search notes among other things. It also has an interactive mode for managing your notes. 
+Terminote is a simple note program for the terminal written in C. You can pipe data to it, insert and search notes among other things. It also has an interactive mode for managing your notes. 
+
+##Usage:
+
+There are a few ways to input data into terminote. You can pipe data to it:
+
+`⇒ ls /usr/bin | ./terminote2`
+
+copy text from the clipboard (requires xclip): 
+
+`⇒ ./terminote2 -c`
+
+or add text from the command line:
+
+`⇒ ./terminote2 -a "I must remember this important thing"`
+
+When you want to view a note, you can read it in a nano-like Ncurses interface by running terminote with no options. Or, if you want to read the note from the shell, you have a few options. 
+
+You can "pop" the last note with the `-P` flag. This prints the last note and then deletes it:
+
+    ⇒ ./terminote2 -P
+    Note Number: 3
+    Path: /home/facetoe/git/terminote2/Debug
+    Time: Sun Jul 21 15:39:27 2013
+    Message:
+    I must remember this important thing
+
+If you want to keep the note, you can use the `-p` flag to print the note without deleting it. In terminote, all uppercase flags are destructive, while the lower case ones are not. 
+
+If you want to print a specific note, you can use the `-n` or `-N` flag with the note number:
+
+    ⇒ ./terminote2 -n 3
+    Note Number: 3
+    Path: /home/facetoe/git/terminote2/Debug
+    Time: Sun Jul 21 15:53:01 2013
+    Message:
+    This is note number 3
+
+Terminote also supports a couple of methods for searching stored notes. You can print all notes that contain a substring with the `-f` flag:
+
+    ⇒ ./terminote2 -f debugging
+    Note Number: 2
+    Path: /home/facetoe/git/terminote2/Debug
+    Time: Sun Jul 21 16:00:46 2013
+    Message:
+    If debugging is the process of removing software bugs, then programming must be the process of putting them in.
+
+Or you can "grep" the stored notes with the `-g` flag, printing each line where the string occurs along with the note and line number:
+
+
+    ⇒ ./terminote2 -g debug   
+    Msg: 1: Line 827: isdv4-serial-debugger
+    Msg: 1: Line 862: jsadebugd
+    Msg: 1: Line 878: kdebugdialog
+    Msg: 1: Line 911: kubuntu-debug-installer
+    Msg: 2: Line 1: If debugging is the process of removing software bugs, then programming must be the process of putting them in.
 
 
 ##How do I install it?
@@ -10,84 +65,11 @@ Just `git clone` this repo, `cd` to the `src` directory and type `make`.
 
 
 ##What does it run on?
-I've tested it on Ubuntu and OS X. If you have trouble getting it to run on another *nix platform file a issue and I'll see if I can fix it.
-
-
-##How do I use it?
-Run terminote with the `-h` flag for the most up to date usage information. Here is a sample of its output:
-
-    Terminote version 1.0 - a command line note tool.
-
-    Terminote reacts differently depending on how you call it.
-    If you pipe data to it, or supply a command line argument, Terminote runs in non-interactive mode.
-    If you call terminote with no arguments from the shell, terminote will enter interactive mode.
-
-    ARGUMENTS: Arguments in capitals are destructive, lower case leaves notes intact.
-      -h: Print this message and quit.
-      -P: Prints the last note only, no path or number, then deletes it.
-      -F: Prints the last note with full info (path/time/num) then deletes it.
-      -N: Prints the note at the supplied note number and deletes it, if it exists. Requires an integer argument. 
-      -D: Deletes the note at supplied note number, if it exists. Requires an integer argument.
-      -R: Deletes all notes.
-      -p: Prints the note at the supplied note number, leaving it intact. Requires an integer argument.
-      -l: Prints all the notes leaving them intact.
-      -f: Searches for notes containing supplied sub string and prints them, leaving them intact. Requires a string argument.
-      -a: Appends a note to the list. Requires a string argument.
-
-    CONTACT:
-      Please email any bugs, requests or hate mail to facetoe@ymail.com, or file a bug at https://github.com/facetoe/terminote2
-
-###Examples:
-
-You can save the output of a command: 
-
-`$ cal | ./terminote`
-
-
-Then "pop" it out again with the `-P` flag for just the note, or the `-F` flag for all the info, eg:
-
-
-    $ ./terminote -P   
-         March 2013
-    Su Mo Tu We Th Fr Sa
-                    1  2
-     3  4  5  6  7  8  9
-    10 11 12 13 14 15 16
-    17 18 19 20 21 22 23
-    24 25 26 27 28 29 30
-    31
-
-    $ ./terminote -F   
-    NoteNum: 1
-    Path: /Users/fragmachine/git/terminote2/src
-    Time: Fri Mar  1 18:18:30 2013
-
-         March 2013
-    Su Mo Tu We Th Fr Sa
-                    1  2
-     3  4  5  6  7  8  9
-    10 11 12 13 14 15 16
-    17 18 19 20 21 22 23
-    24 25 26 27 28 29 30
-    31
-
-If you call terminote with no arguments, it enters interactive mode:
-
-    $ ./terminote 
-
-    Welcome to Terminote interactive:
-    (w) to insert new note
-    (a) and (d) to navigate through notes
-    (e) to print all notes
-    (g) to delete all notes
-    (f) to search for notes
-    (m) to print this message
-    (q) to quit
-
+I've tested it on Mint, Ubuntu and OS X. If you have trouble getting it to run on another *nix platform please file an issue and I'll see if I can fix it.
 
 
 ##Why?
-I wanted to learn about linked lists and C, so this is what I came up with.
+I wanted to learn about linked lists and C and this what I came up with.
 
 
 ##It doesn't work.
@@ -102,10 +84,12 @@ Maybe, file a feature request or email me and I'll give it a try, or you are wel
 
 * Redesign terminote to allow people to write plugins for it.
 
-* Add functionality to edit notes.
+* Add functionality to edit notes in interactive mode.
 
-* Make the note capacity dynamically increase in size up to a set size. 
+* Add option to the grep function to respect word boundries.
 
-* Copy notes from clipboard to terminote.
+* Add option to specify time range to search or print in.
 
-* Copy notes from terminote to clipboard.
+* Add option to read from a file.
+
+* Add option to write to specified file. 
