@@ -18,7 +18,7 @@ or add text from the command line:
 
 `⇒ ./terminote2 -a "I must remember this important thing"`
 
-When you want to view a note, you can read it in a nano-like ncurses interface by running terminote with no options. In interactive mode the 'a' and 'd' keys loop through the notes, the 'w' and 'e' keys jump to the bottom and the top of the message and 'Cntrl-f' opens the menu. Or, if you want to read the note from the shell, you have a few options. 
+When you want to view a note, you can read it in a nano-like ncurses interface by running terminote with no options. In interactive mode the 'a' and 'd' keys loop through the notes, the 'w' and 'e' keys jump to the bottom and the top of the message,.the arrow keys move around and scroll the note, and 'Cntrl-f' opens the menu. Or, if you want to read the note from the shell, you have a few options. 
 
 You can "pop" the last note with the `-P` flag. This prints the last note and then deletes it:
 
