@@ -59,6 +59,8 @@ Or you can "grep" the stored notes with the `-g` flag, printing each line where 
     Msg: 1: Line 911: kubuntu-debug-installer
     Msg: 2: Line 1: If debugging is the process of removing software bugs, then programming must be the process of putting them in.
 
+For a full list of options, run terminote with the `-h` flag.
+
 
 ##How do I install it?
 Just `git clone` this repo, `cd` to the `src` directory and type `make`. 
