@@ -11,4 +11,7 @@ clean:
 	rm $(BINARY)
 
 install: $(BINARY)
-	cp -v $(BINARY) /usr/bin
+	cp $(BINARY) /usr/bin
+
+uninstall: 
+	rm "/usr/bin/$(Binary)"
