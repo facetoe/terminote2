@@ -9,3 +9,9 @@ $(BINARY): $(SOURCES) $(HEADERS) Makefile
 
 clean:
 	rm $(BINARY)
+
+install: $(BINARY)
+	cp $(BINARY) /usr/bin
+
+uninstall: 
+	rm "/usr/bin/$(Binary)"
