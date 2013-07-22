@@ -9,3 +9,6 @@ $(BINARY): $(SOURCES) $(HEADERS) Makefile
 
 clean:
 	rm $(BINARY)
+
+install: $(BINARY)
+	cp -v $(BINARY) /usr/bin
