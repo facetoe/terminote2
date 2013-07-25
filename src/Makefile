@@ -1,6 +1,6 @@
 SOURCES := helperFunctions.c linkedList.c line.c options.c nonInteractive.c ui.c terminote.c 
 HEADERS := defines.h helperFunctions.h linkedList.h options.h line.h structures.h ui.h nonInteractive.h
-BINARY := terminote2
+BINARY := terminote
 CFLAGS := -O3 -std=gnu99 -Wall -pedantic -Wextra 
 LIBS := -lncurses -lmenu
 
