@@ -316,7 +316,7 @@ void initSigaction() {
 }
 
 /* Prints the help message */
-void printHelp(DISPLAY_DATA *disp) {
+void printHelp() {
     wclear(wins[MID]);
     wprintw( wins[MID], "\nTerminote Help:\n\n"
             " Movement:\n"
@@ -324,6 +324,7 @@ void printHelp(DISPLAY_DATA *disp) {
             " <d> selects the next note\n"
             " <w> jumps to the top of the page\n"
             " <e> jumps to the bottom of the page\n"
+            " <q> quits the program\n"
             " Arrows keys scroll and move the cursor\n\n"
             " Cntrl-F opens the menu");
     wrefresh(wins[MID]);
@@ -375,7 +376,7 @@ void doMenu( DISPLAY_DATA *disp ) {
                 break;
             } else if ( !strcmp( item_name( currItem ), "Help" ) ) {
                 hideMainMenu();
-                printHelp(disp);
+                printHelp();
                 keepGoing = false;
                 break;
             } else if ( !strcmp( item_name( currItem ), "Delete" ) ) {

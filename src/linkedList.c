@@ -6,9 +6,8 @@
  */
 
 #include "linkedList.h"
+#include "line.h"
 #include <assert.h>
-
-
 
 /* Allocates memory for a MESSAGE list and initializes default values */
 void list_init( MESSAGE **msg ) {
@@ -77,25 +76,8 @@ void list_setTime( MESSAGE *msg ) {
     } else {
         strip_newline( time );
         size_t time_len = strlen( time );
-        strncpy( msg->time, time, time_len );
+        memmove( msg->time, time, time_len );
     }
-}
-
-/* Inserts a line into a LINE struct */
-void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
-
-    LINE *line = *l;
-    line->text = malloc( lineLen + 1 );
-
-    /* s - lineLen is the start of the line. Copy lineLen characters into the waiting string,
-     * ie, from the start to the end of the line */
-    memcpy( line->text, s - lineLen, lineLen );
-    line->text[lineLen] = 0;
-
-    /* Update statistics */
-    line->lNum = numLines;
-    line->lSize = lineLen;
-    *l = line;
 }
 
 /* Parses a string into individual lines and inserts into the MESSAGE's LINE struct */

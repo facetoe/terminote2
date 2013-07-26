@@ -19,6 +19,9 @@ LINE *line_getLine();
 /* Returns the requested lineNode or NULL if it doesn't exist (needs to be cleaned up) */
 LINE *line_getLineNode( MESSAGE *msg, int nodeNum );
 
+/* Inserts a line into a LINE struct */
+void insertLine( LINE **l, char *s, int lineLen, int numLines );
+
 /* Inserts a line after nodeNum */
 void line_insertAfter( MESSAGE *msg, int nodeNum, char *str );
 

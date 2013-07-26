@@ -25,6 +25,11 @@ char *current_time() {
     return ctime( &t );
 }
 
+/* Returns current Unix time */
+unsigned int currentUnixTime() {
+    return (unsigned int)time(NULL);
+}
+
 /* Strip trailing newline and replace with NULL terminator */
 void strip_newline( char *string ) {
     int len = strlen( string ) - 1;

@@ -23,10 +23,6 @@
 extern char * path;
 
 
-
-/* Allocates memory for a new LINE node and sets default values */
-LINE *line_getLine();
-
 /* Allocates memory for a MESSAGE list and initializes default values */
 void list_init( MESSAGE **msg );
 

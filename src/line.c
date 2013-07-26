@@ -51,6 +51,23 @@ LINE *line_getLineNode( MESSAGE *msg, int nodeNum ) {
     return tmp;
 }
 
+/* Inserts a line into a LINE struct */
+void insertLine( LINE **l, char *s, int lineLen, int numLines ) {
+
+    LINE *line = *l;
+    line->text = malloc( lineLen + 1 );
+
+    /* s - lineLen is the start of the line. Copy lineLen characters into the waiting string,
+     * ie, from the start to the end of the line */
+    memcpy( line->text, s - lineLen, lineLen );
+    line->text[lineLen] = 0;
+
+    /* Update statistics */
+    line->lNum = numLines;
+    line->lSize = lineLen;
+    *l = line;
+}
+
 /* Inserts a line after nodeNum */
 void line_insertAfter( MESSAGE *msg, int nodeNum, char *str ) {
 

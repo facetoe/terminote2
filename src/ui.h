@@ -82,7 +82,7 @@ void hndSIGWINCH( int sig );
 void initSigaction();
 
 /* Prints the help message */
-void printHelp(DISPLAY_DATA *disp);
+void printHelp();
 
 /* Free all memory and quit */
 void quit( MESSAGE *msg );

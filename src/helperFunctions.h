@@ -33,6 +33,9 @@
 /* Returns a pointer to a string containing the current time */
 char *current_time();
 
+/* Returns current Unix time */
+unsigned int currentUnixTime();
+
 /* Strip trailing newline and replace with NULL terminator */
 void strip_newline( char *string );
 

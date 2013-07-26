@@ -83,6 +83,7 @@ void nonInteractive_appendMessage( MESSAGE *msg ) {
     /* Get and set path and time information */
     list_setPath( msg );
     list_setTime( msg );
+    msg->unixTime = currentUnixTime();
 
     int ch, lineLen, totChars, numLines, buffSize;
     ch = lineLen = totChars = numLines = 0;
@@ -171,6 +172,7 @@ void nonInteractive_appendClipboardContents( MESSAGE *msg, char *command ) {
     /* Get and set path and time information */
     list_setPath( msg );
     list_setTime( msg );
+    msg->unixTime = currentUnixTime();
 
     char *tmp, *buffer;
     tmp = buffer = NULL;
