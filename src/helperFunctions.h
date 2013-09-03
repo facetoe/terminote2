@@ -34,7 +34,7 @@
 char *current_time();
 
 /* Returns current Unix time */
-unsigned int currentUnixTime();
+int currentUnixTime();
 
 /* Strip trailing newline and replace with NULL terminator */
 void strip_newline( char *string );

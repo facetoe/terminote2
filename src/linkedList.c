@@ -175,6 +175,7 @@ void list_appendMessage( MESSAGE *msg, char *str ) {
     /* Get and store path and time information */
     list_setPath( msg );
     list_setTime( msg );
+    msg->unixTime = currentUnixTime();
 
     /* Insert the message */
     list_insertString( msg, str );
@@ -216,6 +217,9 @@ void list_writeBinary( FILE *fp, MESSAGE *msg ) {
         fwrite( &len, sizeof(int), 1, fp );
         fwrite( msg->time, sizeof(char), len, fp );
 
+        /* Write Unix time */
+        fwrite(&msg->unixTime, sizeof(msg->unixTime), 1, fp);
+
         msg = msg->next;
     }
 }
@@ -226,6 +230,8 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
 
     long first;
     int len, note_num;
+    int unixTime = 0;
+
     MESSAGE *previous = NULL;
     note_num = 0;
 
@@ -295,6 +301,13 @@ void list_readBinary( FILE *fp, MESSAGE *msg ) {
         memcpy( msg->time, time, len );
         msg->time[len] = 0;
 
+        dataRead = fread( &unixTime, sizeof(unixTime), 1, fp );
+        if(dataRead != 1) {
+            fprintf(stderr, "%s", errorMsg);
+            exit(1);
+        }
+        msg->unixTime = unixTime;
+
         free( buffer );
     }
 }
@@ -343,7 +356,8 @@ int list_length( MESSAGE *msg ) {
  * n: Note number
  * p: Path
  * t: Time
- * m: Message */
+ * m: Message
+ * u: Unix time*/
 void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
     assert( msg != NULL );
 
@@ -355,15 +369,19 @@ void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
     else {
         for ( char *s = args; *s; s++ ) {
             switch ( *s ) {
+
             case 'n':
                 fprintf( outStream, "Note Number: %d\n", msg->messageNum );
                 break;
+
             case 'p':
                 fprintf( outStream, "Path: %s\n", msg->path );
                 break;
+
             case 't':
                 fprintf( outStream, "Time: %s\n", msg->time );
                 break;
+
             case 'm':
                 fprintf( outStream, "Message:\n" );
                 LINE *lines = msg->first;
@@ -371,6 +389,11 @@ void list_printMessage( FILE *outStream, char *args, MESSAGE *msg ) {
                     fprintf( outStream, "%s\n", lines->text );
                 fprintf( outStream, "\n\n" );
                 break;
+
+            case 'u':
+                fprintf(outStream, "Unix Time: %d\n", msg->unixTime);
+                break;
+
             default:
                 break;
             }
@@ -664,4 +687,10 @@ bool list_messageHasSubstring( MESSAGE *msg, char *subStr ) {
     return false;
 }
 
+/* Returns elapsed seconds since the message was created */
+double list_messageAge( MESSAGE *msg ) {
+    time_t current;
+    time(&current);
+    return difftime(current, msg->unixTime);
+}
 

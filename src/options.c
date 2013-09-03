@@ -11,6 +11,8 @@
 #include "nonInteractive.h"
 #include <fcntl.h>
 
+#include "math.h"
+
 #define OPT_NUM 17
 
 OPTIONS *options_new() {
@@ -71,6 +73,7 @@ void options_parse( OPTIONS *options, int argc, char **argv ) {
         /* Copy from clipboard */
         case 'c':
             options->copyFromClip = 1;
+            numFlags++;
             break;
 
             /* Prints statistics */
@@ -240,7 +243,7 @@ void options_execute( OPTIONS *opts ) {
     } else if ( opts->printN ) {
         MESSAGE *tmp = NULL;
         if ( ( tmp = list_searchByNoteNum( msg, opts->printN ) ) )
-            list_printMessage( outStream, "nptm", tmp );
+            list_printMessage( outStream, "nptum", tmp );
         else
             fprintf( stderr, "Nothing to print at position: %d\n",
                     opts->printN );
@@ -269,7 +272,8 @@ void options_execute( OPTIONS *opts ) {
     } else if ( opts->printL ) {
         MESSAGE *tmp = list_searchByNoteNum( msg, msg->root->totalMessages );
         if ( tmp ) {
-            list_printMessage( outStream, "nptm", tmp );
+            list_printMessage( outStream, "nptum", tmp );
+            printf("%f", (list_messageAge(msg->next) / 60) / 60);
         }
     }
 

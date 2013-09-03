@@ -26,8 +26,8 @@ char *current_time() {
 }
 
 /* Returns current Unix time */
-unsigned int currentUnixTime() {
-    return (unsigned int)time(NULL);
+int currentUnixTime() {
+    return ( int ) time( NULL );
 }
 
 /* Strip trailing newline and replace with NULL terminator */
@@ -46,8 +46,7 @@ int file_exists( char *filename ) {
 
 /* Searches string for substring.
  * Returns a true if found, false otherwise.
- */
-bool findSubstring( char *haystack, char *needle ) {
+ */bool findSubstring( char *haystack, char *needle ) {
     char *pntr;
 
     if ( ( pntr = strstr( haystack, needle ) ) == NULL ) {
@@ -66,8 +65,7 @@ void stringToLower( char str[], char newString[], int len ) {
 }
 
 /* Determines if str is an integer *.
- * Returns true if is false if it's not. */
-bool isInteger( char *str ) {
+ * Returns true if is false if it's not. */bool isInteger( char *str ) {
     for ( char *sPntr = str; *sPntr; sPntr++ ) {
         if ( !isdigit(*sPntr) )
             return false;
@@ -78,10 +76,10 @@ bool isInteger( char *str ) {
 /* Gets the path of users home directory and concatenates it with the data filename*/
 void getDataPath() {
     char *homeDir;
-    if( (homeDir = getenv("HOME"))) {
-        int buffSize = strlen(homeDir) + strlen(dataFile) + 1;
-        char *pathBuffer = malloc(buffSize * sizeof(char));
-        snprintf(pathBuffer, buffSize, "%s%s", homeDir, dataFile);
+    if ( ( homeDir = getenv( "HOME" ) ) ) {
+        int buffSize = strlen( homeDir ) + strlen( dataFile ) + 1;
+        char *pathBuffer = malloc( buffSize * sizeof(char) );
+        snprintf( pathBuffer, buffSize, "%s%s", homeDir, dataFile );
         path = pathBuffer;
     }
 }

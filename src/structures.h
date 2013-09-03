@@ -31,7 +31,7 @@ struct message {
     int numLines;
     int messageNum;
     long numChars;
-    unsigned int unixTime;
+    int unixTime;
 
     /* Whether we need to save any changes */
     bool hasChanged;

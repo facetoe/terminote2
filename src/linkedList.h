@@ -106,5 +106,7 @@ void list_save( MESSAGE *msg );
  * false if not. */
 bool list_messageHasSubstring( MESSAGE *msg, char *subStr );
 
+/* Returns elapsed time since the message was created */
+double list_messageAge( MESSAGE *msg );
 
 #endif /* LINKEDLIST_H_ */
