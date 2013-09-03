@@ -20,6 +20,8 @@
 #include "assert.h"
 
 #include <sys/ioctl.h> // For terminal size
+#include <sys/types.h> // for pid_t
+#include <sys/wait.h> // for waitpid
 #include <signal.h> // For sigaction
 
 /* Allocate and initialize a POSITION struct */

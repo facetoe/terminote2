@@ -34,7 +34,7 @@ bool needsRefresh = false;
 
 /* Variables for ncurses */
 char *mainMenuStrings[] =
-        { "Delete", "Quit", "Help", ( char * ) NULL, };
+        { "Add", "Delete", "Quit", "Help", ( char * ) NULL, };
 
 static ITEM **mainMenuItems;
 static MENU *footerMenu;
@@ -383,6 +383,41 @@ void doMenu( DISPLAY_DATA *disp ) {
                 list_deleteNode( disp->currMsg, disp->currMsg->messageNum );
                 disp->currMsg->root->hasChanged = true;
                 list_firstNode( &disp->currMsg );
+                hideMainMenu();
+                showWins( disp );
+                keepGoing = false;
+            } else if ( !strcmp( item_name( currItem ), "Add" ) ) {
+                // get the user's editor
+                char *editor = getenv( "EDITOR" );
+                if ( editor == NULL ) {
+                    // default to nano
+                    editor = "/bin/nano";
+                }
+                // close ncurses
+                endwin();
+                // fork exec the editor
+                pid_t pid=fork();
+                if ( pid == 0 ) {
+                    execl( editor, editor, ".terminote_temp", NULL);
+                    exit( 127 );
+                } else {
+                    waitpid( pid, 0, 0 );
+                }
+                // read the new message in
+                FILE *f = fopen(".terminote_temp", "r");
+                char tempc;
+                char input[1000];
+                for (int i=0;; i++) {
+                    if ( fscanf( f, "%c", &tempc ) == EOF ) {
+                        break;
+                    }
+                    input[i] = tempc;
+                }
+                fclose(f);
+                remove(".terminote_temp");
+                // append it to the list
+                list_appendMessage(disp->currMsg, input);
+                disp->currMsg->root->hasChanged = true; 
                 hideMainMenu();
                 showWins( disp );
                 keepGoing = false;
