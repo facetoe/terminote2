@@ -342,6 +342,50 @@ void quit( MESSAGE *msg ) {
     exit( 0 );
 }
 
+void insertNoteFromEditor(DISPLAY_DATA *disp) {
+    // get the user's editor
+    char *editor = getenv( "EDITOR" );
+    if ( editor == NULL ) {
+        // default to nano
+        editor = "/bin/nano";
+    }
+    // close ncurses
+    endwin();
+
+    // fork exec the editor
+    pid_t pid=fork();
+
+    if ( pid == 0 ) {
+        execl( editor, editor, ".terminote_temp", NULL);
+        exit( 127 );
+    } else {
+        waitpid( pid, 0, 0 );
+    }
+    // read the new message in
+    FILE *f = fopen(".terminote_temp", "r");
+    char tempc;
+    int buffSize = 10, i = 0;
+    char *input = malloc(buffSize * sizeof(char));
+
+    while (fscanf( f, "%c", &tempc ) != EOF) {
+        if ( i >= buffSize ) {
+            buffSize *= 2;
+            input = realloc(input, buffSize * sizeof(char));
+        }
+        input[i] = tempc;
+        i++;
+    }
+
+    input[i] = '\0';
+
+    fclose(f);
+    remove(".terminote_temp");
+    // append it to the list
+    list_appendMessage(disp->currMsg, input);
+
+    free(input);
+}
+
 /* Select and execute options from the menu */
 void doMenu( DISPLAY_DATA *disp ) {
     /* Show the menu along the bottom of the screen */
@@ -387,36 +431,7 @@ void doMenu( DISPLAY_DATA *disp ) {
                 showWins( disp );
                 keepGoing = false;
             } else if ( !strcmp( item_name( currItem ), "Add" ) ) {
-                // get the user's editor
-                char *editor = getenv( "EDITOR" );
-                if ( editor == NULL ) {
-                    // default to nano
-                    editor = "/bin/nano";
-                }
-                // close ncurses
-                endwin();
-                // fork exec the editor
-                pid_t pid=fork();
-                if ( pid == 0 ) {
-                    execl( editor, editor, ".terminote_temp", NULL);
-                    exit( 127 );
-                } else {
-                    waitpid( pid, 0, 0 );
-                }
-                // read the new message in
-                FILE *f = fopen(".terminote_temp", "r");
-                char tempc;
-                char input[1000];
-                for (int i=0;; i++) {
-                    if ( fscanf( f, "%c", &tempc ) == EOF ) {
-                        break;
-                    }
-                    input[i] = tempc;
-                }
-                fclose(f);
-                remove(".terminote_temp");
-                // append it to the list
-                list_appendMessage(disp->currMsg, input);
+                insertNoteFromEditor(disp);
                 disp->currMsg->root->hasChanged = true; 
                 hideMainMenu();
                 showWins( disp );
