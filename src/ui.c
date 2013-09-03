@@ -393,7 +393,7 @@ void doMenu( DISPLAY_DATA *disp ) {
                     // default to nano
                     editor = "/bin/nano";
                 }
-				// close ncurses
+                // close ncurses
                 endwin();
                 // fork exec the editor
                 pid_t pid=fork();
@@ -421,7 +421,7 @@ void doMenu( DISPLAY_DATA *disp ) {
                 hideMainMenu();
                 showWins( disp );
                 keepGoing = false;
-			}
+            }
 
             keepGoing = false;
             break;
